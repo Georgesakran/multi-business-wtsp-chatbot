@@ -1,22 +1,21 @@
+
 const express = require("express");
 require("dotenv").config();
-const bodyParser = require("body-parser");
-const axios = require("axios");
 const cors = require("cors");
+const axios = require("axios");
 const OpenAI = require("openai");
 const connectToMongo = require("./db");
+
 const Business = require("./models/Business");
+const Message = require("./models/Message");
+
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const Message = require("./models/Message");
+
 const app = express();
 
-// Middleware
-connectToMongo();
-app.use(bodyParser.json());
-
-
+// ✅ CORS should come FIRST
 app.use(cors({
   origin: [
     "http://localhost:3000",
@@ -24,14 +23,25 @@ app.use(cors({
   ],
   credentials: true
 }));
+
+// ✅ Then express middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ Now connect to DB
+connectToMongo();
+
+// ✅ Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/businesses", businessRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Initialize OpenAI client
+// OpenAI init (unchanged)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+
 
 // Verify Webhook for Meta
 app.get("/webhook", async (req, res) => {
