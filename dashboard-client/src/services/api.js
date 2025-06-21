@@ -4,7 +4,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 // Automatically pick correct backend
 const baseURL = isProd
-  ? "https://your-backend-production.up.railway.app/api" // ← change this after deploying backend
+  ? "multi-business-wtsp-chatbot-production.up.railway.app/api" // ← change this after deploying backend
   : "http://localhost:5001/api"; // ← your local backend
 
 const instance = axios.create({ baseURL });
