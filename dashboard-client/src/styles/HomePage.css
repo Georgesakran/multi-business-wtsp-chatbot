@@ -1,0 +1,225 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+JP+N&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poiret+One&display=swap');
+
+
+/* === Base Dark Background === */
+.home-container.dark-theme {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(140deg, #0f2027, #203a43, #2c5364);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* === Floating Blobs === */
+  .background-blobs::before,
+  .background-blobs::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,255,0.2), transparent 70%);
+    filter: blur(100px);
+    z-index: 0;
+  }
+  .background-blobs::before {
+    width: 300px;
+    height: 300px;
+    top: 100px;
+    left: -100px;
+  }
+  .background-blobs::after {
+    width: 400px;
+    height: 400px;
+    bottom: 50px;
+    right: -150px;
+  }
+  
+  /* === Hero === */
+  .hero-section {
+    text-align: center;
+    padding: 120px 20px 80px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .gradient-text {
+    font-size: 3rem;
+    background: linear-gradient(to right, #00c6ff, #0072ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-family: "Michroma", sans-serif;
+    font-style: normal;
+  }
+  
+  .hero-section p {
+    font-size: 1.4rem;
+    color: #cfe8ff;
+    margin-bottom: 30px;
+    font-family: "Poiret One", sans-serif;
+
+  }
+  
+  /* === Glowing Button === */
+  .login-button {
+    padding: 14px 36px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
+    transition: all 0.3s ease;
+  }
+  .login-button:hover {
+    background-color: #00b3ff;
+    box-shadow: 0 0 25px rgba(0, 191, 255, 0.8);
+  }
+  
+  /* === Glassmorphism About === */
+  .glass-about {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 50px 30px;
+    max-width: 850px;
+    margin: 40px auto;
+    text-align: center;
+    z-index: 2;
+  }
+  
+ 
+  
+  .glass-about p {
+    font-size: 1.4rem;
+    color: #e0e0e0;
+    line-height: 1.7;
+    max-width: 700px;
+    margin: 0 auto;
+    font-family: "Poiret One", sans-serif;
+    font-weight: 500;
+
+  }
+  
+  /* === Footer === */
+  .footer-contact {
+    color: white;
+    padding: 20px 20px;
+    text-align: center;
+    margin-top: auto;
+    font-size: 1.2rem;
+    font-weight: 500;
+    font-family: "Poiret One", sans-serif;
+  }
+  
+  .footer-contact a {
+    color: #55e1ff;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .footer-contact a:hover {
+    text-decoration: underline;
+  }
+  
+  /* === Responsive === */
+  @media (max-width: 768px) {
+    .gradient-text {
+      font-size: 2.3rem;
+    }
+    .hero-section p {
+      font-size: 1rem;
+    }
+    .glass-about {
+      margin: 40px 20px;
+    }
+    .industries-section {
+    padding: 60px 20px;
+    text-align: center;
+
+    }
+  }
+
+
+  /* ==== Features Grid ==== */
+.features-section {
+    padding: 60px 20px;
+    text-align: center;
+  }
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    background: linear-gradient(to right, #ffae00, #ff5900);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-family: "WDXL Lubrifont JP N", sans-serif;
+  }
+ 
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .feature-card {
+    
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 15px;
+    padding: 20px;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(0,123,255,0.2);
+    margin: 10px;
+    font-size: 1.4rem;
+    font-weight: 500;
+    font-family: "Poiret One", sans-serif;
+
+  }
+  
+  /* ==== Industries We Help ==== */
+  @media (min-width: 768px) {
+
+  .industries-section {
+    padding: 60px 200px;
+    text-align: center;
+
+  }
+}
+  .industries-section h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+ 
+  
+  /* ==== Trust Section ==== */
+  .trust-section {
+    backdrop-filter: blur(6px);
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .trust-section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  .trust-section p {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.7;
+    color: #dcefff;
+    font-size: 1.4rem;
+    font-weight: 500;
+    font-family: "Poiret One", sans-serif;
+  }

@@ -1,0 +1,10 @@
+body {
+    margin: 0px;
+    background-color: #f4f6f8;
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+}
+.main-content{
+    margin-top: 120px; /* 60px header height + 30px top margin + some extra spacing */
+    margin-left: 290px; /* If you have the sidebar with left: 30px and width: 250px */
+    width: calc(100% - 300px); /* Adjusting for the sidebar width and margin */
+}

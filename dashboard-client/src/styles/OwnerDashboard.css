@@ -1,0 +1,46 @@
+
+  .dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .dashboard-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  
+  .dashboard-card h3,
+  .dashboard-card h4 {
+    margin-bottom: 0.75rem;
+    color: #333;
+  }
+  
+  .dashboard-card p,
+  .dashboard-card li {
+    color: #555;
+  }
+  
+  .welcome-card {
+    border-left: 6px solid #007bff;
+  }
+  
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    color: white;
+    background-color: #28a745;
+    margin-left: 8px;
+  }

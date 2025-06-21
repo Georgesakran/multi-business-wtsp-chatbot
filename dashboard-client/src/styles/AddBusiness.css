@@ -1,0 +1,33 @@
+.add-business-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+  }
+  
+  .add-business-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .add-business-form input,
+  .add-business-form select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  
+  .add-business-form button {
+    padding: 12px;
+    background-color: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .message {
+    margin-top: 15px;
+    font-weight: bold;
+  }

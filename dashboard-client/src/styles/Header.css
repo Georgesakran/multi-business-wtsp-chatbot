@@ -1,0 +1,70 @@
+/* Header.css */
+.header-bar {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  height: 60px;
+  left: 310px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f4f6f8;
+  border-radius: 15px;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #1f2937;
+  line-height: 1.625;
+  letter-spacing: 0.00938em;
+  padding: 0 20px;
+  z-index: 1000;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Scroll effect style */
+.header-bar.scrolled {
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+
+
+.page-title {
+  font-size: 24px;
+}
+
+.lang-selector {
+  position: relative;
+}
+
+.lang-current {
+  cursor: pointer;
+  user-select: none;
+}
+
+.lang-dropdown {
+  position: absolute;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color:#1f2937;
+}
+
+.lang-dropdown li {
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.lang-dropdown li.active {
+  background-color: #f0f0f0;
+}
+
+.lang-dropdown li:hover {
+  background-color: #e0e0e0;
+}
