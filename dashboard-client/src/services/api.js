@@ -3,8 +3,8 @@ import axios from "axios";
 const isProd = process.env.NODE_ENV === "production";
 
 const instance = axios.create({
-  baseURL: isProd
-    ? "https://multi-business-wtsp-chatbot.up.railway.app/api"
+baseURL: isProd
+  ? "https://multi-business-wtsp-chatbot-production.up.railway.app/api"
     : "http://localhost:5001/api",
 });
 
