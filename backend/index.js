@@ -15,13 +15,16 @@ const app = express();
 // Middleware
 connectToMongo();
 app.use(bodyParser.json());
+
+
 app.use(cors({
   origin: [
-    "http://localhost:3000",                        // local frontend
-    "https://your-vercel-project.vercel.app",       // deployed frontend (update this later)
+    "http://localhost:3000",
+    "https://multi-business-wtsp-chatbot.vercel.app"
   ],
-  credentials: true,
-}));app.use("/api/auth", authRoutes);
+  credentials: true
+}));
+app.use("/api/auth", authRoutes);
 app.use("/api/businesses", businessRoutes);
 app.use("/api/admin", adminRoutes);
 
