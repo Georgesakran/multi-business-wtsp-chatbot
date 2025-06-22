@@ -22,7 +22,7 @@ app.use(cors({
     "https://multi-business-wtsp-chatbot.vercel.app",
     "https://multi-business-wtsp-chatbot-pvzn01btu-george-sakrans-projects.vercel.app",
     "https://sakranagency-ai.com",// ✅ Your new live domain
-    "https://www.sakranagency-ai.com/" // ✅ Your new live domain
+    "https://www.sakranagency-ai.com" // ✅ Your new live domain
   ],
   credentials: true
 }));
