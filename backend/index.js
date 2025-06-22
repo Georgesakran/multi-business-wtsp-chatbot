@@ -64,29 +64,49 @@ app.get("/webhook", async (req, res) => {
 
 // Handle incoming message
 app.post("/webhook", async (req, res) => {
-  const value = req.body.entry?.[0]?.changes?.[0]?.value;
-  const message = value?.messages?.[0];
-  const toPhone = value?.metadata?.phone_number_id; // Bot's WhatsApp number
+  try {
+    // 🌐 Detect if this is from Twilio or Meta by checking payload format
+    const isTwilio = !!req.body.Body && !!req.body.From;
 
-  if (!message || !toPhone) return res.sendStatus(200);
+    let from, to, text, business;
 
-  // 🎯 Find business by phoneNumberId
-  const business = await Business.findOne({ phoneNumberId: toPhone });
-  if (!business) return res.sendStatus(200);
+    if (isTwilio) {
+      // 🟦 Twilio payload
+      from = req.body.From.replace("whatsapp:", "");  // e.g. "whatsapp:+972581234567"
+      to = req.body.To.replace("whatsapp:", "");
+      text = req.body.Body;
 
-  const from = message.from;
-  const text = message.text?.body;
+      // 🏢 Find business in DB using the Twilio number
+      business = await Business.findOne({ whatsappNumber: to });
 
-  if (!text) {
-    await sendMessage(from, "❗ Sorry, I can only respond to text messages.", business);
-    return res.sendStatus(200);
+    } else {
+      // 🟩 Meta payload (like before)
+      const value = req.body.entry?.[0]?.changes?.[0]?.value;
+      const message = value?.messages?.[0];
+      from = message?.from;
+      text = message?.text?.body;
+      const phoneNumberId = value?.metadata?.phone_number_id;
+
+      // Find Meta business by phoneNumberId
+      business = await Business.findOne({ phoneNumberId });
+    }
+
+    if (!business || !text) {
+      console.warn("⚠️ No matching business or empty message");
+      return res.sendStatus(200);
+    }
+
+    // 🧠 Generate reply using OpenAI
+    const reply = await getReply(text, business, from);
+
+    // 📤 Send message back
+    await sendMessage(from, reply, business);
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("❌ Webhook error:", error.message);
+    res.sendStatus(500);
   }
-
-  const reply = await getReply(text, business, from);
-  
-  await sendMessage(from, reply, business);
-
-  res.sendStatus(200);
 });
 
 // Smart Reply Generator
@@ -158,46 +178,32 @@ Answer briefly, naturally, and in ${business.language}.
   return reply;
 }
 
-// WhatsApp Send
+
+
+const twilio = require("twilio");
+
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
 async function sendMessage(to, text, business) {
-  await axios.post(
-    `https://graph.facebook.com/v18.0/${business.phoneNumberId}/messages`,
-    {
-      messaging_product: "whatsapp",
-      to,
-      type: "text",
-      text: { body: text },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${business.accessToken}`,
-        "Content-Type": "application/json",
-      },
+  try {
+    if (business.whatsappType === "twilio") {
+      await twilioClient.messages.create({
+        from: `whatsapp:${business.whatsappNumber}`,  // ✅ Must be prefixed with "whatsapp:"
+        to: `whatsapp:${to}`,                          // ✅ Also needs "whatsapp:"
+        body: text,
+      });
+
+      console.log("📤 Twilio message sent to", to);
+    } else {
+      console.warn("⚠️ Business is not using Twilio for WhatsApp");
     }
-  );
+  } catch (error) {
+    console.error("❌ Failed to send via Twilio:", error.message);
+  }
 }
-
-// const twilio = require("twilio");
-
-// const twilioClient = twilio(
-//   process.env.TWILIO_ACCOUNT_SID,
-//   process.env.TWILIO_AUTH_TOKEN
-// );
-
-// async function sendMessage(to, text, business) {
-//   try {
-//     const message = await twilioClient.messages.create({
-//       from: process.env.TWILIO_PHONE_NUMBER, // Twilio sandbox number
-//       to: `whatsapp:${to}`, // e.g. whatsapp:+972581234567
-//       body: text,
-//     });
-
-//     console.log("📤 Twilio message sent:", message.sid);
-//   } catch (error) {
-//     console.error("❌ Failed to send via Twilio:", error.message);
-//   }
-// }
-
 // Start server
 app.listen(process.env.PORT, () =>
   console.log("✅ Server ready on http://localhost:" + process.env.PORT)

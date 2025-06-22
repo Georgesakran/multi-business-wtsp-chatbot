@@ -28,6 +28,11 @@ const businessSchema = new mongoose.Schema({
 
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  whatsappType: {
+    type: String,
+    enum: ["meta", "twilio"],
+    default: "meta"
+  },
   isActive: { type: Boolean, default: true },
 });
 
