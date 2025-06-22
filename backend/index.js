@@ -106,7 +106,6 @@ app.post("/webhook", async (req, res) => {
 
     await sendMessage(from, reply, business);
 
-    res.sendStatus(200);
   } catch (error) {
     console.error("❌ Webhook error:", error.message);
     res.sendStatus(500);
