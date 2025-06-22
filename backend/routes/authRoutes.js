@@ -44,4 +44,16 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
+router.post('/logout', (req, res) => {
+  // Clear the cookie (assuming cookie name is 'token')
+  res.clearCookie('token', { path: '/' });
+  
+  // You can also destroy session if you use express-session
+  if (req.session) {
+    req.session.destroy();
+  }
+
+  return res.status(200).json({ message: 'Logged out successfully' });
+});
 module.exports = router;

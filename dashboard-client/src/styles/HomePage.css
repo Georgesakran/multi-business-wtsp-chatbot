@@ -68,7 +68,7 @@
   }
   
   /* === Glowing Button === */
-  .login-button {
+  .login-naviation-button{
     padding: 14px 36px;
     font-size: 1rem;
     font-weight: bold;
@@ -113,11 +113,19 @@
   }
   
   /* === Footer === */
-  .footer-contact {
+  .footer-contact{
     color: white;
     padding: 20px 20px;
     text-align: center;
     margin-top: auto;
+    font-size: 1.2rem;
+    font-weight: 500;
+    font-family: "Poiret One", sans-serif;
+  }
+  .footer-contact p{
+    color: white;
+    padding: 5px 5px;
+    text-align: center;
     font-size: 1.2rem;
     font-weight: 500;
     font-family: "Poiret One", sans-serif;
@@ -156,8 +164,8 @@
     padding: 60px 20px;
     text-align: center;
   }
-  h2 {
-    font-size: 2rem;
+  .features-section h2, .industries-sectio h2, .trust-section h2, .industries-section h2 ,.footer-contact h3 {
+    font-size: 2rem; 
     margin-bottom: 30px;
     background: linear-gradient(to right, #ffae00, #ff5900);
     background-clip: text;

@@ -1,13 +1,45 @@
 import React, { useContext } from "react";
+import { useState } from "react";
+
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../styles/Sidebar.css";
 import { LanguageContext } from "../context/LanguageContext";
+import { handleLogout } from "../utils/logout";
+import ConfirmationModal from "./ConfirmationModal";
+
+
 
 function Sidebar({ collapsed, setCollapsed, role }) {
   const { language } = useContext(LanguageContext);
   const isRTL = language === "arabic" || language === "hebrew";
+  const navigate = useNavigate();
 
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "",
+    message: "",
+    onConfirm: () => {}
+  });
 
+  const handleClick = (e, to) => {
+    e.preventDefault();
+  
+    if (to === "/logout") {
+      setModalConfig({
+        title: "Confirm Logout",
+        message: "Are you sure you want to log out?",
+        onConfirm: () => {
+          handleLogout(navigate);
+          setShowModal(false);
+        }
+      });
+      setShowModal(true);
+    }
+  
+    // You can add more dynamic cases later for delete, submit, etc.
+  };
+  
   // === Admin Menu ===
   const adminMenu = [
     { to: "/admin/Dashboard", label: { en: "Dashboard", ar: "لوحة التحكم", he: "לוח ניהול" }, icon: "🧠" },
@@ -38,6 +70,8 @@ function Sidebar({ collapsed, setCollapsed, role }) {
             to={item.to}
             className="sidebar-link"
             activeclassname="active"
+            onClick={(e) => handleClick(e, item.to)}
+
           >
             <span className="icon">{item.icon}</span>
             {!collapsed && (
@@ -52,6 +86,15 @@ function Sidebar({ collapsed, setCollapsed, role }) {
           </NavLink>
         ))}
       </nav>
+      {showModal && (
+      <ConfirmationModal
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        onCancel={() => setShowModal(false)}
+      />
+)}
+
     </div>
   );
 }

@@ -1,0 +1,142 @@
+/* LoginPage.css */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url('../../public/images/3d-delivery-robot-working.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* Adjust darkness */
+  }
+  
+  .login-card {
+    position: relative; /* Important to stay above the overlay */
+    z-index: 1;
+    background-color: white;
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .login-title {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 25px;
+    color: #333;
+  }
+  
+  .login-form .input-group {
+    margin-bottom: 20px;
+  }
+  
+  .login-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+  }
+  
+  .login-form input {
+    width: -webkit-fill-available;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+  }
+  
+  .login-form input:focus {
+    border-color: #007bff;
+  }
+  
+  .password-field {
+    display: flex;
+    align-items: center;
+  }
+  
+  .password-field input {
+    flex: 1;
+    border-radius: 8px 0 0 8px;
+  }
+  
+  .toggle-password {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-left: none;
+    padding: 12px 15px;
+    cursor: pointer;
+    border-radius: 0 8px 8px 0;
+  }
+  
+  .toggle-password:hover {
+    background: #e0e0e0;
+  }
+  
+  .login-button {
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .login-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .error-message {
+    color: red;
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  /* ✅ Mobile Responsive */
+@media (max-width: 600px) {
+    .login-card {
+      padding: 20px 15px;
+      max-width: 75%;
+    }
+  
+    .login-title {
+      font-size: 24px;
+    }
+  
+    .login-form input {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+  
+    .toggle-password {
+      padding: 10px 12px;
+    }
+  
+    .login-button {
+      font-size: 14px;
+      padding: 10px;
+    }
+  }
+  

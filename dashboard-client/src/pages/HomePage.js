@@ -18,7 +18,7 @@ const HomePage = () => {
       <header className="hero-section">
         <h1 className="gradient-text">Sakran Agency AI</h1>
         <p>Smart WhatsApp Automation for Modern Businesses</p>
-        <button className="login-button" onClick={() => navigate("/login")}>
+        <button className="login-naviation-button" onClick={() => navigate("/login")}>
           Enter Dashboard
         </button>
       </header>
