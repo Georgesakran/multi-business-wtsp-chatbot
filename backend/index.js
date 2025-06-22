@@ -20,7 +20,9 @@ app.use(cors({
   origin: [
     "http://localhost:3000",
     "https://multi-business-wtsp-chatbot.vercel.app",
-    "https://multi-business-wtsp-chatbot-pvzn01btu-george-sakrans-projects.vercel.app" // ← New Vercel build URL
+    "https://multi-business-wtsp-chatbot-pvzn01btu-george-sakrans-projects.vercel.app",
+    "https://sakranagency-ai.com",// ✅ Your new live domain
+    "https://www.sakranagency-ai.com/" // ✅ Your new live domain
   ],
   credentials: true
 }));
