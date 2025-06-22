@@ -67,29 +67,29 @@ app.get("/webhook", async (req, res) => {
 // Handle incoming message
 app.post("/webhook", async (req, res) => {
   try {
-    // 🌐 Detect if this is from Twilio or Meta by checking payload format
     const isTwilio = !!req.body.Body && !!req.body.From;
 
     let from, to, text, business;
 
     if (isTwilio) {
-      // 🟦 Twilio payload
-      from = req.body.From.replace("whatsapp:", "");  // e.g. "whatsapp:+972581234567"
+      from = req.body.From.replace("whatsapp:", "");
       to = req.body.To.replace("whatsapp:", "");
       text = req.body.Body;
 
-      // 🏢 Find business in DB using the Twilio number
+      console.log("📥 Incoming Twilio message from:", from);
+      console.log("📤 To business number:", to);
+      console.log("📝 Message text:", text);
+
       business = await Business.findOne({ whatsappNumber: to });
+      if (!business) console.log("⚠️ Business not found for Twilio number");
 
     } else {
-      // 🟩 Meta payload (like before)
       const value = req.body.entry?.[0]?.changes?.[0]?.value;
       const message = value?.messages?.[0];
       from = message?.from;
       text = message?.text?.body;
       const phoneNumberId = value?.metadata?.phone_number_id;
 
-      // Find Meta business by phoneNumberId
       business = await Business.findOne({ phoneNumberId });
     }
 
@@ -98,10 +98,12 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // 🧠 Generate reply using OpenAI
+    console.log("🏪 Matched business:", business.businessName);
+
     const reply = await getReply(text, business, from);
 
-    // 📤 Send message back
+    console.log("🤖 GPT reply:", reply);
+
     await sendMessage(from, reply, business);
 
     res.sendStatus(200);
@@ -158,7 +160,11 @@ Answer briefly, naturally, and in ${business.language}.
       { role: "user", content: text },
     ],
   });
-
+  console.log("🔮 System Prompt:");
+  console.log(systemPrompt);
+  
+  console.log("📚 Message History:");
+  console.log(history);
   const reply = completion.choices[0].message.content;
 
   // Save both user and assistant messages
