@@ -51,9 +51,17 @@ app.post('/webhook', async (req, res) => {
     } else {
       const value = req.body.entry?.[0]?.changes?.[0]?.value;
       const message = value?.messages?.[0];
-      from = message?.from;
-      text = message?.text?.body.trim();
-      const phoneNumberId = value?.metadata?.phone_number_id;
+
+      // ✅ Skip if the message is not from a user
+      if (!message || message.type !== 'text' || !message.text?.body) {
+        console.log('📭 Non-text or system message received, ignored.');
+        return res.sendStatus(200);
+      }
+
+      from = message.from;
+      text = message.text.body.trim();
+      const phoneNumberId = value.metadata.phone_number_id;
+
       business = await Business.findOne({ phoneNumberId });
       if (!business) return res.sendStatus(200);
     }
@@ -73,7 +81,7 @@ app.post('/webhook', async (req, res) => {
 
     if (state.mode === 'booking') {
       await handleBookingFlow(req, res, state, text, from, business);
-      return;
+      return; // ✅ Prevent further code execution
     } else {
       if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
         state.mode = 'booking';
@@ -106,5 +114,6 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 app.listen(process.env.PORT, () => console.log('✅ Server ready on http://localhost:' + process.env.PORT));
