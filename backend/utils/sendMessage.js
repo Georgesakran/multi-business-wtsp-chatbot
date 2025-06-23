@@ -1,11 +1,10 @@
-// 📂 utils/sendMessage.js
-const axios = require('axios');
 const twilio = require('twilio');
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
 
+// ✅ Send normal text message
 async function sendMessage(to, text, business) {
   try {
     if (business.whatsappType === 'twilio') {
@@ -23,62 +22,31 @@ async function sendMessage(to, text, business) {
   }
 }
 
-
+// ✅ Send WhatsApp Menu with buttons
 async function sendMenu(to, business) {
   try {
-    await axios.post(
-      `https://graph.facebook.com/v19.0/${business.phoneNumberId}/messages`,
-      {
-        messaging_product: 'whatsapp',
-        to: to,
-        type: 'interactive',
-        interactive: {
-          type: 'button',
-          body: {
-            text: 'Please choose an option:'
-          },
-          action: {
-            buttons: [
-              {
-                type: 'reply',
-                reply: {
-                  id: 'booking_option',
-                  title: '📅 Booking'
-                }
-              },
-              {
-                type: 'reply',
-                reply: {
-                  id: 'location_option',
-                  title: '📍 Location'
-                }
-              },
-              {
-                type: 'reply',
-                reply: {
-                  id: 'info_option',
-                  title: 'ℹ️ Information'
-                }
-              }
-            ]
-          }
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${business.whatsappToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log('✅ WhatsApp interactive menu sent to', to);
+    if (business.whatsappType === 'twilio') {
+      await twilioClient.messages.create({
+        from: `whatsapp:${business.whatsappNumber}`,
+        to: `whatsapp:${to}`,
+        contentSid: process.env.TWILIO_MENU_SID, // Optional if you want to use predefined templates
+        contentVariables: JSON.stringify({
+          // Use these if using Twilio templates, otherwise remove
+        }),
+        body: 'Please choose an option:',
+        persistentAction: [
+          'reply?payload=booking_option&text=Book Now',
+          'reply?payload=location_option&text=Location',
+          'reply?payload=info_option&text=Information',
+        ],
+      });
+      console.log('📤 Menu sent to', to);
+    } else {
+      console.warn('⚠️ Business is not using Twilio for WhatsApp');
+    }
   } catch (error) {
-    console.error('❌ Failed to send interactive menu:', error.message);
+    console.error('❌ Failed to send menu via Twilio:', error.message);
   }
 }
 
-module.exports = { sendMenu };
-
-
-module.exports = { sendMessage };
+module.exports = { sendMessage, sendMenu };

@@ -4,9 +4,7 @@ const cors = require('cors');
 const connectToMongo = require('./db');
 const Business = require('./models/Business');
 const ConversationState = require('./models/ConversationState');
-const { sendMessage } = require('./utils/sendMessage');
-const { sendMenu } = require('./utils/sendMessage');
-
+const { sendMessage, sendMenu } = require('./utils/sendMessage');
 const { getReply } = require('./utils/getReply');
 const handleBookingFlow = require('./bookingFlow/handleBookingFlow');
 
