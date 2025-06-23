@@ -41,7 +41,9 @@ app.post("/webhook", async (req, res) => {
 
     // Detect Twilio or Meta incoming message format
     const isTwilio = !!req.body.Body && !!req.body.From;
-
+    const message = value?.messages?.[0];
+    const buttonPayload = message?.button?.payload;
+    
     let from, to, text, business;
 
     if (isTwilio) {
@@ -93,7 +95,6 @@ app.post("/webhook", async (req, res) => {
       // ✅ Booking flow already handles res.sendStatus
       return;
     }
-
     // ✅ Handle Button Replies
 if (buttonPayload) {
   if (buttonPayload === 'booking_option') {
