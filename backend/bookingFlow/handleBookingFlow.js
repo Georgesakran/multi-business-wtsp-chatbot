@@ -5,7 +5,7 @@ const { sendMessage } = require('../utils/sendMessage');
 async function handleBookingFlow(req, res, state, text, from, business) {
   const services = business.services || [];
 
-  switch(state.step) {
+  switch (state.step) {
     case 'selectService': {
       const serviceIndex = parseInt(text) - 1;
       if (serviceIndex < 0 || serviceIndex >= services.length || isNaN(serviceIndex)) {
@@ -23,13 +23,12 @@ async function handleBookingFlow(req, res, state, text, from, business) {
 
     case 'selectDay': {
       const requestedDay = text.trim();
-
       state.data.selectedDay = requestedDay;
       await state.save();
 
       const possibleTimes = state.data.selectedService.availableTimes || [];
 
-      // Find already booked times for this business, service and day
+      // Find already booked times for this business, service, and day
       const bookedSlots = await Booking.find({
         businessId: business._id,
         service: state.data.selectedService.name,
@@ -38,7 +37,6 @@ async function handleBookingFlow(req, res, state, text, from, business) {
       }).select('time').lean();
 
       const bookedTimes = bookedSlots.map(b => b.time);
-
       const freeTimes = possibleTimes.filter(t => !bookedTimes.includes(t));
 
       if (freeTimes.length === 0) {
@@ -70,14 +68,15 @@ async function handleBookingFlow(req, res, state, text, from, business) {
       }
 
       const selectedTime = freeTimes[timeChoice];
-      state.data.selectedTime = selectedTime;
+      const selectedService = state.data.selectedService.name;
+      const selectedDay = state.data.selectedDay;
 
       // Save booking
       await Booking.create({
         businessId: business._id,
         customerPhone: from,
-        service: state.data.selectedService.name,
-        day: state.data.selectedDay,
+        service: selectedService,
+        day: selectedDay,
         time: selectedTime,
         status: 'pending',
         createdAt: new Date(),
@@ -89,7 +88,7 @@ async function handleBookingFlow(req, res, state, text, from, business) {
       state.data = {};
       await state.save();
 
-      await sendMessage(from, `✅ Your booking for ${state.data.selectedService.name} on ${state.data.selectedDay} at ${selectedTime} is confirmed. Thank you!`, business);
+      await sendMessage(from, `✅ Your booking for ${selectedService} on ${selectedDay} at ${selectedTime} is confirmed. Thank you!`, business);
       return res.sendStatus(200);
     }
 
