@@ -1,13 +1,12 @@
-// models/ConversationState.js
+// 📂 models/ConversationState.js
 const mongoose = require('mongoose');
 
-const ConversationStateSchema = new mongoose.Schema({
-    customerPhone: { type: String, required: true, unique: true },
-    step: { type: String, required: true, default: 'menu' }, 
-    mode: { type: String, required: true, default: 'gpt' }, // 'gpt' or 'booking'
-    data: { type: Object, default: {} },
-    updatedAt: { type: Date, default: Date.now }
-  });
-  
+const conversationStateSchema = new mongoose.Schema({
+  businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
+  phoneNumber: { type: String, required: true, unique: true },
+  step: { type: String, default: 'menu' },
+  mode: { type: String, default: 'gpt' },
+  data: { type: Object, default: {} },
+});
 
-module.exports = mongoose.model('ConversationState', ConversationStateSchema);
+module.exports = mongoose.model('ConversationState', conversationStateSchema);
