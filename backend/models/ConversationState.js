@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 const ConversationStateSchema = new mongoose.Schema({
-    phoneNumber: { type: String, required: true, unique: true },
+  customerPhone: { type: String, required: true, unique: true },
     step: { type: String, required: true, default: 'menu' }, 
     mode: { type: String, required: true, default: 'gpt' }, // 'gpt' or 'booking'
     data: { type: Object, default: {} },
