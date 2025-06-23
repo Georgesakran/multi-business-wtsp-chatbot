@@ -73,6 +73,7 @@ app.post('/webhook', async (req, res) => {
 
     if (state.mode === 'booking') {
       await handleBookingFlow(req, res, state, text, from, business);
+      return;
     } else {
       if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
         state.mode = 'booking';
@@ -97,6 +98,7 @@ app.post('/webhook', async (req, res) => {
 
       const reply = await getReply(text, business, from);
       await sendMessage(from, reply, business);
+      return res.sendStatus(200);
     }
 
   } catch (error) {
