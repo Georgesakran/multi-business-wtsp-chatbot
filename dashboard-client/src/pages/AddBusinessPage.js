@@ -33,7 +33,7 @@ const AddBusinessPage = () => {
       });
 
       const data = await res.json();
-      if (res.ok) {
+      if (res.OK) {
         setMessage("✅ Business added successfully");
         setForm({
           username: "",

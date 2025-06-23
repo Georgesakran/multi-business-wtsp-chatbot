@@ -13,8 +13,6 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://multi-business-wtsp-chatbot.vercel.app',
-    'https://multi-business-wtsp-chatbot-pvzn01btu-george-sakrans-projects.vercel.app',
     'https://sakranagency-ai.com',
     'https://www.sakranagency-ai.com'
   ],
@@ -53,7 +51,7 @@ app.post("/webhook", async (req, res) => {
       business = await Business.findOne({ whatsappNumber: to });
       if (!business) {
         console.log("⚠️ Business not found for Twilio number");
-        return res.sendStatus(200);
+        return res.sendStatus(204);
       }
     } else {
       // Meta WhatsApp webhook payload
@@ -66,13 +64,13 @@ app.post("/webhook", async (req, res) => {
       business = await Business.findOne({ phoneNumberId });
       if (!business) {
         console.log("⚠️ Business not found for Meta phoneNumberId");
-        return res.sendStatus(200);
+        return res.sendStatus(204);
       }
     }
 
     if (!text) {
       console.log('⚠️ Empty message text received');
-      return res.sendStatus(200);
+      return res.sendStatus(204);
     }
 
     // Load or create conversation state
@@ -104,7 +102,7 @@ app.post("/webhook", async (req, res) => {
         const services = business.services || [];
         if (services.length === 0) {
           await sendMessage(from, "Sorry, no services found to book.", business);
-          return res.sendStatus(200);
+          return res.sendStatus(204);
         }
 
         let msg = 'Please select a service by entering the number:\n';
@@ -113,13 +111,13 @@ app.post("/webhook", async (req, res) => {
         });
 
         await sendMessage(from, msg, business);
-        return res.sendStatus(200);
+        return res.sendStatus(204);
       }
 
       // Normal GPT chat mode
       const reply = await getReply(text, business, from);
       await sendMessage(from, reply, business);
-      return res.sendStatus(200);
+      return res.sendStatus(204);
     }
 
   } catch (error) {
