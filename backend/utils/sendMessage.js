@@ -1,6 +1,6 @@
 // 📂 utils/sendMessage.js
+const axios = require('axios');
 const twilio = require('twilio');
-
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
@@ -23,7 +23,6 @@ async function sendMessage(to, text, business) {
   }
 }
 
-const axios = require('axios');
 
 async function sendMenu(to, business) {
   try {
