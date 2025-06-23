@@ -21,9 +21,9 @@ router.post("/webhook", async (req, res) => {
       }
   
       // Step 1: Find or Create Conversation State
-      let state = await ConversationState.findOne({ phoneNumber: from });
+      let state = await ConversationState.findOne({ customerPhone: from });
       if (!state) {
-        state = await ConversationState.create({ phoneNumber: from, step: 'menu', mode: 'gpt' });
+        state = await ConversationState.create({ customerPhone: from, step: 'menu', mode: 'gpt' });
       }
   
       // Step 2: Check mode and route the message
