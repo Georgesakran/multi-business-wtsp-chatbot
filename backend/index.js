@@ -87,6 +87,7 @@ app.post("/webhook", async (req, res) => {
         data: {}
       });
     }
+    const value = req.body.entry?.[0]?.changes?.[0]?.value;
     const message = value?.messages?.[0];
     const buttonPayload = message?.button?.payload;
 
