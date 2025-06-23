@@ -27,30 +27,13 @@ async function sendMenu(to, business) {
       await twilioClient.messages.create({
         from: `whatsapp:${business.whatsappNumber}`,
         to: `whatsapp:${to}`,
-        interactive: {
-          type: 'button',
-          body: {
-            text: 'Hello! How can I assist you today?'
-          },
-          action: {
-            buttons: [
-              {
-                type: 'reply',
-                reply: { id: 'booking_option', title: '📅 Booking' }
-              },
-              {
-                type: 'reply',
-                reply: { id: 'location_option', title: '📍 Location' }
-              },
-              {
-                type: 'reply',
-                reply: { id: 'info_option', title: 'ℹ️ Info' }
-              }
-            ]
-          }
-        }
+        contentSid: 'HX3714f88bdd47fa8833ac43edf3636396',
+        contentVariables: JSON.stringify({
+          "1": "عزيزي العميل" // أو اسم الزبون لو عندك
+        })
       });
-      console.log('📤 Menu sent to', to);
+
+      console.log('📤 تم إرسال قائمة الخيارات لـ', to);
     }
   } catch (err) {
     console.error('❌ sendMenu error:', err.message);
