@@ -20,7 +20,7 @@ async function sendMessage(to, text, business) {
   }
 }
 
-// — Send interactive menu with buttons
+// — Send interactive menu with buttonsuhgiuhiuhiuhiuhiuh
 async function sendMenu(to, business) {
   try {
     if (business.whatsappType === 'twilio') {
