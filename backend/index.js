@@ -38,6 +38,7 @@ app.get('/webhook', async (req, res) => {
 app.post("/webhook", async (req, res) => {
   try {
     console.log('---Webhook POST received---');
+
     // Detect Twilio or Meta incoming message format
     const isTwilio = !!req.body.Body && !!req.body.From;
 
@@ -46,31 +47,32 @@ app.post("/webhook", async (req, res) => {
     if (isTwilio) {
       from = req.body.From.replace('whatsapp:', '');
       to = req.body.To.replace('whatsapp:', '');
-      text = req.body.Body.trim();
+      text = req.body.Body?.trim();
 
       business = await Business.findOne({ whatsappNumber: to });
       if (!business) {
         console.log("⚠️ Business not found for Twilio number");
-        return res.sendStatus(204);
+        return res.sendStatus(204); // ✅ Don't send OK response
       }
     } else {
       // Meta WhatsApp webhook payload
       const value = req.body.entry?.[0]?.changes?.[0]?.value;
       const message = value?.messages?.[0];
       from = message?.from;
-      text = message?.text?.body.trim();
+      text = message?.text?.body?.trim();
       const phoneNumberId = value?.metadata?.phone_number_id;
 
       business = await Business.findOne({ phoneNumberId });
       if (!business) {
         console.log("⚠️ Business not found for Meta phoneNumberId");
-        return res.sendStatus(204);
+        return res.sendStatus(204); // ✅ Don't send OK response
       }
     }
 
+    // If message is not a text message, like an image or location
     if (!text) {
-      console.log('⚠️ Empty message text received');
-      return res.sendStatus(204);
+      console.log('⚠️ Non-text message received (image, sticker, etc.)');
+      return res.sendStatus(204); // ✅ Don't send OK response
     }
 
     // Load or create conversation state
@@ -85,46 +87,46 @@ app.post("/webhook", async (req, res) => {
       });
     }
 
+    // 📌 Booking Mode
     if (state.mode === 'booking') {
-      // Booking flow mode
       await handleBookingFlow(req, res, state, text, from, business);
-      // IMPORTANT: handleBookingFlow calls res.sendStatus(200)
+      // ✅ Booking flow already handles res.sendStatus
       return;
-    } else {
-      // Not in booking mode
-      if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
-        // Switch to booking flow
-        state.mode = 'booking';
-        state.step = 'selectService';
-        state.data = {};
-        await state.save();
+    }
 
-        const services = business.services || [];
-        if (services.length === 0) {
-          await sendMessage(from, "Sorry, no services found to book.", business);
-          return res.sendStatus(204);
-        }
+    // 📌 Check if user wants to start booking
+    if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
+      state.mode = 'booking';
+      state.step = 'selectService';
+      state.data = {};
+      await state.save();
 
-        let msg = 'Please select a service by entering the number:\n';
-        services.forEach((s, i) => {
-          msg += `${i + 1}. ${s.name} - ${s.price}₪\n`;
-        });
-
-        await sendMessage(from, msg, business);
+      const services = business.services || [];
+      if (services.length === 0) {
+        await sendMessage(from, "Sorry, no services found to book.", business);
         return res.sendStatus(204);
       }
 
-      // Normal GPT chat mode
-      const reply = await getReply(text, business, from);
-      await sendMessage(from, reply, business);
+      let msg = 'Please select a service by entering the number:\n';
+      services.forEach((s, i) => {
+        msg += `${i + 1}. ${s.name} - ${s.price}₪\n`;
+      });
+
+      await sendMessage(from, msg, business);
       return res.sendStatus(204);
     }
+
+    // 📌 Normal GPT Mode
+    const reply = await getReply(text, business, from);
+    await sendMessage(from, reply, business);
+    return res.sendStatus(204); // ✅ Always use 204 to avoid "OK" messages
 
   } catch (error) {
     console.error('❌ Webhook error:', error);
     return res.sendStatus(500);
   }
 });
+
 
 
 
