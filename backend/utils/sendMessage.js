@@ -29,13 +29,39 @@ async function sendMenu(to, business) {
       await twilioClient.messages.create({
         from: `whatsapp:${business.whatsappNumber}`,
         to: `whatsapp:${to}`,
-        body: 'Please choose an option:',
-        persistentAction: [
-          'reply?payload=booking_option&text=📅 Booking',
-          'reply?payload=location_option&text=📍 Location',
-          'reply?payload=info_option&text=ℹ️ Information'
-        ],
+        interactive: {
+          type: 'button',
+          body: {
+            text: 'Please choose an option:'
+          },
+          action: {
+            buttons: [
+              {
+                type: 'reply',
+                reply: {
+                  id: 'booking_option',
+                  title: '📅 Booking'
+                }
+              },
+              {
+                type: 'reply',
+                reply: {
+                  id: 'location_option',
+                  title: '📍 Location'
+                }
+              },
+              {
+                type: 'reply',
+                reply: {
+                  id: 'info_option',
+                  title: 'ℹ️ Information'
+                }
+              }
+            ]
+          }
+        }
       });
+      
       console.log('📤 Menu sent to', to);
     } else {
       console.warn('⚠️ Business is not using Twilio for WhatsApp');
