@@ -97,7 +97,6 @@ app.post('/webhook', async (req, res) => {
 
       const reply = await getReply(text, business, from);
       await sendMessage(from, reply, business);
-      return res.sendStatus(200);
     }
 
   } catch (error) {
