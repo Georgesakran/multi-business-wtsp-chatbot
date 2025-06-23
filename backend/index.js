@@ -52,9 +52,9 @@ app.post('/webhook', async (req, res) => {
       const value = req.body.entry?.[0]?.changes?.[0]?.value;
       const message = value?.messages?.[0];
 
-      // ✅ Skip if the message is not from a user
+      // ✅ This is the real fix:
       if (!message || message.type !== 'text' || !message.text?.body) {
-        console.log('📭 Non-text or system message received, ignored.');
+        console.log('📭 Skipped non-text message or system event.');
         return res.sendStatus(200);
       }
 
@@ -67,6 +67,8 @@ app.post('/webhook', async (req, res) => {
     }
 
     if (!text) return res.sendStatus(200);
+
+    console.log('📥 Incoming User Message:', text);
 
     let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
     if (!state) {
@@ -81,7 +83,7 @@ app.post('/webhook', async (req, res) => {
 
     if (state.mode === 'booking') {
       await handleBookingFlow(req, res, state, text, from, business);
-      return; // ✅ Prevent further code execution
+      return; // ✅ Prevent further execution
     } else {
       if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
         state.mode = 'booking';
@@ -114,6 +116,7 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.listen(process.env.PORT, () => console.log('✅ Server ready on http://localhost:' + process.env.PORT));
