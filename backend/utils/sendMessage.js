@@ -22,22 +22,18 @@ async function sendMessage(to, text, business) {
   }
 }
 
-// ✅ Send WhatsApp Menu with buttons
+// ✅ Send WhatsApp Menu with Interactive Buttons
 async function sendMenu(to, business) {
   try {
     if (business.whatsappType === 'twilio') {
       await twilioClient.messages.create({
         from: `whatsapp:${business.whatsappNumber}`,
         to: `whatsapp:${to}`,
-        contentSid: process.env.TWILIO_MENU_SID, // Optional if you want to use predefined templates
-        contentVariables: JSON.stringify({
-          // Use these if using Twilio templates, otherwise remove
-        }),
         body: 'Please choose an option:',
         persistentAction: [
-          'reply?payload=booking_option&text=Book Now',
-          'reply?payload=location_option&text=Location',
-          'reply?payload=info_option&text=Information',
+          'reply?payload=booking_option&text=📅 Booking',
+          'reply?payload=location_option&text=📍 Location',
+          'reply?payload=info_option&text=ℹ️ Information'
         ],
       });
       console.log('📤 Menu sent to', to);
