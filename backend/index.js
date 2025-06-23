@@ -41,8 +41,7 @@ app.post("/webhook", async (req, res) => {
 
     // Detect Twilio or Meta incoming message format
     const isTwilio = !!req.body.Body && !!req.body.From;
-    const message = value?.messages?.[0];
-    const buttonPayload = message?.button?.payload;
+ 
     
     let from, to, text, business;
 
@@ -88,6 +87,8 @@ app.post("/webhook", async (req, res) => {
         data: {}
       });
     }
+    const message = value?.messages?.[0];
+    const buttonPayload = message?.button?.payload;
 
     // 📌 Booking Mode
     if (state.mode === 'booking') {
