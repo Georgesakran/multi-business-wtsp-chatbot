@@ -39,6 +39,7 @@ app.get('/webhook', async (req, res) => {
 
 app.post('/webhook', async (req, res) => {
   try {
+    // ✅ Check if it's a Twilio message
     const isTwilio = !!req.body.Body && !!req.body.From;
     let from, to, text, business;
 
@@ -49,10 +50,13 @@ app.post('/webhook', async (req, res) => {
       business = await Business.findOne({ whatsappNumber: to });
       if (!business) return res.sendStatus(200);
     } else {
-      const value = req.body.entry?.[0]?.changes?.[0]?.value;
+      // ✅ Meta WhatsApp - extract message safely
+      const entry = req.body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const value = changes?.value;
       const message = value?.messages?.[0];
 
-      // ✅ This is the real fix:
+      // ✅ Skip system events (statuses, delivery reports)
       if (!message || message.type !== 'text' || !message.text?.body) {
         console.log('📭 Skipped non-text message or system event.');
         return res.sendStatus(200);
@@ -60,7 +64,7 @@ app.post('/webhook', async (req, res) => {
 
       from = message.from;
       text = message.text.body.trim();
-      const phoneNumberId = value.metadata.phone_number_id;
+      const phoneNumberId = value.metadata?.phone_number_id;
 
       business = await Business.findOne({ phoneNumberId });
       if (!business) return res.sendStatus(200);
@@ -68,8 +72,7 @@ app.post('/webhook', async (req, res) => {
 
     if (!text) return res.sendStatus(200);
 
-    console.log('📥 Incoming User Message:', text);
-
+    // ✅ Manage conversation state
     let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
     if (!state) {
       state = await ConversationState.create({
@@ -83,8 +86,9 @@ app.post('/webhook', async (req, res) => {
 
     if (state.mode === 'booking') {
       await handleBookingFlow(req, res, state, text, from, business);
-      return; // ✅ Prevent further execution
+      return; // ✅ Exit here - booking flow handles the response
     } else {
+      // ✅ Detect booking trigger keywords
       if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
         state.mode = 'booking';
         state.step = 'selectService';
@@ -106,16 +110,17 @@ app.post('/webhook', async (req, res) => {
         return res.sendStatus(200);
       }
 
+      // ✅ Normal GPT reply
       const reply = await getReply(text, business, from);
       await sendMessage(from, reply, business);
       return res.sendStatus(200);
     }
-
   } catch (error) {
     console.error('❌ Webhook error:', error.message);
-    res.sendStatus(500);
+    return res.sendStatus(500);
   }
 });
+
 
 
 
