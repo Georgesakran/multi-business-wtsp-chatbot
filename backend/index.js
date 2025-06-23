@@ -94,6 +94,45 @@ app.post("/webhook", async (req, res) => {
       return;
     }
 
+    // ✅ Handle Button Replies
+if (buttonPayload) {
+  if (buttonPayload === 'booking_option') {
+    state.mode = 'booking';
+    state.step = 'selectService';
+    state.data = {};
+    await state.save();
+
+    const services = business.services || [];
+    if (services.length === 0) {
+      await sendMessage(from, "Sorry, no services found to book.", business);
+      return res.sendStatus(204);
+    }
+
+    let msg = 'Please select a service by entering the number:\n';
+    services.forEach((s, i) => {
+      msg += `${i + 1}. ${s.name} - ${s.price}₪\n`;
+    });
+
+    await sendMessage(from, msg, business);
+    return res.sendStatus(204);
+  }
+
+  if (buttonPayload === 'location_option') {
+    await sendMessage(from, `📍 We are located at: ${business.location}`, business);
+    return res.sendStatus(204);
+  }
+
+  if (buttonPayload === 'info_option') {
+    await sendMessage(from, `ℹ️ Our working hours are: ${business.hours}`, business);
+    return res.sendStatus(204);
+  }
+}
+if (/menu|options|خيارات|قائمة/i.test(text)) {
+  await sendMenu(from, business);
+  return res.sendStatus(204);
+}
+
+
     // 📌 Check if user wants to start booking
     if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
       state.mode = 'booking';
