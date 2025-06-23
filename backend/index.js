@@ -37,42 +37,45 @@ app.get('/webhook', async (req, res) => {
   return res.sendStatus(403);
 });
 
-app.post('/webhook', async (req, res) => {
+app.post("/webhook", async (req, res) => {
   try {
-    // ✅ Check if it's a Twilio message
+    console.log('---Webhook POST received---');
+    // Detect Twilio or Meta incoming message format
     const isTwilio = !!req.body.Body && !!req.body.From;
+
     let from, to, text, business;
 
     if (isTwilio) {
       from = req.body.From.replace('whatsapp:', '');
       to = req.body.To.replace('whatsapp:', '');
       text = req.body.Body.trim();
-      business = await Business.findOne({ whatsappNumber: to });
-      if (!business) return res.sendStatus(200);
-    } else {
-      // ✅ Meta WhatsApp - extract message safely
-      const entry = req.body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const value = changes?.value;
-      const message = value?.messages?.[0];
 
-      // ✅ Skip system events (statuses, delivery reports)
-      if (!message || message.type !== 'text' || !message.text?.body) {
-        console.log('📭 Skipped non-text message or system event.');
+      business = await Business.findOne({ whatsappNumber: to });
+      if (!business) {
+        console.log("⚠️ Business not found for Twilio number");
         return res.sendStatus(200);
       }
-
-      from = message.from;
-      text = message.text.body.trim();
-      const phoneNumberId = value.metadata?.phone_number_id;
+    } else {
+      // Meta WhatsApp webhook payload
+      const value = req.body.entry?.[0]?.changes?.[0]?.value;
+      const message = value?.messages?.[0];
+      from = message?.from;
+      text = message?.text?.body.trim();
+      const phoneNumberId = value?.metadata?.phone_number_id;
 
       business = await Business.findOne({ phoneNumberId });
-      if (!business) return res.sendStatus(200);
+      if (!business) {
+        console.log("⚠️ Business not found for Meta phoneNumberId");
+        return res.sendStatus(200);
+      }
     }
 
-    if (!text) return res.sendStatus(200);
+    if (!text) {
+      console.log('⚠️ Empty message text received');
+      return res.sendStatus(200);
+    }
 
-    // ✅ Manage conversation state
+    // Load or create conversation state
     let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
     if (!state) {
       state = await ConversationState.create({
@@ -85,11 +88,14 @@ app.post('/webhook', async (req, res) => {
     }
 
     if (state.mode === 'booking') {
+      // Booking flow mode
       await handleBookingFlow(req, res, state, text, from, business);
-      return; // ✅ Exit here - booking flow handles the response
+      // IMPORTANT: handleBookingFlow calls res.sendStatus(200)
+      return;
     } else {
-      // ✅ Detect booking trigger keywords
+      // Not in booking mode
       if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(text)) {
+        // Switch to booking flow
         state.mode = 'booking';
         state.step = 'selectService';
         state.data = {};
@@ -97,7 +103,7 @@ app.post('/webhook', async (req, res) => {
 
         const services = business.services || [];
         if (services.length === 0) {
-          await sendMessage(from, 'Sorry, no services found to book.', business);
+          await sendMessage(from, "Sorry, no services found to book.", business);
           return res.sendStatus(200);
         }
 
@@ -110,13 +116,14 @@ app.post('/webhook', async (req, res) => {
         return res.sendStatus(200);
       }
 
-      // ✅ Normal GPT reply
+      // Normal GPT chat mode
       const reply = await getReply(text, business, from);
       await sendMessage(from, reply, business);
       return res.sendStatus(200);
     }
+
   } catch (error) {
-    console.error('❌ Webhook error:', error.message);
+    console.error('❌ Webhook error:', error);
     return res.sendStatus(500);
   }
 });
