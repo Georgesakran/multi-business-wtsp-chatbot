@@ -42,7 +42,7 @@ async function sendMainMenu(to, business) {
 // — Send interactive menu with button for services
 
 const serviceTemplateMap = {
-  1: 'HXa3116036f7c52753ffc913da2b979604', // قالب فيه فقط 1 متغيرات
+  1: 'HXa3116036f7c52753ffc913da2b979604', // قالب فيه 1 خدمات
   2: 'HX513cff1a3f706be3f7be641848f9c39a', // قالب فيه 2 خدمات
   3: 'HX9c0a06261ed62e2d6a9c3de520da3815', // قالب فيه 3 خدمات
   4: 'HX7a5405b85a203f3d559ccc471278ebd6', // قالب فيه 4 خدمات
