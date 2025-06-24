@@ -4,9 +4,11 @@ const cors = require('cors');
 const connectToMongo = require('./db');
 const Business = require('./models/Business');
 const ConversationState = require('./models/ConversationState');
-const { sendMessage, sendMainMenu, sendServiceMenuTemplate} = require('./utils/sendMessage');
+const { sendMessage,
+        sendMainMenu, 
+        sendServiceMenuTemplate, 
+        sendDayPickerTemplate} = require('./utils/sendMessage');
 const { getReply } = require('./utils/getReply');
-const { sendListPicker } = require('./utils/sendListPicker');
 const handleBookingFlow = require('./bookingFlow/handleBookingFlow');
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
@@ -70,10 +72,7 @@ app.post("/webhook", async (req, res) => {
     }
     return days;
   };
-  const getAvailableHours = (date, business) => {
-    // Static example – ideally pull from business config
-    return ['09:00', '10:00', '11:00', '12:00', '15:00', '17:00'];
-  };
+
   try {
     const isTwilio = !!req.body.Body && !!req.body.From;
     let from, to, text, business, payload;
