@@ -101,6 +101,10 @@ app.post("/webhook", async (req, res) => {
       await sendMessage(from, "👋 مرحبًا! اكتب 'menu' للخيارات.", business);
       return res.sendStatus(204);
     }
+    if (text.toLowerCase() === 'menu') {
+      await sendMenu(from, business); // ← أو sendListPicker لو تحب تبدأ بها
+      return res.sendStatus(200);
+    }
 
     if (payload === 'booking_option') {
       state.mode = 'booking';
