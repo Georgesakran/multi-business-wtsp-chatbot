@@ -41,11 +41,11 @@ async function sendMainMenu(to, business) {
 }
 // — Send interactive menu with buttonsuhgiuhiuhiuhiuhiuh
 
-async function sendServiceMenuTemplate(toPhoneNumber) {
+async function sendServiceMenuTemplate(to) {
   try {
     await client.messages.create({
-      from: 'whatsapp:+YOUR_TWILIO_NUMBER',  // عدل الرقم هنا
-      to: `whatsapp:${toPhoneNumber}`,
+      from: `whatsapp:${business.whatsappNumber}`,
+      to: `whatsapp:${to}`,
       contentSid: 'HX68f89e0768cf19045916ffd5c64dffc1', // SID للقالب الجديد
       contentVariables: JSON.stringify({})
     });
