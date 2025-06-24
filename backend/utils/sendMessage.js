@@ -41,37 +41,50 @@ async function sendMainMenu(to, business) {
 }
 // — Send interactive menu with buttonsuhgiuhiuhiuhiuhiuh
 
-async function sendServiceMenuTemplate(to, business) {
-  try {
-    const services = business.services.slice(0, 10); // Max 10 services
-    const contentVariables = {};
+// async function sendServiceMenuTemplate(to, business) {
+//   try {
+//     const services = business.services.slice(0, 10); // Max 10 services
+//     const contentVariables = {};
 
-    // Add real service data
-    services.forEach((service, i) => {
-      const index = i * 3;
-      contentVariables[(index + 1).toString()] = service.name || 'خدمة';
-      contentVariables[(index + 2).toString()] = `service_${i}`; // or service._id
-      contentVariables[(index + 3).toString()] = `${service.price}₪` || '';
-    });
-    console.log('📦 Services:', services);
+//     // Add real service data
+//     services.forEach((service, i) => {
+//       const index = i * 3;
+//       contentVariables[(index + 1).toString()] = service.name || 'خدمة';
+//       contentVariables[(index + 2).toString()] = `service_${i}`; // or service._id
+//       contentVariables[(index + 3).toString()] = `${service.price}₪` || '';
+//     });
+//     console.log('📦 Services:', services);
 
-    // Fill the rest with empty strings
-    for (let i = services.length * 3 + 1; i <= 30; i++) {
-      contentVariables[i.toString()] = '-';
-    }
+//     // Fill the rest with empty strings
+//     for (let i = services.length * 3 + 1; i <= 30; i++) {
+//       contentVariables[i.toString()] = '-';
+//     }
 
-    await twilioClient.messages.create({
-      from: `whatsapp:${business.whatsappNumber}`,
-      to: `whatsapp:${to}`,
-      contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91', // your template SID
-      contentVariables: JSON.stringify(contentVariables),
-    });
+//     await twilioClient.messages.create({
+//       from: `whatsapp:${business.whatsappNumber}`,
+//       to: `whatsapp:${to}`,
+//       contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91', // your template SID
+//       contentVariables: JSON.stringify(contentVariables),
+//     });
 
-    console.log('✅ تم إرسال قائمة الخدمات بـ fallback للفراغات');
-  } catch (err) {
-    console.error('❌ فشل في إرسال قائمة الخدمات:', err.message);
-  }
-}
+//     console.log('✅ تم إرسال قائمة الخدمات بـ fallback للفراغات');
+//   } catch (err) {
+//     console.error('❌ فشل في إرسال قائمة الخدمات:', err.message);
+//   }
+// }
 
+await twilioClient.messages.create({
+  from: `whatsapp:${business.whatsappNumber}`,
+  to: `whatsapp:${to}`,
+  contentSid: 'HX68f89e0768cf19045916ffd5c64dffc1',
+  contentVariables: JSON.stringify({
+    "1": "Nail Polish",
+    "2": "service_0",
+    "3": "30₪",
+    "4": "Manicure",
+    "5": "service_1",
+    "6": "50₪"
+  })
+});
 
 module.exports = { sendMessage, sendMainMenu, sendServiceMenuTemplate };
