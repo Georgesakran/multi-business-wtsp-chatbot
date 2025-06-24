@@ -40,4 +40,4 @@ async function sendMenu(to, business) {
   }
 }
 
-module.exports = { sendMessage, sendMenu, getNext7Days };
+module.exports = { sendMessage, sendMenu };
