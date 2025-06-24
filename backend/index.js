@@ -48,30 +48,31 @@ app.get('/webhook', async (req, res) => {
 });
 
 
-const getNext7Days = () => {
-  const days = [];
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    const dayLabel = date.toLocaleDateString('ar-EG', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'numeric'
-    });
-    days.push({
-      label: dayLabel,
-      value: date.toISOString().split('T')[0]
-    });
-  }
-  return days;
-};
-const getAvailableHours = (date, business) => {
-  // Static example – ideally pull from business config
-  return ['09:00', '10:00', '11:00', '12:00', '15:00', '17:00'];
-};
+
 
 app.post("/webhook", async (req, res) => {
+  const getNext7Days = () => {
+    const days = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const dayLabel = date.toLocaleDateString('ar-EG', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'numeric'
+      });
+      days.push({
+        label: dayLabel,
+        value: date.toISOString().split('T')[0]
+      });
+    }
+    return days;
+  };
+  const getAvailableHours = (date, business) => {
+    // Static example – ideally pull from business config
+    return ['09:00', '10:00', '11:00', '12:00', '15:00', '17:00'];
+  };
   try {
     const isTwilio = !!req.body.Body && !!req.body.From;
     let from, to, text, business, payload;
