@@ -123,7 +123,23 @@ app.post("/webhook", async (req, res) => {
       console.log('📦 Payload:', payload);
       
       return res.sendStatus(204);
+
+      
     }
+    if (payload.startsWith('service_')) {
+      state.step = 'selectDay';
+      state.data.serviceId = payload; // أو احفظ اسم الخدمة إذا تريد لاحقًا
+      await state.save();
+    
+      await sendDayPickerTemplate(from, business);
+      console.log('✅ تم إرسال قالب الأيام بعد اختيار الخدمة');
+      return res.sendStatus(204);
+    }
+
+
+
+
+
     return res.sendStatus(204);
   } catch (err) {
     console.error('❌ Webhook error:', err);
