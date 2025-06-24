@@ -39,39 +39,41 @@ async function sendMainMenu(to, business) {
     console.error('❌ sendMenu error:', err.message);
   }
 }
-// — Send interactive menu with buttonsuhgiuhiuhiuhiuhiuh
+// — Send interactive menu with button for services
+
+const serviceTemplateMap = {
+  1: 'HXa3116036f7c52753ffc913da2b979604', // قالب فيه فقط 1 متغيرات
+  2: 'HX513cff1a3f706be3f7be641848f9c39a', // قالب فيه 2 خدمات
+  3: 'HX9c0a06261ed62e2d6a9c3de520da3815', // قالب فيه 3 خدمات
+  4: 'HX7a5405b85a203f3d559ccc471278ebd6', // قالب فيه 4 خدمات
+};
 
 async function sendServiceMenuTemplate(to, business) {
   try {
-    const services = business.services.slice(0, 10); // Max 10 services
+    const services = business.services.slice(0, 10); // Max 10
     const contentVariables = {};
 
-    // Add real service data
     services.forEach((service, i) => {
       const index = i * 3;
       contentVariables[(index + 1).toString()] = service.name || 'خدمة';
-      contentVariables[(index + 2).toString()] = `service_${i}`; // or service._id
-      contentVariables[(index + 3).toString()] = `${service.price}₪` || '';
+      contentVariables[(index + 2).toString()] = `service_${i}`;
+      contentVariables[(index + 3).toString()] = `${service.price}₪`;
     });
-    console.log('📦 Services:', services);
 
-    // Fill the rest with empty strings
-    for (let i = services.length * 3 + 1; i <= 30; i++) {
-      contentVariables[i.toString()] = '-';
-    }
- console.log('📦 Content Variables:', contentVariables);
+    const sid = serviceTemplateMap[services.length];
+    if (!sid) throw new Error(`No template configured for ${services.length} services`);
+
     await twilioClient.messages.create({
       from: `whatsapp:${business.whatsappNumber}`,
       to: `whatsapp:${to}`,
-      contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91', // your template SID
+      contentSid: sid,
       contentVariables: JSON.stringify(contentVariables),
     });
 
-    console.log('✅ تم إرسال قائمة الخدمات بـ fallback للفراغات');
+    console.log('✅ تم إرسال قائمة الخدمات بنجاح');
   } catch (err) {
     console.error('❌ فشل في إرسال قائمة الخدمات:', err.message);
   }
 }
-
 
 module.exports = { sendMessage, sendMainMenu, sendServiceMenuTemplate };
