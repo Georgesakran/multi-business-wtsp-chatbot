@@ -8,7 +8,7 @@ const conversationStateSchema = new mongoose.Schema({
   data: { type: Object, default: {} },
 }, { timestamps: true });
 
-// ✅ اجعل combination من businessId + phoneNumber فريدdsfsefsfe
+// ✅ اجعل combination من businessId + phoneNumber فريد
 conversationStateSchema.index({ businessId: 1, phoneNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model('ConversationState', conversationStateSchema);
