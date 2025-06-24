@@ -4,7 +4,7 @@ const cors = require('cors');
 const connectToMongo = require('./db');
 const Business = require('./models/Business');
 const ConversationState = require('./models/ConversationState');
-const { sendMessage, sendMenu } = require('./utils/sendMessage');
+const { sendMessage, sendMainMenu, sendServiceMenuTemplate} = require('./utils/sendMessage');
 const { getReply } = require('./utils/getReply');
 const { sendListPicker } = require('./utils/sendListPicker');
 const handleBookingFlow = require('./bookingFlow/handleBookingFlow');
@@ -102,7 +102,7 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(204);
     }
     if (text.toLowerCase() === 'menu') {
-      await sendMenu(from, business); // ← أو sendListPicker لو تحب تبدأ بها
+      await sendMainMenu(from, business); // ← أو sendListPicker لو تحب تبدأ بها
       return res.sendStatus(200);
     }
 
@@ -111,6 +111,8 @@ app.post("/webhook", async (req, res) => {
       state.step = 'selectService';
       state.data = {};
       await state.save();
+      await sendServiceMenuTemplate(from);
+
 
       const services = business.services || [];
       const rows = services.map((s, i) => ({
@@ -120,96 +122,9 @@ app.post("/webhook", async (req, res) => {
       }));
 
       console.log('📦 Payload:', payload);
-      await sendListPicker('972587400656', business, {
-        header: 'اختر الخدمة',
-        body: 'يرجى اختيار الخدمة التي تريد حجزها:',
-        buttonText: 'الخدمات المتاحة',
-        rows:[
-          { id: '1', title: 'خدمة 1', description: 'وصف الخدمة 50 ILS' },
-          { id: '2', title: 'خدمة 2', description: 'وصف الخدمة 100ILS' },
-          { id: '3', title: 'خدمة 3', description: 'وصف الخدمة 3' }
-        ]
-      });
+      
       return res.sendStatus(204);
     }
-
-    if (state.mode === 'booking' && state.step === 'selectService' && payload.startsWith('service_')) {
-      const index = parseInt(payload.replace('service_', ''));
-      const selectedService = business.services[index];
-      state.step = 'selectDay';
-      state.data.service = selectedService;
-      await state.save();
-
-      const days = getNext7Days();
-      const rows = days.map(day => ({
-        id: `day_${day.value}`,
-        title: day.label,
-        description: ''
-      }));
-
-      await sendListPicker(from, business, {
-        header: 'اختر اليوم',
-        body: `الخدمة: ${selectedService.name}
-اختر اليوم:`,
-        buttonText: 'اختر يوم',
-        rows
-      });
-      return res.sendStatus(204);
-    }
-
-    if (state.mode === 'booking' && state.step === 'selectDay' && payload.startsWith('day_')) {
-      const date = payload.replace('day_', '');
-      state.step = 'selectHour';
-      state.data.selectedDate = date;
-      await state.save();
-
-      const hours = getAvailableHours(date, business);
-      const rows = hours.map(h => ({
-        id: `hour_${h}`,
-        title: h,
-        description: ''
-      }));
-
-      await sendListPicker(from, business, {
-        header: 'اختر الساعة',
-        body: `اليوم: ${date}`,
-        buttonText: 'اختر ساعة',
-        rows
-      });
-      return res.sendStatus(204);
-    }
-
-    if (state.mode === 'booking' && state.step === 'selectHour' && payload.startsWith('hour_')) {
-      const hour = payload.replace('hour_', '');
-      const { selectedDate, service } = state.data;
-
-      const exists = await Booking.findOne({ businessId: business._id, date: selectedDate, hour });
-      if (exists) {
-        await sendMessage(from, '❌ هذا الموعد محجوز مسبقًا. اختر وقتًا آخر.', business);
-        return res.sendStatus(204);
-      }
-
-      await Booking.create({
-        businessId: business._id,
-        phoneNumber: from,
-        date: selectedDate,
-        hour,
-        service: service.name
-      });
-
-      await sendMessage(from, `🎉 تم تأكيد حجزك!
-      الخدمة: ${service.name}
-      📅 التاريخ: ${selectedDate}
-      ⏰ الساعة: ${hour}`, business);
-
-      state.mode = 'gpt';
-      state.step = 'menu';
-      state.data = {};
-      await state.save();
-
-      return res.sendStatus(204);
-    }
-
     return res.sendStatus(204);
   } catch (err) {
     console.error('❌ Webhook error:', err);

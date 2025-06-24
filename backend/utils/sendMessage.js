@@ -20,8 +20,8 @@ async function sendMessage(to, text, business) {
   }
 }
 
-// — Send interactive menu with buttonsuhgiuhiuhiuhiuhiuh
-async function sendMenu(to, business) {
+// — Send interactive menu with 3 options (bookings, location , info)
+async function sendMainMenu(to, business) {
   try {
     if (business.whatsappType === 'twilio') {
       await twilioClient.messages.create({
@@ -39,5 +39,21 @@ async function sendMenu(to, business) {
     console.error('❌ sendMenu error:', err.message);
   }
 }
+// — Send interactive menu with buttonsuhgiuhiuhiuhiuhiuh
 
-module.exports = { sendMessage, sendMenu };
+async function sendServiceMenuTemplate(toPhoneNumber) {
+  try {
+    await client.messages.create({
+      from: 'whatsapp:+YOUR_TWILIO_NUMBER',  // عدل الرقم هنا
+      to: `whatsapp:${toPhoneNumber}`,
+      contentSid: 'HX68f89e0768cf19045916ffd5c64dffc1', // SID للقالب الجديد
+      contentVariables: JSON.stringify({})
+    });
+
+    console.log('✅ تم إرسال قالب اختيار الخدمة');
+  } catch (err) {
+    console.error('❌ فشل في إرسال قالب اختيار الخدمة:', err.message);
+  }
+}
+
+module.exports = { sendMessage, sendMainMenu, sendServiceMenuTemplate };
