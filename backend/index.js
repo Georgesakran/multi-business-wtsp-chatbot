@@ -4,12 +4,13 @@ const cors = require('cors');
 const connectToMongo = require('./db');
 const Business = require('./models/Business');
 const ConversationState = require('./models/ConversationState');
-const { sendMessage, sendMenu } = require('./utils/sendMessage');
+const { sendMessage, sendMenu, getNext7Days } = require('./utils/sendMessage');
 const { getReply } = require('./utils/getReply');
 const handleBookingFlow = require('./bookingFlow/handleBookingFlow');
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const bookingsRoutes = require("./routes/bookingsRoutes");
 
 const app = express();
 
@@ -32,7 +33,8 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/auth", authRoutes);
   app.use("/api/businesses", businessRoutes);
   app.use("/api/admin", adminRoutes);
-  
+  app.use("/api/bookings", bookingsRoutes);
+
 app.get('/webhook', async (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -45,10 +47,32 @@ app.get('/webhook', async (req, res) => {
   return res.sendStatus(403);
 });
 
+
+const getNext7Days = () => {
+  const days = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const dayLabel = date.toLocaleDateString('ar-EG', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'numeric'
+    });
+    days.push({
+      label: dayLabel,
+      value: date.toISOString().split('T')[0]
+    });
+  }
+  return days;
+};
+const getAvailableHours = (date, business) => {
+  // Static example – ideally pull from business config
+  return ['09:00', '10:00', '11:00', '12:00', '15:00', '17:00'];
+};
+
 app.post("/webhook", async (req, res) => {
   try {
-    console.log('---Webhook POST received---');
-
     const isTwilio = !!req.body.Body && !!req.body.From;
     let from, to, text, business, payload;
 
@@ -57,35 +81,13 @@ app.post("/webhook", async (req, res) => {
       to = req.body.To.replace('whatsapp:', '');
       text = req.body.Body?.trim();
       payload = req.body.ListPickerResponseId || req.body.ButtonPayload || text;
-
       business = await Business.findOne({ whatsappNumber: to });
-      if (!business) {
-        console.log("⚠️ Business not found for Twilio number");
-        return res.sendStatus(204);
-      }
-    } else {
-      const value = req.body.entry?.[0]?.changes?.[0]?.value;
-      const message = value?.messages?.[0];
-      from = message?.from;
-      text = message?.text?.body?.trim();
-      payload = message?.button?.payload || text;
-      const phoneNumberId = value?.metadata?.phone_number_id;
-
-      business = await Business.findOne({ phoneNumberId });
-      if (!business) {
-        console.log("⚠️ Business not found for Meta phoneNumberId");
-        return res.sendStatus(204);
-      }
     }
 
-    if (!text && !payload) {
-      console.log('⚠️ Non-text and non-interactive message received');
-      return res.sendStatus(204);
-    }
+    if (!from || !business) return res.sendStatus(204);
 
     let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
 
-    // 🟡 New conversation
     if (!state) {
       state = await ConversationState.create({
         businessId: business._id,
@@ -94,24 +96,10 @@ app.post("/webhook", async (req, res) => {
         mode: 'gpt',
         data: {}
       });
-
-      await sendMenu(from, business);
+      await sendMessage(from, "👋 مرحبًا! اكتب 'menu' للخيارات.", business);
       return res.sendStatus(204);
     }
 
-    // 🔁 If in booking flow
-    if (state.mode === 'booking') {
-      await handleBookingFlow(req, res, state, text, from, business);
-      return;
-    }
-
-    // 📌 Menu keywords (manual)
-    if (/menu|options|خيارات|قائمة|رجوع/i.test(payload)) {
-      await sendMenu(from, business);
-      return res.sendStatus(204);
-    }
-
-    // 📌 Handle List Picker or Button payloads
     if (payload === 'booking_option') {
       state.mode = 'booking';
       state.step = 'selectService';
@@ -119,59 +107,101 @@ app.post("/webhook", async (req, res) => {
       await state.save();
 
       const services = business.services || [];
-      if (services.length === 0) {
-        await sendMessage(from, "عذرًا، لا توجد خدمات متاحة حالياً.", business);
+      const rows = services.map((s, i) => ({
+        id: `service_${i}`,
+        title: s.name,
+        description: `${s.price}₪`
+      }));
+
+      await sendListPicker(from, business, {
+        header: '💅 اختر الخدمة',
+        body: 'يرجى اختيار الخدمة التي تريد حجزها:',
+        buttonText: 'اختر خدمة',
+        rows
+      });
+      return res.sendStatus(204);
+    }
+
+    if (state.mode === 'booking' && state.step === 'selectService' && payload.startsWith('service_')) {
+      const index = parseInt(payload.replace('service_', ''));
+      const selectedService = business.services[index];
+      state.step = 'selectDay';
+      state.data.service = selectedService;
+      await state.save();
+
+      const days = getNext7Days();
+      const rows = days.map(day => ({
+        id: `day_${day.value}`,
+        title: day.label,
+        description: ''
+      }));
+
+      await sendListPicker(from, business, {
+        header: '🗓️ اختر اليوم',
+        body: `الخدمة: ${selectedService.name}
+اختر اليوم:`,
+        buttonText: 'اختر يوم',
+        rows
+      });
+      return res.sendStatus(204);
+    }
+
+    if (state.mode === 'booking' && state.step === 'selectDay' && payload.startsWith('day_')) {
+      const date = payload.replace('day_', '');
+      state.step = 'selectHour';
+      state.data.selectedDate = date;
+      await state.save();
+
+      const hours = getAvailableHours(date, business);
+      const rows = hours.map(h => ({
+        id: `hour_${h}`,
+        title: h,
+        description: ''
+      }));
+
+      await sendListPicker(from, business, {
+        header: '⏰ اختر الساعة',
+        body: `اليوم: ${date}`,
+        buttonText: 'اختر ساعة',
+        rows
+      });
+      return res.sendStatus(204);
+    }
+
+    if (state.mode === 'booking' && state.step === 'selectHour' && payload.startsWith('hour_')) {
+      const hour = payload.replace('hour_', '');
+      const { selectedDate, service } = state.data;
+
+      const exists = await Booking.findOne({ businessId: business._id, date: selectedDate, hour });
+      if (exists) {
+        await sendMessage(from, '❌ هذا الموعد محجوز مسبقًا. اختر وقتًا آخر.', business);
         return res.sendStatus(204);
       }
 
-      let msg = 'يرجى اختيار الخدمة بكتابة الرقم:\n';
-      services.forEach((s, i) => {
-        msg += `${i + 1}. ${s.name} - ${s.price}₪\n`;
+      await Booking.create({
+        businessId: business._id,
+        phoneNumber: from,
+        date: selectedDate,
+        hour,
+        service: service.name
       });
 
-      await sendMessage(from, msg, business);
-      return res.sendStatus(204);
-    }
+      await sendMessage(from, `🎉 تم تأكيد حجزك!
+      الخدمة: ${service.name}
+      📅 التاريخ: ${selectedDate}
+      ⏰ الساعة: ${hour}`, business);
 
-    if (payload === 'location_option') {
-      await sendMessage(from, `📍 موقعنا: ${business.location}`, business);
-      return res.sendStatus(204);
-    }
-
-    if (payload === 'info_option') {
-      await sendMessage(from, `ℹ️ ساعات العمل: ${business.hours}`, business);
-      return res.sendStatus(204);
-    }
-
-    // 📌 Booking trigger from text
-    if (/booking|book|reserve|حجز|予約|בְּרִירָה/i.test(payload)) {
-      state.mode = 'booking';
-      state.step = 'selectService';
+      state.mode = 'gpt';
+      state.step = 'menu';
       state.data = {};
       await state.save();
 
-      const services = business.services || [];
-      if (services.length === 0) {
-        await sendMessage(from, "عذرًا، لا توجد خدمات متاحة حالياً.", business);
-        return res.sendStatus(204);
-      }
-
-      let msg = 'يرجى اختيار الخدمة بكتابة الرقم:\n';
-      services.forEach((s, i) => {
-        msg += `${i + 1}. ${s.name} - ${s.price}₪\n`;
-      });
-
-      await sendMessage(from, msg, business);
       return res.sendStatus(204);
     }
 
-    // 🧠 Default GPT response
-    const reply = await getReply(text, business, from);
-    await sendMessage(from, reply, business);
     return res.sendStatus(204);
-
-  } catch (error) {
-    console.error('❌ Webhook error:', error);
+  } catch (err) {
+    console.error('❌ Webhook error:', err);
     return res.sendStatus(500);
   }
 });
