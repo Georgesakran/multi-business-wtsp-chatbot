@@ -53,6 +53,7 @@ async function sendServiceMenuTemplate(to, business) {
       contentVariables[(index + 2).toString()] = `service_${i}`; // or service._id
       contentVariables[(index + 3).toString()] = `${service.price}₪` || '';
     });
+    console.log('📦 Services:', services);
 
     // Fill the rest with empty strings
     for (let i = services.length * 3 + 1; i <= 30; i++) {
