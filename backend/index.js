@@ -51,6 +51,7 @@ app.get('/webhook', async (req, res) => {
 
 
 app.post("/webhook", async (req, res) => {
+  console.log('📥 Webhook received:', JSON.stringify(req.body, null, 2));
   const getNext7Days = () => {
     const days = [];
     const today = new Date();
