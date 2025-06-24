@@ -119,6 +119,7 @@ app.post("/webhook", async (req, res) => {
         description: `${s.price}₪`
       }));
 
+      console.log('📦 Payload:', payload);
       await sendListPicker('972587400656', business, {
         header: 'اختر الخدمة',
         body: 'يرجى اختيار الخدمة التي تريد حجزها:',
