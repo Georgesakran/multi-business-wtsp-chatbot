@@ -43,16 +43,21 @@ async function sendMainMenu(to, business) {
 
 async function sendServiceMenuTemplate(to, business) {
   try {
-    const services = business.services.slice(0, 10); // max 10 services
+    const services = business.services.slice(0, 10); // Max 10 services
     const contentVariables = {};
 
-    // Fill variables dynamically: 3 per service
+    // Add real service data
     services.forEach((service, i) => {
       const index = i * 3;
-      contentVariables[(index + 1).toString()] = service.name;
+      contentVariables[(index + 1).toString()] = service.name || 'خدمة';
       contentVariables[(index + 2).toString()] = `service_${i}`; // or service._id
-      contentVariables[(index + 3).toString()] = `${service.price}₪`;
+      contentVariables[(index + 3).toString()] = `${service.price}₪` || '';
     });
+
+    // Fill the rest with empty strings
+    for (let i = services.length * 3 + 1; i <= 30; i++) {
+      contentVariables[i.toString()] = ' ';
+    }
 
     await twilioClient.messages.create({
       from: `whatsapp:${business.whatsappNumber}`,
