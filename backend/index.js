@@ -7,6 +7,9 @@ const ConversationState = require('./models/ConversationState');
 const { sendMessage, sendMenu } = require('./utils/sendMessage');
 const { getReply } = require('./utils/getReply');
 const handleBookingFlow = require('./bookingFlow/handleBookingFlow');
+const authRoutes = require("./routes/authRoutes");
+const businessRoutes = require("./routes/businessRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -21,8 +24,15 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-connectToMongo();
 
+  // ✅ Now connect to DB
+  connectToMongo();
+
+  // ✅ Routes
+  app.use("/api/auth", authRoutes);
+  app.use("/api/businesses", businessRoutes);
+  app.use("/api/admin", adminRoutes);
+  
 app.get('/webhook', async (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
