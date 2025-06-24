@@ -57,7 +57,7 @@ async function sendServiceMenuTemplate(to, business) {
     await twilioClient.messages.create({
       from: `whatsapp:${business.whatsappNumber}`,
       to: `whatsapp:${to}`,
-      contentSid: 'HX68f89e0768cf19045916ffd5c64dffc1', // your list template SID
+      contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91', // your list template SID
       contentVariables: JSON.stringify(contentVariables),
     });
 
