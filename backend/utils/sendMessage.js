@@ -62,11 +62,11 @@ async function sendServiceMenuTemplate(to, business) {
     await twilioClient.messages.create({
       from: `whatsapp:${business.whatsappNumber}`,
       to: `whatsapp:${to}`,
-      contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91', // your list template SID
+      contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91', // your template SID
       contentVariables: JSON.stringify(contentVariables),
     });
 
-    console.log('✅ تم إرسال قائمة الخدمات بـ dynamic content');
+    console.log('✅ تم إرسال قائمة الخدمات بـ fallback للفراغات');
   } catch (err) {
     console.error('❌ فشل في إرسال قائمة الخدمات:', err.message);
   }

@@ -113,7 +113,6 @@ app.post("/webhook", async (req, res) => {
       await state.save();
       await sendServiceMenuTemplate(from, business);
 
-
       const services = business.services || [];
       const rows = services.map((s, i) => ({
         id: `service_${i}`,
