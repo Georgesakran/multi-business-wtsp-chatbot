@@ -115,11 +115,15 @@ app.post("/webhook", async (req, res) => {
         description: `${s.price}₪`
       }));
 
-      await sendListPicker(from, business, {
-        header: '💅 اختر الخدمة',
+      await sendListPicker('972587400656', business, {
+        header: 'اختر الخدمة',
         body: 'يرجى اختيار الخدمة التي تريد حجزها:',
-        buttonText: 'اختر خدمة',
-        rows
+        buttonText: 'الخدمات المتاحة',
+        rows:[
+          { id: '1', title: 'خدمة 1', description: 'وصف الخدمة 50 ILS' },
+          { id: '2', title: 'خدمة 2', description: 'وصف الخدمة 100ILS' },
+          { id: '3', title: 'خدمة 3', description: 'وصف الخدمة 3' }
+        ]
       });
       return res.sendStatus(204);
     }
@@ -139,7 +143,7 @@ app.post("/webhook", async (req, res) => {
       }));
 
       await sendListPicker(from, business, {
-        header: '🗓️ اختر اليوم',
+        header: 'اختر اليوم',
         body: `الخدمة: ${selectedService.name}
 اختر اليوم:`,
         buttonText: 'اختر يوم',
@@ -162,7 +166,7 @@ app.post("/webhook", async (req, res) => {
       }));
 
       await sendListPicker(from, business, {
-        header: '⏰ اختر الساعة',
+        header: 'اختر الساعة',
         body: `اليوم: ${date}`,
         buttonText: 'اختر ساعة',
         rows
