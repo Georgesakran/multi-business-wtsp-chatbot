@@ -103,7 +103,7 @@ app.post("/webhook", async (req, res) => {
     }
     if (text.toLowerCase() === 'menu') {
       await sendMainMenu(from, business); // ← أو sendListPicker لو تحب تبدأ بها
-      return res.sendStatus(200);
+      return res.sendStatus(204);
     }
 
     if (payload === 'booking_option') {
@@ -111,7 +111,7 @@ app.post("/webhook", async (req, res) => {
       state.step = 'selectService';
       state.data = {};
       await state.save();
-      await sendServiceMenuTemplate(from);
+      await sendServiceMenuTemplate(from, business);
 
 
       const services = business.services || [];
