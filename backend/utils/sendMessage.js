@@ -43,7 +43,7 @@ async function sendMainMenu(to, business) {
 
 async function sendServiceMenuTemplate(to, business) {
   try {
-    const services = business.services.slice(0, 10); // Max 10 services
+    const services = business.services.slice(1, 10); // Max 10 services
     const contentVariables = {};
 
     // Add real service data
