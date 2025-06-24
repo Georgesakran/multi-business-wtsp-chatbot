@@ -76,7 +76,7 @@ async function sendMainMenu(to, business) {
 await twilioClient.messages.create({
   from: `whatsapp:${business.whatsappNumber}`,
   to: `whatsapp:${to}`,
-  contentSid: 'HX68f89e0768cf19045916ffd5c64dffc1',
+  contentSid: 'HX3d0bbe05f825bca4602f36a76fbf3a91',
   contentVariables: JSON.stringify({
     "1": "Nail Polish",
     "2": "service_0",
