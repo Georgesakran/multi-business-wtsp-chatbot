@@ -46,4 +46,21 @@ router.post("/NewBusiness", async (req, res) => {
   }
 });
 
+router.put("/reset-password/:username", async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const updated = await Business.findOneAndUpdate(
+      { username: req.params.username },
+      { password: hashed }
+    );
+
+    if (!updated) return res.status(404).json({ error: "Business not found" });
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    console.error("Reset error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
