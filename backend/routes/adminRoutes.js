@@ -32,9 +32,27 @@ router.post("/NewBusiness", async (req, res) => {
       nameArabic,
       nameHebrew,
       whatsappNumber,
+      phoneNumberId:"",
+      verifyToken:"",
+      accessToken:"",
       language,
-      businessType,
-      enabledServices,
+      businessType: req.body.businessType || "booking",
+      enabledServices: req.body.enabledServices || [],
+      whatsappType: "twilio",
+      isActive: true,
+      config: {
+        booking: {
+          workingDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+          openingTime: "09:00",
+          closingTime: "17:00",
+          allowNotes: false,
+          slotGapMinutes: 15,
+        },
+        product: { allowPriceInquiry: false },
+        delivery: { requireAddress: false },
+        event: { eventList: [] },
+      },
+      services: [],
     });
 
     await newBusiness.save();

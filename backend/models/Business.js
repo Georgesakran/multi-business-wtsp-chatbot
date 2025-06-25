@@ -48,14 +48,6 @@ const businessSchema = new mongoose.Schema({
   services: [serviceSchema],
 
   // Business working schedule
-  workingDays: {
-    type: [String],
-    default: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
-  },
-  workingHours: {
-    start: { type: String, default: "09:00" }, // e.g. "09:00"
-    end: { type: String, default: "17:00" },   // e.g. "17:00"
-  },
   closedDates: {
     type: [String], // Specific dates the business is closed (YYYY-MM-DD)
     default: [],
