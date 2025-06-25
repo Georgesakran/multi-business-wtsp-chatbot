@@ -28,3 +28,26 @@
   .bookings-table tr:hover {
     background-color: #f0f8ff;
   }
+
+  .bookings-table button {
+    margin-left: 5px;
+    padding: 4px 8px;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .bookings-table button:hover {
+    opacity: 0.8;
+  }
+  
+  .bookings-table button:nth-child(1) {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .bookings-table button:nth-child(2) {
+    background-color: #f44336;
+    color: white;
+  }
