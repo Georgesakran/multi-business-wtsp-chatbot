@@ -15,6 +15,7 @@ import BusinessesPage from "./pages/BusinessesPage";
 import AddBusinessPage from "./pages/AddBusinessPage";
 import OwnerSettingsPage from "./pages/OwnerSettingsPage";
 import HomePage from "./pages/HomePage";
+import BookingsPage from "./pages/BookingPage";
 import Layout from "./context/Layout";
 import "./styles/Global.css";
 
@@ -84,6 +85,14 @@ function AppContent() {
                 element={
                   <ProtectedRoute role="owner">
                     <OwnerSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+                  <Route
+                path="/owner/bookings"
+                element={
+                  <ProtectedRoute role="owner">
+                    <BookingsPage />
                   </ProtectedRoute>
                 }
               />

@@ -54,9 +54,9 @@ function Sidebar({ collapsed, setCollapsed, role }) {
 
   const ownerMenu = [
     { to: "/owner/Dashboard", label: { en: "Dashboard", ar: "لوحة التحكم", he: "לוח ניהול" }, icon: "🏠" },
-    { to: "/profile", label: { en: "Business Info", ar: "معلومات النشاط", he: "פרטי העסק" }, icon: "🏢" },
-    { to: "/services", label: { en: "Services", ar: "الخدمات", he: "שירותים" }, icon: "💈" },
-    { to: "/bookings", label: { en: "Bookings", ar: "الحجوزات", he: "הזמנות" }, icon: "📅" },
+    { to: "/owner/profile", label: { en: "Business Info", ar: "معلومات النشاط", he: "פרטי העסק" }, icon: "🏢" },
+    { to: "/owner/services", label: { en: "Services", ar: "الخدمات", he: "שירותים" }, icon: "💈" },
+    { to: "/owner/bookings", label: { en: "Bookings", ar: "الحجوزات", he: "הזמנות" }, icon: "📅" },
     { to: "/logout", label: { en: "Logout", ar: "تسجيل الخروج", he: "התנתק" }, icon: "🚪" },
   ];
 
