@@ -43,4 +43,34 @@ router.put("/update-status/:bookingId", async (req, res) => {
   }
 });
 
+// POST /bookings - Owner manually adds a booking
+router.post("/", async (req, res) => {
+  const {
+    businessId,
+    customerName,
+    customerPhone,
+    service,
+    date,
+    time,
+    status
+  } = req.body;
+
+  try {
+    const newBooking = new Booking({
+      businessId,
+      customerName,
+      customerPhone,
+      service,
+      date,
+      time,
+      status: status || "pending",
+    });
+
+    await newBooking.save();
+    res.status(201).json({ message: "✅ Booking added successfully", booking: newBooking });
+  } catch (err) {
+    console.error("❌ Error creating booking:", err);
+    res.status(500).json({ error: "Failed to create booking" });
+  }
+});
 module.exports = router;
