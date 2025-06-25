@@ -15,7 +15,7 @@ const businessSchema = new mongoose.Schema({
   nameArabic: String,
   nameHebrew: String, 
   businessName: String,
-  busineessType: {
+  businessType: {
     type: String,
     enum: ["booking","product","mixed","info","event","delievery"],
     required: true,
@@ -23,7 +23,7 @@ const businessSchema = new mongoose.Schema({
   
   whatsappNumber: { type: String, required: true },
 
-  features:[String], // e.g. ["booking", "catalog", "faq",]
+  enabledServices: [String], // e.g. ["booking", "catalog", "faq",]
   services: [serviceSchema], // array of services offered by the business
   config: {
     booking: {

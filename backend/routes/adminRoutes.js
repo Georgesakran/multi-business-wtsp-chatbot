@@ -18,9 +18,9 @@ router.post("/NewBusiness", async (req, res) => {
   } = req.body;
 
   try {
-    const existing = await Business.findOne({ username });
-    if (existing) {
-      return res.status(400).json({ error: "Username already exists" });
+    const whatsappNumberexisting = await Business.findOne({ whatsappNumber });
+    if (whatsappNumberexisting) {
+      return res.status(400).json({ error: "whatsappNumber already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
