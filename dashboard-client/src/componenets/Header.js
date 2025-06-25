@@ -40,7 +40,7 @@ const PAGE_TITLES = {
     arabic: "الحجوزات",
     hebrew: "הזמנות",
   },
-  "/settings": {
+  "/owner/settings": {
     english: "Settings",
     arabic: "الإعدادات",
     hebrew: "הגדרות",
@@ -71,7 +71,7 @@ function Header() {
   };
 
   const handleSettingsClick = () => {
-    navigate("/settings");
+    navigate("/owner/settings");
   };
 
   const currentPath = location.pathname;
