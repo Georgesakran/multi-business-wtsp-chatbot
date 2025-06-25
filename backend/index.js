@@ -14,7 +14,7 @@ const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const bookingsRoutes = require("./routes/bookingsRoutes");
-const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
+//const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
 
 const app = express();
 
@@ -54,12 +54,12 @@ app.get('/webhook', async (req, res) => {
 
 
 
-app.post("/webhook", async (req, res) => {
+// app.post("/webhook", async (req, res) => {
 
-  // inside your webhook POST logic:
-  await handleChatbotEntryPoint(text, business);
+//   // inside your webhook POST logic:
+//   await handleChatbotEntryPoint(text, business);
 
-});
+// });
 
 
 
