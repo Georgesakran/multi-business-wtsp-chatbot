@@ -32,10 +32,11 @@ const AddBusinessPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
-
+  
     try {
       const res = await axios.post("/admin/NewBusiness", form);
-      const data = await res.json();
+      const data = res.data;
+  
       if (res.status === 200 || res.status === 201) {
         setMessage("✅ Business added successfully");
         setForm({
@@ -50,10 +51,10 @@ const AddBusinessPage = () => {
           enabledServices: [],
         });
       } else {
-        setMessage(`❌ Error: ${data.error}`);
+        setMessage(`❌ Error: ${data.error || "Unknown error"}`);
       }
     } catch (err) {
-      setMessage("❌ Server error");
+      setMessage(`❌ Server error: ${err.response?.data?.error || err.message}`);
     }
   };
 

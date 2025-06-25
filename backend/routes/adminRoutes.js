@@ -1,5 +1,3 @@
-// routes/adminRoutes.js
-
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
@@ -14,10 +12,9 @@ router.post("/NewBusiness", async (req, res) => {
     nameArabic,
     nameHebrew,
     whatsappNumber,
-    phoneNumberId,
-    verifyToken,
-    accessToken,
-    language
+    language,
+    businessType,
+    enabledServices
   } = req.body;
 
   try {
@@ -35,17 +32,16 @@ router.post("/NewBusiness", async (req, res) => {
       nameArabic,
       nameHebrew,
       whatsappNumber,
-      phoneNumberId,
-      verifyToken,     // ✅ save it
-      accessToken,     // ✅ save it
-      language
+      language,
+      businessType,
+      enabledServices,
     });
 
     await newBusiness.save();
-    res.status(201).json({ message: "Business added" });
+    res.status(201).json({ message: "✅ Business added successfully" });
 
   } catch (err) {
-    console.error("Failed to add business:", err);
+    console.error("❌ Failed to add business:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
