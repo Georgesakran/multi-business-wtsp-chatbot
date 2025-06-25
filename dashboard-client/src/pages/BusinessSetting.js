@@ -18,8 +18,8 @@ const BusinessSettings = ({ businessId }) => {
         const config = res.data.config?.booking || {};
 
         setWorkingDays(config.workingDays || []);
-        setOpeningTime(config.openingTime || "");
-        setClosingTime(config.closingTime || "");
+        setOpeningTime(config.openingTime ?? "");
+        setClosingTime(config.closingTime ?? "");
       } catch (err) {
         console.error("❌ Error fetching settings:", err.message);
         setMessage("❌ Failed to load settings");
