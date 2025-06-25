@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import "../styles/Header.css";
 import { LanguageContext } from "../context/LanguageContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const LANGUAGES = [
   { code: "english", label: "English" },
@@ -9,7 +9,7 @@ const LANGUAGES = [
   { code: "hebrew", label: "עברית" },
 ];
 
-const PAGE_TITLES = { 
+const PAGE_TITLES = {
   "/admin/Dashboard": {
     english: "Admin Dashboard",
     arabic: "لوحة التحكم",
@@ -31,75 +31,83 @@ const PAGE_TITLES = {
     hebrew: "פרטי העסק",
   },
   "/admin/add-business": {
-    english: "add-business",
-    arabic: "الخدمات",
-    hebrew: "שירותים",
+    english: "Add Business",
+    arabic: "إضافة عمل",
+    hebrew: "הוספת עסק",
   },
   "/bookings": {
     english: "Bookings",
     arabic: "الحجوزات",
     hebrew: "הזמנות",
   },
+  "/settings": {
+    english: "Settings",
+    arabic: "الإعدادات",
+    hebrew: "הגדרות",
+  },
 };
 
 function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const { language, setLanguage } = useContext(LanguageContext);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const toggleDropdown = () => setOpen(!open);
+
   const selectLang = (lang) => {
     localStorage.setItem("lang", lang);
     setLanguage(lang);
     setOpen(false);
   };
 
+  const handleSettingsClick = () => {
+    navigate("/settings");
+  };
+
   const currentPath = location.pathname;
   const title =
-    PAGE_TITLES[currentPath]?.[language] || PAGE_TITLES["/dashboard"][language];
+    PAGE_TITLES[currentPath]?.[language] || PAGE_TITLES["/dashboard"]?.[language];
 
   const isRTL = language === "arabic" || language === "hebrew";
 
   return (
-    <header
-      className={`header-bar ${isScrolled ? "scrolled" : ""} ${
-        isRTL ? "rtl" : "ltr"
-      }`}
-    >
+    <header className={`header-bar ${isScrolled ? "scrolled" : ""} ${isRTL ? "rtl" : "ltr"}`}>
       <h1 className="page-title">{title}</h1>
 
-      <div className="lang-selector">
-        <div className="lang-current" onClick={toggleDropdown}>
-          🌐 {LANGUAGES.find((l) => l.code === language).label}
-        </div>
+      <div className="header-actions">
+        <button className="settings-button" onClick={handleSettingsClick}>
+          ⚙️ {language === "arabic" ? "الإعدادات" : language === "hebrew" ? "הגדרות" : "Settings"}
+        </button>
 
-        {open && (
-          <ul className={`lang-dropdown ${isRTL ? "rtl-drop" : ""}`}>
-            {LANGUAGES.map((lang) => (
-              <li
-                key={lang.code}
-                className={lang.code === language ? "active" : ""}
-                onClick={() => selectLang(lang.code)}
-              >
-                {lang.label}
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="lang-selector">
+          <div className="lang-current" onClick={toggleDropdown}>
+            🌐 {LANGUAGES.find((l) => l.code === language).label}
+          </div>
+
+          {open && (
+            <ul className={`lang-dropdown ${isRTL ? "rtl-drop" : ""}`}>
+              {LANGUAGES.map((lang) => (
+                <li
+                  key={lang.code}
+                  className={lang.code === language ? "active" : ""}
+                  onClick={() => selectLang(lang.code)}
+                >
+                  {lang.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </header>
   );

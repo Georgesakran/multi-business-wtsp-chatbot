@@ -39,4 +39,25 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+router.put("/update-settings/:id", async (req, res) => {
+  try {
+    const businessId = req.params.id;
+    const { workingDays, openingTime, closingTime } = req.body;
+
+    const business = await Business.findById(businessId);
+    if (!business) return res.status(404).json({ error: "Business not found" });
+
+    business.config.booking.workingDays = workingDays;
+    business.config.booking.openingTime = openingTime;
+    business.config.booking.closingTime = closingTime;
+
+    await business.save();
+    res.status(200).json({ message: "Settings updated", business });
+  } catch (err) {
+    console.error("Update settings error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 module.exports = router;
