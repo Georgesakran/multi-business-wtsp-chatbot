@@ -3,10 +3,8 @@ import React from "react";
 import BusinessSettings from "../componenets/BusinessSettings"; // adjust path if needed
 
 const OwnerSettingsPage = () => {
-  const ownerData = JSON.parse(localStorage.getItem("ownerData")); // or whatever key you used
+  const ownerData = JSON.parse(localStorage.getItem("user")); // or whatever key you used
   const businessId = ownerData?.businessId;
-  console.log("Business ID:", businessId);
-  console.log("Owner Data:", ownerData);
 
   if (!businessId) {
     return <p>❌ No business ID found. Please log in again.</p>;
