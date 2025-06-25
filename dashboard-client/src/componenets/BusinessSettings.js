@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "../services/api";
+import "../styles/BusinessSettings.css"; // adjust path if needed
 
 
 // This component allows business owners to manage their booking settings

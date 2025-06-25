@@ -1,0 +1,127 @@
+/* BusinessSettings.css */
+
+.settings-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 25px;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+    font-family: "Segoe UI", sans-serif;
+    transition: 0.3s ease-in-out;
+  }
+  
+  .settings-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.8rem;
+    color: #2c3e50;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  form label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+    color: #34495e;
+    font-size: 1rem;
+  }
+  
+  .day-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+  }
+  
+  .day-selector label {
+    display: flex;
+    align-items: center;
+    background-color: #f1f2f6;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95rem;
+    color: #2f3542;
+    border: 1px solid transparent;
+    transition: 0.2s;
+  }
+  
+  .day-selector input {
+    margin-right: 6px;
+  }
+  
+  .day-selector label:hover {
+    border-color: #74b9ff;
+  }
+  
+  input[type="time"] {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    color: #2d3436;
+  }
+  
+  button[type="submit"] {
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 14px 0;
+    width: 100%;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  button[type="submit"]:hover {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
+  
+  .message {
+    margin-top: 15px;
+    font-weight: 500;
+    text-align: center;
+    font-size: 1rem;
+  }
+  
+  /* 🌐 Responsive styles for mobile */
+  @media (max-width: 600px) {
+    .settings-container {
+      margin: 20px 15px;
+      padding: 20px;
+      border-radius: 12px;
+    }
+  
+    .settings-container h2 {
+      font-size: 1.5rem;
+    }
+  
+    .day-selector {
+      gap: 8px;
+    }
+  
+    .day-selector label {
+      font-size: 0.85rem;
+      padding: 8px 10px;
+    }
+  
+    button[type="submit"] {
+      font-size: 1rem;
+      padding: 12px 0;
+    }
+  
+    input[type="time"] {
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+  }

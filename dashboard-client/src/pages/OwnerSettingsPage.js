@@ -5,12 +5,11 @@ import BusinessSettings from "../componenets/BusinessSettings"; // adjust path i
 const OwnerSettingsPage = () => {
   const ownerData = JSON.parse(localStorage.getItem("user")); // or whatever key you used
   const businessId = ownerData?.businessId;
-
   if (!businessId) {
     return <p>❌ No business ID found. Please log in again.</p>;
   }
 
-  return <BusinessSettings businessId={businessId} />;
+  return <BusinessSettings BusinessId={businessId} />;
 };
 
 export default OwnerSettingsPage;
