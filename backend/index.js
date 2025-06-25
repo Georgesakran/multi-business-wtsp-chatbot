@@ -14,6 +14,8 @@ const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const bookingsRoutes = require("./routes/bookingsRoutes");
+const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
+
 const app = express();
 
 app.use(cors({
@@ -53,97 +55,10 @@ app.get('/webhook', async (req, res) => {
 
 
 app.post("/webhook", async (req, res) => {
-  console.log('📥 Webhook received:', JSON.stringify(req.body, null, 2));
-  const getNext7Days = () => {
-    const days = [];
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      const dayLabel = date.toLocaleDateString('ar-EG', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'numeric'
-      });
-      days.push({
-        label: dayLabel,
-        value: date.toISOString().split('T')[0]
-      });
-    }
-    return days;
-  };
 
-  try {
-    const isTwilio = !!req.body.Body && !!req.body.From;
-    let from, to, text, business, payload;
+  // inside your webhook POST logic:
+  await handleChatbotEntryPoint(text, business);
 
-    if (isTwilio) {
-      from = req.body.From.replace('whatsapp:', '');
-      to = req.body.To.replace('whatsapp:', '');
-      text = req.body.Body?.trim();
-      payload = req.body.ListPickerResponseId || req.body.ButtonPayload || text;
-      business = await Business.findOne({ whatsappNumber: to });
-    }
-
-    if (!from || !business) return res.sendStatus(204);
-
-    let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
-
-    if (!state) {
-      state = await ConversationState.create({
-        businessId: business._id,
-        phoneNumber: from,
-        step: 'menu',
-        mode: 'gpt',
-        data: {}
-      });
-      await sendMessage(from, "👋 مرحبًا! اكتب 'menu' للخيارات.", business);
-      return res.sendStatus(204);
-    }
-    if (text.toLowerCase() === 'menu') {
-      await sendMainMenu(from, business); // ← أو sendListPicker لو تحب تبدأ بها
-      return res.sendStatus(204);
-    }
-
-    if (payload === 'booking_option') {
-      state.mode = 'booking';
-      state.step = 'selectService';
-      state.data = {};
-      await state.save();
-      await sendServiceMenuTemplate(from, business);
-
-      const services = business.services || [];
-      const rows = services.map((s, i) => ({
-        id: `service_${i}`,
-        title: s.name,
-        description: `${s.price}₪`
-      }));
-
-      console.log('📦 Payload:', payload);
-      
-      return res.sendStatus(204);
-
-      
-    }
-    if (payload.startsWith('service_')) {
-      state.step = 'selectDay';
-      state.data.serviceId = payload; // أو احفظ اسم الخدمة إذا تريد لاحقًا
-      await state.save();
-    
-      await sendDayPickerTemplate(from, business);
-      console.log('✅ تم إرسال قالب الأيام بعد اختيار الخدمة');
-      return res.sendStatus(204);
-    }
-
-
-
-
-
-    return res.sendStatus(204);
-  } catch (err) {
-    console.error('❌ Webhook error:', err);
-    return res.sendStatus(500);
-  }
 });
 
 
