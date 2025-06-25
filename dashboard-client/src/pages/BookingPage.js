@@ -5,7 +5,7 @@ import "../styles/BookingsPage.css";
 const BookingsPage = () => {
   const businessId = JSON.parse(localStorage.getItem("business"))?.businessId;
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -25,7 +25,7 @@ const BookingsPage = () => {
     } catch (err) {
       console.error("❌ Failed to load bookings:", err.message);
     } finally {
-      setLoading(false);
+      setLoading(true);
     }
   }, [businessId]);
 
