@@ -19,9 +19,21 @@ const BookingsPage = () => {
       }
     };
 
+
     fetchBookings();
   }, [businessId]);
-
+  const handleStatusChange = async (bookingId, newStatus) => {
+    try {
+      await axios.put(`/bookings/update-status/${bookingId}`, { status: newStatus });
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === bookingId ? { ...b, status: newStatus } : b
+        )
+      );
+    } catch (err) {
+      console.error("❌ Failed to update status:", err.message);
+    }
+  };
   if (loading) return <p>⏳ Loading bookings...</p>;
 
   return (
@@ -49,8 +61,15 @@ const BookingsPage = () => {
                 <td>{b.service}</td>
                 <td>{b.date}</td>
                 <td>{b.time}</td>
-                <td>{b.status}</td>
-              </tr>
+                <td>
+                  <strong>{b.status}</strong>
+                  {b.status === "pending" && (
+                    <>
+                      <button onClick={() => handleStatusChange(b._id, "confirmed")}>✅</button>
+                      <button onClick={() => handleStatusChange(b._id, "cancelled")}>❌</button>
+                    </>
+                  )}
+                </td>              </tr>
             ))}
           </tbody>
         </table>

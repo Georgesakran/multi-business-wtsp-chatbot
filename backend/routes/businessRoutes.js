@@ -18,7 +18,6 @@ router.get("/", auth, async (req, res) => {
 });
 
 // GET /api/businesses/:id - Get single business
-// GET /api/businesses/:id - Get single business
 router.get("/:id", async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
@@ -49,6 +48,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+  // PUT /api/businesses/:id - Update business settings working days and hours
 router.put("/update-settings/:id", async (req, res) => {
   try {
     const businessId = req.params.id;
