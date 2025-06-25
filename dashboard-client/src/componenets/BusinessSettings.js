@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "../services/api";
 
-const BusinessSettings = ({ businessId }) => {
+
+// This component allows business owners to manage their booking settings
+const BusinessSettings = ({ BusinessId }) => {
   const [workingDays, setWorkingDays] = useState([]);
   const [openingTime, setOpeningTime] = useState("");
   const [closingTime, setClosingTime] = useState("");
@@ -14,7 +16,7 @@ const BusinessSettings = ({ businessId }) => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get(`/businesses/${businessId}`);
+        const res = await axios.get(`/businesses/${BusinessId}`);
         const config = res.data.config?.booking || {};
 
         setWorkingDays(config.workingDays || []);
@@ -29,7 +31,7 @@ const BusinessSettings = ({ businessId }) => {
     };
 
     fetchSettings();
-  }, [businessId]);
+  }, [BusinessId]);
 
   const handleToggleDay = (day) => {
     setWorkingDays((prev) =>
@@ -46,7 +48,7 @@ const BusinessSettings = ({ businessId }) => {
     }
 
     try {
-      await axios.put(`/businesses/update-settings/${businessId}`, {
+      await axios.put(`/businesses/update-settings/${BusinessId}`, {
         workingDays,
         openingTime,
         closingTime,

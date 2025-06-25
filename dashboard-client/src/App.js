@@ -13,7 +13,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import BusinessesPage from "./pages/BusinessesPage";
 import AddBusinessPage from "./pages/AddBusinessPage";
-import BusinessSettings from "./pages/BusinessSetting";
+import OwnerSettingsPage from "./pages/OwnerSettingsPage";
 import HomePage from "./pages/HomePage";
 import Layout from "./context/Layout";
 import "./styles/Global.css";
@@ -83,7 +83,7 @@ function AppContent() {
                 path="/owner/settings"
                 element={
                   <ProtectedRoute role="owner">
-                    <BusinessSettings />
+                    <OwnerSettingsPage />
                   </ProtectedRoute>
                 }
               />
