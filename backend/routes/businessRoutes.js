@@ -18,13 +18,23 @@ router.get("/", auth, async (req, res) => {
 });
 
 // GET /api/businesses/:id - Get single business
-router.get('/:id', async (req, res) => {
+// GET /api/businesses/:id - Get single business
+router.get("/:id", async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
-    if (!business) return res.status(404).json({ error: 'Not found' });
+    if (!business) return res.status(404).json({ error: "Not found" });
+
+    // Ensure default structure to prevent frontend crash
+    if (!business.config) business.config = {};
+    if (!business.config.booking) business.config.booking = {};
+    if (!business.config.booking.workingDays) business.config.booking.workingDays = [];
+    if (!business.config.booking.openingTime) business.config.booking.openingTime = "";
+    if (!business.config.booking.closingTime) business.config.booking.closingTime = "";
+
     res.json(business);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error("❌ Failed to fetch business:", err.message);
+    res.status(500).json({ error: "Server error" });
   }
 });
   
@@ -58,6 +68,7 @@ router.put("/update-settings/:id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 
 module.exports = router;
