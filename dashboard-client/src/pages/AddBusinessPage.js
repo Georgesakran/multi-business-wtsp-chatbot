@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "../services/api";
 import "../styles/AddBusiness.css";
 
 const AddBusinessPage = () => {
@@ -33,14 +34,9 @@ const AddBusinessPage = () => {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5001/api/admin/NewBusiness", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
+      const res = await axios.post("/admin/NewBusiness", form);
       const data = await res.json();
-      if (res.ok) {
+      if (res.status === 200 || res.status === 201) {
         setMessage("✅ Business added successfully");
         setForm({
           username: "",
