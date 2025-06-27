@@ -16,6 +16,7 @@ import AddBusinessPage from "./pages/AddBusinessPage";
 import OwnerSettingsPage from "./pages/OwnerSettingsPage";
 import HomePage from "./pages/HomePage";
 import BookingsPage from "./pages/BookingPage";
+import CalendarView from "./pages/CalendarView";
 import Layout from "./context/Layout";
 import "./styles/Global.css";
 
@@ -88,11 +89,19 @@ function AppContent() {
                   </ProtectedRoute>
                 }
               />
-                  <Route
+              <Route
                 path="/owner/bookings"
                 element={
                   <ProtectedRoute role="owner">
                     <BookingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/owner/calendar"
+                element={
+                  <ProtectedRoute role="owner">
+                    <CalendarView />
                   </ProtectedRoute>
                 }
               />

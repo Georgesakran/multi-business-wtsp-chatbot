@@ -58,9 +58,7 @@
   }
   
   input[type="time"] {
-    width: 100%;
     padding: 12px 14px;
-    margin-bottom: 20px;
     font-size: 1rem;
     border: 1px solid #ddd;
     border-radius: 10px;

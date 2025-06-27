@@ -18,7 +18,7 @@
   line-height: 1.625;
   letter-spacing: 0.00938em;
   padding: 0 20px;
-  z-index: 1000;
+  z-index: 999;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -27,7 +27,6 @@
   background-color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
-
 
 
 .page-title {
@@ -67,4 +66,25 @@
 
 .lang-dropdown li:hover {
   background-color: #e0e0e0;
+}
+
+/* Header: Hamburger button for mobile */
+.hamburger-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+@media (max-width: 768px) {
+  .hamburger-toggle {
+    display: block;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+    margin-left: 10px;
+  }
 }

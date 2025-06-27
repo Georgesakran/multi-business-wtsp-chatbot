@@ -1,4 +1,3 @@
-// src/components/Layout.js
 import React from "react";
 import Sidebar from "../componenets/Sidebar";
 import Header from "../componenets/Header";
@@ -8,7 +7,7 @@ function Layout({ children, role, collapsed, setCollapsed }) {
     <div className="app-layout" style={{ display: "flex", flexDirection: "row" }}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} role={role} />
       <div style={{ flex: 1 }}>
-        <Header />
+        <Header setCollapsed={setCollapsed} />
         <div style={{ padding: "20px" }}>
           {children}
         </div>

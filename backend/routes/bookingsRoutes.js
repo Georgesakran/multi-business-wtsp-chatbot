@@ -48,7 +48,7 @@ router.post("/", async (req, res) => {
   const {
     businessId,
     customerName,
-    customerPhone,
+    phoneNumber,
     service,
     date,
     time,
@@ -59,7 +59,7 @@ router.post("/", async (req, res) => {
     const newBooking = new Booking({
       businessId,
       customerName,
-      customerPhone,
+      phoneNumber,
       service,
       date,
       time,
@@ -71,6 +71,30 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error("❌ Error creating booking:", err);
     res.status(500).json({ error: "Failed to create booking" });
+  }
+});
+
+// PUT /bookings/:id - Edit a booking
+router.put("/:id", async (req, res) => {
+  try {
+    const updated = await Booking.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Error updating booking:", err);
+    res.status(500).json({ error: "Failed to update booking" });
+  }
+});
+
+// DELETE /bookings/:id - Delete a booking
+router.delete("/:id", async (req, res) => {
+  try {
+    await Booking.findByIdAndDelete(req.params.id);
+    res.json({ message: "🗑️ Booking deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting booking:", err);
+    res.status(500).json({ error: "Failed to delete booking" });
   }
 });
 module.exports = router;

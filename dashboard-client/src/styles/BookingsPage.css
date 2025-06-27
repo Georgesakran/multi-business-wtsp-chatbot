@@ -87,3 +87,12 @@
     border: 1px solid #ccc;
     font-size: 1rem;
   }
+
+  .actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .actions button {
+    font-size: 0.9rem;
+  }

@@ -47,7 +47,7 @@ const PAGE_TITLES = {
   },
 };
 
-function Header() {
+function Header({ setCollapsed }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -85,6 +85,12 @@ function Header() {
       <h1 className="page-title">{title}</h1>
 
       <div className="header-actions">
+      <button
+        className="hamburger-toggle"
+        onClick={() => setCollapsed((prev) => !prev)}
+      >
+        ☰
+      </button>
         <button className="settings-button" onClick={handleSettingsClick}>
           ⚙️ {language === "arabic" ? "الإعدادات" : language === "hebrew" ? "הגדרות" : "Settings"}
         </button>

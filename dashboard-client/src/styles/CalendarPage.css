@@ -1,0 +1,164 @@
+/* Main container */
+.calendar-view {
+    padding: 20px;
+    background-color: #f7f9fc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Calendar styling */
+  .custom-calendar {
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  /* Overlay for modal */
+  .ReactModal__Overlay.no-default-overlay-style {
+    all: unset;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  /* Modal box styling */
+  .ReactModal__Content.no-default-modal-style {
+    all: unset;
+    box-sizing: border-box;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95vw;
+    max-width: 420px;
+    background-color: #ffffff;
+    padding: 24px 20px;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.25s ease;
+  }
+  
+  /* Modal header */
+  .ReactModal__Content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #222;
+    margin: 0 0 18px 0;
+    text-align: center;
+  }
+  
+  /* Close button */
+  .booking-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 1.4rem;
+    color: #888;
+    border: none;
+    background: none;
+    cursor: pointer;
+    z-index: 1000;
+  }
+  .booking-modal-close:hover {
+    color: #000;
+  }
+  
+  /* Form */
+  .booking-model-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  /* Input / Select */
+  .booking-modal-input,
+  .booking-modal-select {
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: border 0.2s ease-in-out, background 0.2s;
+  }
+  .booking-modal-input:focus,
+  .booking-modal-select:focus {
+    border-color: #2196f3;
+    background-color: #fff;
+    outline: none;
+  }
+  
+  /* Button */
+  .booking-modal-submitBtn {
+    background-color: #2196f3;
+    color: white;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .booking-modal-submitBtn:hover {
+    background-color: #1976d2;
+  }
+  
+  /* Event hover effect */
+  .rbc-event {
+    transition: transform 0.2s ease;
+  }
+  .rbc-event:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+  }
+  
+  /* Disabled days in calendar */
+  .rbc-day-disabled {
+    background-color: #f0f0f0 !important;
+    color: #999 !important;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  
+  /* Mobile-specific tweaks */
+  @media (max-width: 480px) {
+    .ReactModal__Content.no-default-modal-style {
+      width: 92vw;
+      padding: 20px 16px;
+    }
+  
+    .booking-modal-input,
+    .booking-modal-select {
+      font-size: 0.95rem;
+      padding: 10px 12px;
+    }
+  
+    .booking-modal-submitBtn {
+      font-size: 0.95rem;
+      padding: 12px;
+    }
+  
+    .booking-modal-close {
+      font-size: 1.2rem;
+      top: 10px;
+      right: 12px;
+    }
+  
+    .ReactModal__Content h3 {
+      font-size: 1.1rem;
+    }
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { transform: translate(-50%, 60%); opacity: 0; }
+    to { transform: translate(-50%, -50%); opacity: 1; }
+  }

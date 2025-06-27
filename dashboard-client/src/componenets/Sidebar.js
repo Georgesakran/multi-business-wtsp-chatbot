@@ -58,6 +58,7 @@ function Sidebar({ collapsed, setCollapsed, role }) {
     { to: "/owner/services", label: { en: "Services", ar: "الخدمات", he: "שירותים" }, icon: "💈" },
     { to: "/owner/bookings", label: { en: "Bookings", ar: "الحجوزات", he: "הזמנות" }, icon: "📅" },
     { to: "/logout", label: { en: "Logout", ar: "تسجيل الخروج", he: "התנתק" }, icon: "🚪" },
+    { to: "/owner/calendar", label: { en: "Calendar", ar: "التقويم", he: "לוח שנה" }, icon: "📆" },
   ];
 
   const menu = role === "admin" ? adminMenu : ownerMenu;
