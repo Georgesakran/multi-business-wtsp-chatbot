@@ -2,7 +2,6 @@
 
 .settings-container {
     max-width: 600px;
-    margin: 40px auto;
     padding: 25px;
     background-color: #fff;
     border-radius: 16px;
@@ -95,8 +94,8 @@
   /* 🌐 Responsive styles for mobile */
   @media (max-width: 600px) {
     .settings-container {
-      margin: 20px 15px;
-      padding: 20px;
+      margin-top: 10px;
+      padding-top: 20px;
       border-radius: 12px;
     }
   

@@ -51,15 +51,22 @@ function Header({ setCollapsed }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { language, setLanguage } = useContext(LanguageContext);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const { language, setLanguage } = useContext(LanguageContext);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const toggleDropdown = () => setOpen(!open);
@@ -70,52 +77,52 @@ function Header({ setCollapsed }) {
     setOpen(false);
   };
 
-  const handleSettingsClick = () => {
-    navigate("/owner/settings");
-  };
+  const handleSettingsClick = () => navigate("/owner/settings");
 
   const currentPath = location.pathname;
   const title =
     PAGE_TITLES[currentPath]?.[language] || PAGE_TITLES["/dashboard"]?.[language];
 
-  const isRTL = language === "arabic" || language === "hebrew";
-
   return (
-    <header className={`header-bar ${isScrolled ? "scrolled" : ""} ${isRTL ? "rtl" : "ltr"}`}>
-      <h1 className="page-title">{title}</h1>
-
-      <div className="header-actions">
-      <button
-        className="hamburger-toggle"
-        onClick={() => setCollapsed((prev) => !prev)}
-      >
-        ☰
-      </button>
-        <button className="settings-button" onClick={handleSettingsClick}>
-          ⚙️ {language === "arabic" ? "الإعدادات" : language === "hebrew" ? "הגדרות" : "Settings"}
+    <header className={`header-bar ${isScrolled ? "scrolled" : ""}`}>
+    <div className="header-left">
+      {isMobile && (
+        <button
+          className="hamburger-toggle"
+          onClick={() => setCollapsed((prev) => !prev)}
+        >
+          ☰
         </button>
-
-        <div className="lang-selector">
-          <div className="lang-current" onClick={toggleDropdown}>
-            🌐 {LANGUAGES.find((l) => l.code === language).label}
-          </div>
-
-          {open && (
-            <ul className={`lang-dropdown ${isRTL ? "rtl-drop" : ""}`}>
-              {LANGUAGES.map((lang) => (
-                <li
-                  key={lang.code}
-                  className={lang.code === language ? "active" : ""}
-                  onClick={() => selectLang(lang.code)}
-                >
-                  {lang.label}
-                </li>
-              ))}
-            </ul>
-          )}
+      )}
+      <h1 className="page-title">{title}</h1>
+    </div>
+  
+    <div className="header-actions">
+      <button className="settings-button" onClick={handleSettingsClick}>
+        ⚙️ {language === "arabic" ? "الإعدادات" : language === "hebrew" ? "הגדרות" : "Settings"}
+      </button>
+  
+      <div className="lang-selector">
+        <div className="lang-current" onClick={toggleDropdown}>
+          🌐 {LANGUAGES.find((l) => l.code === language).label}
         </div>
+  
+        {open && (
+          <ul className="lang-dropdown">
+            {LANGUAGES.map((lang) => (
+              <li
+                key={lang.code}
+                className={lang.code === language ? "active" : ""}
+                onClick={() => selectLang(lang.code)}
+              >
+                {lang.label}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </header>
+    </div>
+  </header>
   );
 }
 

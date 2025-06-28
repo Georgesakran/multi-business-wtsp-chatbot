@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -37,8 +37,24 @@ function ProtectedRoute({ children, role }) {
 
 function AppContent() {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
 
+  useEffect(() => {
+    const handleResize = () => {
+      // If resized to mobile, collapse
+      if (window.innerWidth < 768) {
+        setCollapsed(true);
+      } else {
+        setCollapsed(false);
+      }
+    };
+
+    // Add listener
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const isLoginPage = location.pathname === "/login";
   const isHomePage = location.pathname === "/";
 

@@ -1,13 +1,13 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState,useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "../styles/Sidebar.css";
 import { LanguageContext } from "../context/LanguageContext";
 import { handleLogout } from "../utils/logout";
 import ConfirmationModal from "./ConfirmationModal";
 
+
 function Sidebar({ collapsed, setCollapsed, role }) {
   const { language } = useContext(LanguageContext);
-  const isRTL = language === "arabic" || language === "hebrew";
   const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
@@ -16,6 +16,23 @@ function Sidebar({ collapsed, setCollapsed, role }) {
     message: "",
     onConfirm: () => {}
   });
+
+
+// After `useState` declarations
+useEffect(() => {
+  const body = document.body;
+  if (window.innerWidth < 768 && !collapsed) {
+    body.classList.add("no-scroll");
+  } else {
+    body.classList.remove("no-scroll");
+  }
+
+  return () => {
+    body.classList.remove("no-scroll");
+  };
+}, [collapsed]);
+
+// Add this inside your return (above .modern-sidebar)
 
   const handleClick = (e, to) => {
     if (to === "/logout") {
@@ -65,7 +82,13 @@ function Sidebar({ collapsed, setCollapsed, role }) {
 
   return (
     <>
-      <div className={`modern-sidebar ${isRTL ? "rtl" : "ltr"} ${collapsed ? "collapsed" : ""}`}>
+        {window.innerWidth < 768 && !collapsed && (
+      <div
+        className="mobile-sidebar-overlay active"
+        onClick={() => setCollapsed(true)}
+      ></div>
+    )}
+      <div className={`modern-sidebar ${collapsed ? "collapsed" : ""}`}>
         <nav className="sidebar-menu">
           {menu.map((item) => (
             <NavLink
