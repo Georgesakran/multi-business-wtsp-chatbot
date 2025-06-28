@@ -10,7 +10,7 @@ body {
   /* Desktop layout (default) */
   .main-content {
     margin-top: auto; /* header + spacing */
-    margin-left: 250px; /* sidebar space */
+    margin-left: auto; /* sidebar space */
     width: calc(100% - 300px); /* header + spacing */
   }
   
