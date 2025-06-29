@@ -16,14 +16,14 @@ const PAGE_TITLES = {
     hebrew: "לוח ניהול",
   },
   "/owner/Dashboard": {
-    english: "Owner Dashboard",
-    arabic: "لوحة صاحب العمل",
-    hebrew: "לוח בעל העסק",
-  },
-  "/admin/businesses": {
-    english: "Admin Dashboard",
+    english: "Dashboard",
     arabic: "لوحة التحكم",
     hebrew: "לוח ניהול",
+  },
+  "/admin/businesses": {
+    english: "Businesses",
+    arabic: "الأعمال",
+    hebrew: "עסקים",
   },
   "/profile": {
     english: "Business Info",
@@ -35,10 +35,15 @@ const PAGE_TITLES = {
     arabic: "إضافة عمل",
     hebrew: "הוספת עסק",
   },
-  "/bookings": {
+  "/owner/bookings": {
     english: "Bookings",
     arabic: "الحجوزات",
     hebrew: "הזמנות",
+  },
+  "/owner/calendar": {
+    english: "Calendar",
+    arabic: "رزنامة",
+    hebrew: "לוח שנה",
   },
   "/owner/settings": {
     english: "Settings",
