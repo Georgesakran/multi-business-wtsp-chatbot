@@ -8,7 +8,7 @@ function Layout({ children, role, collapsed, setCollapsed }) {
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} role={role} />
       <div style={{ flex: 1 }}>
         <Header setCollapsed={setCollapsed} />
-      <div className="content" style={{ padding: "5px" }}>
+      <div className="content" style={{ paddingRight: "20px" , paddingLeft: "20px", paddingTop: "20px" }}>
           {children}
       </div>
       </div>
