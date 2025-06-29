@@ -156,10 +156,13 @@ useEffect(() => {
 
   return (
     <div className="bookings-container">
-      <label>
-        Search Bookings :
-      </label>
-      <input type="text" placeholder="🔎 Search by name or phone" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      <div className="search-byName-Number">
+        <label>
+          Search Bookings :
+        </label>
+        <input type="text" placeholder="🔎 Search by name or phone" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      </div>
+      
       <div className="filters">
         <label>
           Filter :
@@ -182,12 +185,14 @@ useEffect(() => {
         
 
       </div>
+
       <button
         className={showForm ? "add-new-booking-btn cancel-mode" : "add-new-booking-btn"}
         onClick={() => setShowForm(!showForm)}
       >
-        {showForm ? "Cancel" : "➕ Add Booking"}
+        {showForm ? "Cancel" : "Add Booking"}
       </button>
+      
       {showForm && (
         <form onSubmit={handleFormSubmit} className="booking-form">
           <input type="text" placeholder="Customer Name" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} required />
