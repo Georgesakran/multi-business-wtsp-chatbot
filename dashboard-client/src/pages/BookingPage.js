@@ -50,6 +50,34 @@ const BookingsPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+useEffect(() => {
+  const handleOutsideClickOrScroll = (event) => {
+    // Prevent crash by checking if target is a DOM element
+    if (
+      !(event.target instanceof Element) ||
+      !event.target.closest(".dropdown-wrapper")
+    ) {
+      setOpenDropdownId(null);
+    }
+  };
+
+  document.addEventListener("click", handleOutsideClickOrScroll);
+  document.addEventListener("scroll", handleOutsideClickOrScroll, true); // useCapture = true for better scroll detection
+
+  return () => {
+    document.removeEventListener("click", handleOutsideClickOrScroll);
+    document.removeEventListener("scroll", handleOutsideClickOrScroll, true);
+  };
+}, []);
+
+  
+
+  const handleResetDateFilter = () => {
+    setDateFilter("");
+    setStatusFilter("all");
+    setSearchQuery("");
+  };
+
   const toggleDropdown = (id) => {
     setOpenDropdownId(prev => (prev === id ? null : id));
   };
@@ -128,23 +156,38 @@ const BookingsPage = () => {
 
   return (
     <div className="bookings-container">
+      <label>
+        Search Bookings :
+      </label>
       <input type="text" placeholder="🔎 Search by name or phone" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       <div className="filters">
         <label>
-          Status:
+          Filter :
+          </label>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-        </label>
+        
+        <div className="date-filter">
         <label>
-          Date:
           <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
         </label>
+        <button className="reset-date-btn" onClick={handleResetDateFilter}>
+          ♻️
+        </button>
+        </div>
+        
+
       </div>
-      <button onClick={() => setShowForm(!showForm)}>{showForm ? "Cancel" : "➕ Add Booking"}</button>
+      <button
+        className={showForm ? "add-new-booking-btn cancel-mode" : "add-new-booking-btn"}
+        onClick={() => setShowForm(!showForm)}
+      >
+        {showForm ? "Cancel" : "➕ Add Booking"}
+      </button>
       {showForm && (
         <form onSubmit={handleFormSubmit} className="booking-form">
           <input type="text" placeholder="Customer Name" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} required />
@@ -157,7 +200,7 @@ const BookingsPage = () => {
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <button type="submit" disabled={!formData.customerName || !formData.phoneNumber || !formData.date || !formData.time}>✅ Save Booking</button>
+          <button className="SaveBooking-btn" disabled={!formData.customerName || !formData.phoneNumber || !formData.date || !formData.time}>✅ Save Booking</button>
         </form>
       )}
 
