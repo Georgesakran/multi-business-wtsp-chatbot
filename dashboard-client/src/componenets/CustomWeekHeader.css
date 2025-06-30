@@ -1,0 +1,76 @@
+.b-calendarrow-header {
+    display: flex;
+    justify-content: center;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .b-calendarrow-header-container {
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .b-cal-cell-header {
+    flex: 1;
+    text-align: center;
+    padding: 8px 0;
+    font-family: Arial, sans-serif;
+    font-size: 0.9rem;
+
+  }
+  
+  .b-day-name-part {
+    line-height: 1.4;
+  }
+  
+  .b-day-name-date {
+    font-weight: bold;
+    color: #333;
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  /* ☁️ Gray hover circle for inactive dates only */
+  .b-cal-cell-header:hover .b-day-name-date:not(.active-day-circle) {
+    background-color: #e0e0e0;
+    cursor: pointer;
+  }
+  
+  /* 🔵 Active circle for selected day */
+  .active-day-circle {
+    background-color: #2196f3;
+    color: white;
+  }
+  
+  /* Light gray background for non-working days */
+.b-nonworking-day {
+    color: #999;
+    opacity: 0.6; /* optional: make it look disabled */
+  }
+  
+  /* Optional: more specific styles if needed */
+  .b-nonworking-day .b-day-name-date {
+    pointer-events: none; /* Prevent clicking if you want */
+  }
+  .b-nonworking-day::after {
+    content: "OFF";
+    display: block;
+    font-size: 0.8rem;
+    margin-top: 4px;
+    color: #bbb;
+  }
+  
+  
+
+  
+  .b-cal-empty-corner {
+    flex: 0 0 80px; /* Match the width of your time gutter in react-big-calendar */
+    background-color: #f5f5f5;
+  }
+ 
+  

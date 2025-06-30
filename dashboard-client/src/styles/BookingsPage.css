@@ -45,25 +45,33 @@
 }
 
 /* reset button  */
+
 .reset-date-btn {
-  border-style:none ;
-  background:none;
+  border-style: none;
+  background: none;
   cursor: pointer;
   font-size: 1.125rem;
   padding: 10px;
   transform: translateZ(0) scale(1);
-  transition: transform .2s;
+  transition: transform 0.2s;
   user-select: none;
   -webkit-user-select: none;
+
+  background-color: transparent !important;
+  -webkit-tap-highlight-color: transparent; /* 🔥 for mobile */
+  -webkit-touch-callout: none;
 }
 
-.reset-date-btn:not(:disabled):hover {
-  transform: scale(1.05);
+.reset-date-btn:focus {
+  outline: none;
 }
 
-.reset-date-btn:not(:disabled):hover:active {
-  transform: scale(1.05) translateY(.125rem);
+.reset-date-btn:active {
+  background-color: transparent !important;
+  transform: scale(1.05) translateY(0.125rem);
 }
+
+
 
 /* Booking Form */
 .booking-form {

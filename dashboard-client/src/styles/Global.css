@@ -9,7 +9,7 @@ body {
   
   /* Desktop layout (default) */
   .main-content {
-    margin-top: auto; /* header + spacing */
+    margin-top: 100px; /* header + spacing */
     margin-left: auto; /* sidebar space */
     width: calc(100% - 240px); /* header + spacing */
   }
@@ -21,8 +21,7 @@ body {
         overflow-x: hidden;
       }
     .main-content {
-      margin-top: 5px; /* slightly smaller top margin on mobile */
-      margin-left: 0;
+      margin-top: 90px; /* slightly smaller top margin on mobile */
       width: 100%;
     }
   

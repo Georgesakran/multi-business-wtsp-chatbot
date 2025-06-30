@@ -1,164 +1,248 @@
-/* Main container */
-.calendar-view {
-    padding: 20px;
-    background-color: #f7f9fc;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+:root {
+  --primary: #2196f3;
+  --primary-dark: #1976d2;
+  --success: #4caf50;
+  --danger: #f44336;
+  --warning: #ffc107;
+  --gray-bg: #f7f9fc;
+  --text-dark: #333;
+  --text-light: #777;
+}
+
+/* Main Layout */
+.calendar-layout {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--gray-bg);
+  padding: 16px;
+}
+
+/* Header (Custom Toolbar) */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.calendar-header-left,
+.calendar-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calendar-header-label {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+.calendar-header button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-header button:hover {
+  background-color: #f2f2f2;
+}
+
+.calendar-header button.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Body Layout */
+.calendar-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+}
+
+/* Sidebar */
+.calendar-sidebar {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.react-calendar {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.react-calendar__tile {
+  padding: 10px 0;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.react-calendar__tile--active,
+.react-calendar__tile--now {
+  background: var(--primary);
+  color: white;
+}
+/* Remove blue focus dots from weekday headers */
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+  border: none !important;
+}
+
+.rbc-toolbar{
+  display:none;
+}
+
+.rbc-time-header{
+  display:none;
+}
+
+/* Selected date */
+.calendar-tile-selected {
+  background-color: #007bff !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Today (but not selected) */
+.calendar-tile-today {
+  color: black !important;
+  background-color: #c5e1ff !important;
+
+}
+
+
+.react-calendar__navigation button {
+  color: var(--primary-dark);
+}
+
+.nav-arrows button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.status-filters label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.status-filters input {
+  margin-right: 6px;
+}
+
+/* Main Calendar Panel */
+.calendar-main {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Event Style */
+.rbc-event {
+  border-radius: 6px;
+  padding: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+.rbc-event:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+/* Modal Form */
+.ReactModal__Overlay.no-default-overlay-style {
+  all: unset;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.ReactModal__Content.no-default-modal-style {
+  all: unset;
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 95vw;
+  max-width: 420px;
+  background-color: #ffffff;
+  padding: 24px 20px;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.25s ease;
+}
+
+.booking-model-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.booking-model-form input,
+.booking-model-form select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+.booking-model-form button {
+  background: var(--primary);
+  color: white;
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.booking-model-form button:hover {
+  background: var(--primary-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calendar-body {
+    grid-template-columns: 1fr;
   }
-  
-  /* Calendar styling */
-  .custom-calendar {
-    background-color: #fff;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+  .calendar-sidebar {
+    order: 2;
   }
-  
-  /* Overlay for modal */
-  .ReactModal__Overlay.no-default-overlay-style {
-    all: unset;
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 999;
-    animation: fadeIn 0.2s ease-in-out;
+  .calendar-main {
+    order: 1;
   }
-  
-  /* Modal box styling */
-  .ReactModal__Content.no-default-modal-style {
-    all: unset;
-    box-sizing: border-box;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 95vw;
-    max-width: 420px;
-    background-color: #ffffff;
-    padding: 24px 20px;
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-    animation: slideUp 0.25s ease;
-  }
-  
-  /* Modal header */
-  .ReactModal__Content h3 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #222;
-    margin: 0 0 18px 0;
-    text-align: center;
-  }
-  
-  /* Close button */
-  .booking-modal-close {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    font-size: 1.4rem;
-    color: #888;
-    border: none;
-    background: none;
-    cursor: pointer;
-    z-index: 1000;
-  }
-  .booking-modal-close:hover {
-    color: #000;
-  }
-  
-  /* Form */
-  .booking-model-form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  
-  /* Input / Select */
-  .booking-modal-input,
-  .booking-modal-select {
-    padding: 12px 14px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    transition: border 0.2s ease-in-out, background 0.2s;
-  }
-  .booking-modal-input:focus,
-  .booking-modal-select:focus {
-    border-color: #2196f3;
-    background-color: #fff;
-    outline: none;
-  }
-  
-  /* Button */
-  .booking-modal-submitBtn {
-    background-color: #2196f3;
-    color: white;
-    padding: 14px;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  .booking-modal-submitBtn:hover {
-    background-color: #1976d2;
-  }
-  
-  /* Event hover effect */
-  .rbc-event {
-    transition: transform 0.2s ease;
-  }
-  .rbc-event:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
-  }
-  
-  /* Disabled days in calendar */
-  .rbc-day-disabled {
-    background-color: #f0f0f0 !important;
-    color: #999 !important;
-    pointer-events: none;
-    opacity: 0.6;
-  }
-  
-  /* Mobile-specific tweaks */
-  @media (max-width: 480px) {
-    .ReactModal__Content.no-default-modal-style {
-      width: 92vw;
-      padding: 20px 16px;
-    }
-  
-    .booking-modal-input,
-    .booking-modal-select {
-      font-size: 0.95rem;
-      padding: 10px 12px;
-    }
-  
-    .booking-modal-submitBtn {
-      font-size: 0.95rem;
-      padding: 12px;
-    }
-  
-    .booking-modal-close {
-      font-size: 1.2rem;
-      top: 10px;
-      right: 12px;
-    }
-  
-    .ReactModal__Content h3 {
-      font-size: 1.1rem;
-    }
-  }
-  
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes slideUp {
-    from { transform: translate(-50%, 60%); opacity: 0; }
-    to { transform: translate(-50%, -50%); opacity: 1; }
-  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translate(-50%, 60%); opacity: 0; }
+  to { transform: translate(-50%, -50%); opacity: 1; }
+}

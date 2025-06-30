@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+import CalendarPicker from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import axios from "../services/api";
 import Modal from "react-modal";
 import "../styles/CalendarPage.css";
+import CustomWeekHeader from "../componenets/CustomWeekHeader"; // adjust path as needed
+
 
 const localizer = momentLocalizer(moment);
 Modal.setAppElement("#root");
@@ -19,6 +23,12 @@ const CalendarView = () => {
   const [businessConfig, setBusinessConfig] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [filters, setFilters] = useState({
+    confirmed: true,
+    pending: true,
+    cancelled: true,
+  });
+
   const [formData, setFormData] = useState({
     customerName: "",
     phoneNumber: "",
@@ -27,6 +37,8 @@ const CalendarView = () => {
     time: "",
     status: "pending",
   });
+
+  //const isMobile = window.innerWidth <= 480;
 
   const fetchBusinessConfig = useCallback(async () => {
     try {
@@ -41,8 +53,7 @@ const CalendarView = () => {
     switch (status) {
       case "confirmed": return "#4CAF50";
       case "cancelled": return "#f44336";
-      case "pending":
-      default: return "#FFC107";
+      case "pending": default: return "#FFC107";
     }
   };
 
@@ -58,6 +69,7 @@ const CalendarView = () => {
           start,
           end,
           allDay: false,
+          status: booking.status,
           resource: { color: getColorByStatus(booking.status) },
           ...booking,
         };
@@ -75,31 +87,10 @@ const CalendarView = () => {
     }
   }, [businessId, fetchBusinessConfig, fetchBookings]);
 
-  const handleSlotSelect = (slot) => {
-    const date = moment(slot.start).format("YYYY-MM-DD");
-    const time = moment(slot.start).format("HH:mm");
-    setFormData({
-      customerName: "",
-      phoneNumber: "",
-      service: "",
-      date,
-      time,
-      status: "pending",
-    });
-    setSelectedSlot(slot);
-  };
-
-  const handleEditClick = (event) => {
-    setFormData({
-      customerName: event.customerName,
-      phoneNumber: event.phoneNumber,
-      service: event.service,
-      date: event.date,
-      time: event.time,
-      status: event.status,
-    });
-    setSelectedEvent(event);
-  };
+  useEffect(() => {
+    const mobile = window.innerWidth <= 480;
+    if (mobile) setCurrentView("day");
+  }, []);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -109,15 +100,7 @@ const CalendarView = () => {
       } else {
         await axios.post("/bookings", { ...formData, businessId });
       }
-
-      setFormData({
-        customerName: "",
-        phoneNumber: "",
-        service: "",
-        date: "",
-        time: "",
-        status: "pending",
-      });
+      setFormData({ customerName: "", phoneNumber: "", service: "", date: "", time: "", status: "pending" });
       setSelectedEvent(null);
       setSelectedSlot(null);
       fetchBookings();
@@ -126,151 +109,212 @@ const CalendarView = () => {
     }
   };
 
-  const minTime = businessConfig?.openingTime
-    ? moment(businessConfig.openingTime, "HH:mm").toDate()
-    : new Date(2023, 1, 1, 8);
+  const minTime = businessConfig?.openingTime ? moment(businessConfig.openingTime, "HH:mm").toDate() : new Date(2023, 1, 1, 8);
+  const maxTime = businessConfig?.closingTime ? moment(businessConfig.closingTime, "HH:mm").toDate() : new Date(2023, 1, 1, 20);
 
-  const maxTime = businessConfig?.closingTime
-    ? moment(businessConfig.closingTime, "HH:mm").toDate()
-    : new Date(2023, 1, 1, 20);
-
-  const disabledDays = ["Sunday", "Saturday"].filter(
-    (day) => !businessConfig?.workingDays?.includes(day)
-  );
-
+  const filteredEvents = events.filter(e => filters[e.status]);
+  const getStep = () => {
+    switch (currentView) {
+      case "day":
+        return "day";
+      case "month":
+        return "month";
+      case "agenda":
+        return "year"; // or 'week' if preferred
+      case "week":
+      default:
+        return "week";
+    }
+  };
+  const getLabel = (date, view) => {
+    const m = moment(date);
+    switch (view) {
+      case "day":
+        return m.format("dddd, MMMM D, YYYY");
+      case "week":
+        return m.format("[Week] WW, MMMM YYYY");
+      case "month":
+        return m.format("MMMM YYYY");
+      case "agenda":
+        return `Agenda View: ${m.format("MMMM YYYY")}`;
+      default:
+        return m.format("MMMM D, YYYY");
+    }
+  };
+  
   return (
-    <div className="calendar-view">
-      <Calendar className="custom-calendar"
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        date={currentDate}
-        view={currentView}
-        onNavigate={(date) => setCurrentDate(date)}
-        onView={(view) => setCurrentView(view)}
-        min={minTime}
-        max={maxTime}
-        selectable
-        style={{ height: 600 }}
-        onSelectEvent={handleEditClick}
-        onSelectSlot={handleSlotSelect}
-        dayPropGetter={(date) => {
-          const dayName = moment(date).format("dddd");
-          if (disabledDays.includes(dayName)) {
-            return {
-              style: {
-                backgroundColor: "#f0f0f0",
-                color: "#999",
-                pointerEvents: "none",
-                opacity: 0.6,
-              },
-            };
-          }
-          return {};
-        }}
-        eventPropGetter={(event) => ({
-          style: {
-            backgroundColor: event.resource?.color || "#2196F3",
-            color: "white",
-            borderRadius: "6px",
-            padding: "5px",
-          },
-        })}
-      />
-<Modal
-  isOpen={!!selectedEvent || !!selectedSlot}
-  onRequestClose={() => {
-    setSelectedEvent(null);
-    setSelectedSlot(null);
-  }}
-  contentLabel="Booking Form"
-  className="ReactModal__Content no-default-modal-style"
-  overlayClassName="ReactModal__Overlay no-default-overlay-style"
->
+    <div className="calendar-layout">
+      {/* Custom Toolbar Header */}
+      <div className="calendar-header">
+      <div className="calendar-header-left">
+  <button onClick={() => setCurrentDate(new Date())}>Today</button>
+
   <button
-    className="booking-modal-close"
     onClick={() => {
-      setSelectedEvent(null);
-      setSelectedSlot(null);
+      const newDate = moment(currentDate).subtract(1, getStep()).toDate();
+      setCurrentDate(newDate);
     }}
   >
-    ✖
+    ‹
   </button>
 
-  <h3>{selectedEvent ? "Edit Booking" : "Add Booking"}</h3>
+  <button
+    onClick={() => {
+      const newDate = moment(currentDate).add(1, getStep()).toDate();
+      setCurrentDate(newDate);
+    }}
+  >
+    ›
+  </button>
 
-  <form className="booking-model-form" onSubmit={handleFormSubmit}>
-    <input
-      className="booking-modal-input"
-      type="text"
-      placeholder="Customer Name"
-      value={formData.customerName}
-      onChange={(e) =>
-        setFormData({ ...formData, customerName: e.target.value })
-      }
-      required
-    />
+  <span className="calendar-header-label">
+    {getLabel(currentDate, currentView)}
+  </span>
+</div>
 
-    <input
-      className="booking-modal-input"
-      type="tel"
-      placeholder="Phone"
-      value={formData.phoneNumber}
-      onChange={(e) =>
-        setFormData({ ...formData, phoneNumber: e.target.value })
-      }
-      required
-    />
+        <div className="calendar-header-center" />
+        <div className="calendar-header-right">
+          {["day", "week", "month", "agenda"].map(view => (
+            <button
+              key={view}
+              className={currentView === view ? "active" : ""}
+              onClick={() => setCurrentView(view)}
+            >
+              {view.charAt(0).toUpperCase() + view.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
 
-    <input
-      className="booking-modal-input"
-      type="text"
-      placeholder="Service"
-      value={formData.service}
-      onChange={(e) =>
-        setFormData({ ...formData, service: e.target.value })
-      }
-      required
-    />
+      {/* Main Body: Sidebar + Calendar */}
+      <div className="calendar-body">
+        {/* Left Sidebar */}
+        <div className="calendar-sidebar">
 
-    <input
-      className="booking-modal-input"
-      type="date"
-      value={formData.date}
-      onChange={(e) =>
-        setFormData({ ...formData, date: e.target.value })
-      }
-      required
-    />
+        <CalendarPicker
+          onChange={(date) => setCurrentDate(date)}
+          value={currentDate}
+          nextLabel="›"
+          prevLabel="‹"
+          showNeighboringMonth={false}
+          calendarType="gregory"
+          tileDisabled={({ date }) =>
+            !businessConfig?.workingDays?.includes(moment(date).format("dddd"))
+          }
+          tileClassName={({ date }) => {
+            const mDate = moment(date);
+            const isSelected = mDate.isSame(currentDate, "day");
+            const isToday = mDate.isSame(moment(), "day");
+          
+            if (isSelected) return "calendar-tile-selected";
+            if (isToday) return "calendar-tile-today";
+          
+            return "";
+          }}
+          
+          
+        />
+          <div className="status-filters">
+            <label><input type="checkbox" checked={filters.pending} onChange={() => setFilters(prev => ({ ...prev, pending: !prev.pending }))}/> Pending</label>
+            <label><input type="checkbox" checked={filters.confirmed} onChange={() => setFilters(prev => ({ ...prev, confirmed: !prev.confirmed }))}/> Confirmed</label>
+            <label><input type="checkbox" checked={filters.cancelled} onChange={() => setFilters(prev => ({ ...prev, cancelled: !prev.cancelled }))}/> Cancelled</label>
+          </div>
+        </div>
 
-    <input
-      className="booking-modal-input"
-      type="time"
-      value={formData.time}
-      onChange={(e) =>
-        setFormData({ ...formData, time: e.target.value })
-      }
-      required
-    />
+        {/* Right: Calendar */}
+        <div className="calendar-main">
+        {["week", "day"].includes(currentView) && (
+          <CustomWeekHeader
+            start={moment(currentDate).startOf("week")}
+            currentDate={currentDate}
+            currentView={currentView}
+            workingDays={businessConfig?.workingDays ?? []}
+            onDayClick={(date) => {
+              setCurrentDate(date);
+              setCurrentView("day");
+            }}
+          />
+        )}
 
-    <select
-      className="booking-modal-select"
-      value={formData.status}
-      onChange={(e) =>
-        setFormData({ ...formData, status: e.target.value })
-      }
-    >
-      <option value="pending">Pending</option>
-      <option value="confirmed">Confirmed</option>
-      <option value="cancelled">Cancelled</option>
-    </select>
 
-    <button className="booking-modal-submitBtn" type="submit">
-      {selectedEvent ? "Update Booking" : "Create Booking"}
-    </button>
-  </form>
-</Modal>
+
+        <Calendar
+          localizer={localizer}
+          events={filteredEvents}
+          startAccessor="start"
+          endAccessor="end"
+          date={currentDate}
+          view={currentView}
+          onNavigate={setCurrentDate}
+          onView={setCurrentView}
+          selectable={(slotInfo) => {
+            const dayName = moment(slotInfo.start).format("dddd"); // "Monday", etc.
+            return businessConfig?.workingDays?.includes(dayName); // ✅ correct
+          }}
+          
+          min={minTime}
+          max={maxTime}
+          style={{ height: 650 }}
+          onSelectEvent={(event) => {
+            setSelectedEvent(event);
+            setFormData({ ...event });
+          }}
+          onSelectSlot={(slot) => {
+            const date = moment(slot.start).format("YYYY-MM-DD");
+            const time = moment(slot.start).format("HH:mm");
+            setSelectedSlot(slot);
+            setFormData({
+              customerName: "",
+              phoneNumber: "",
+              service: "",
+              date,
+              time,
+              status: "pending",
+            });
+          }}
+          eventPropGetter={(event) => ({
+            style: {
+              backgroundColor: event.resource?.color || "#2196f3",
+              color: "white",
+              borderRadius: "6px",
+              padding: "4px",
+            },
+          })}
+          components={{
+            timeGridHeader: () => null, // ⛔ hides week/day headers
+            month: {
+              header: () => null, // ⛔ hides month view day headers
+            },
+          }}
+        />
+
+
+        </div>
+      </div>
+
+      <Modal
+        isOpen={!!selectedEvent || !!selectedSlot}
+        onRequestClose={() => {
+          setSelectedEvent(null);
+          setSelectedSlot(null);
+        }}
+        className="ReactModal__Content no-default-modal-style"
+        overlayClassName="ReactModal__Overlay no-default-overlay-style"
+      >
+        <form className="booking-model-form" onSubmit={handleFormSubmit}>
+          <input placeholder="Customer Name" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} required />
+          <input placeholder="Phone" value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} required />
+          <input placeholder="Service" value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })} required />
+          <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
+          <input type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} required />
+          <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button type="submit">{selectedEvent ? "Update" : "Create"}</button>
+        </form>
+      </Modal>
     </div>
   );
 };
