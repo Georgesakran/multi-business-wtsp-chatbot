@@ -14,8 +14,7 @@
   display: flex;
   flex-direction: column;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--gray-bg);
-  padding: 16px;
+  padding: 3px;
 }
 
 /* Header (Custom Toolbar) */
@@ -39,13 +38,24 @@
   gap: 10px;
 }
 
+.mobile-view-dropdown {
+  display: none;
+}
+
+/* Show desktop buttons on large screens */
+.desktop-view-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+
 .calendar-header-label {
   font-weight: bold;
   font-size: 1rem;
   color: var(--text-dark);
 }
 
-.calendar-header button {
+.calendar-header button , .dropdown-toggle {
   background: none;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -56,7 +66,7 @@
 }
 
 .calendar-header button:hover {
-  background-color: #f2f2f2;
+  background-color: none;
 }
 
 .calendar-header button.active {
@@ -78,6 +88,79 @@
   padding: 16px;
   border-radius: 10px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.event-preview-box {
+  position: absolute;
+  border-radius: 10px;
+  width: auto;
+  min-width: 185px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  transform: translate(-50%,110%);
+  padding: 0;
+  background: #C19A6B;
+
+}
+
+.event-preview-header {
+  border-radius: 10px;
+  background: #C19A6B;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.event-preview-title {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+  .event-preview-actions button {
+    background: white;
+    border: 2px solid #ccc; /* <== Set border thickness and color here */
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 4px 6px, 
+                rgba(0, 0, 0, 0.17) 0px 12px 13px, 
+                rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    color: black; /* You had color: white on white bg — changed for visibility */
+    font-size: 1rem;
+    margin-left: 5px;
+    cursor: pointer;
+  }
+  
+
+.event-preview-body {
+  border-radius: 10px;
+  display: flex;
+  padding: 10px;
+  gap: 10px;
+  background:#EDC9AF ;
+}
+
+.event-preview-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  gap: 6px;
+}
+
+/* triangle arrow */
+.preview-arrow {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white;
+  border-block-color:#EDC9AF ;
+  ;
 }
 
 .react-calendar {
@@ -223,6 +306,7 @@
   background: var(--primary-dark);
 }
 
+
 /* Responsive */
 @media (max-width: 768px) {
   .calendar-body {
@@ -234,6 +318,46 @@
   .calendar-main {
     order: 1;
   }
+  .desktop-view-buttons {
+    display: none;
+  }
+  .mobile-view-dropdown {
+    display: inline-block;
+    position: relative;
+  }
+  .dropdown-toggle {
+    background: #007bff;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .dropdown-menu {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+  }
+  .dropdown-menu button {
+    padding: 10px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+  }
+  .dropdown-menu button.active {
+    background: #007bff;
+    color: white;
+  }
+
 }
 
 /* Animations */
