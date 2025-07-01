@@ -153,6 +153,7 @@
 /* triangle arrow */
 .preview-arrow {
   position: absolute;
+  top: 100%;
   bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
@@ -161,7 +162,7 @@
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-top: 10px solid white;
-  border-block-color:#EDC9AF ;
+  border-block-color:black ;
   ;
 }
 

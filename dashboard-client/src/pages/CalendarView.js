@@ -326,7 +326,7 @@ const CalendarView = () => {
             const eventRect = eventElement.getBoundingClientRect();
             const containerRect = calendarMain.getBoundingClientRect();
           
-            const top = eventRect.top - containerRect.top - 140; // 140 = offset above the event
+            const top = eventRect.top - containerRect.top - 145; // 145 = offset above the event
             const left = eventRect.left - containerRect.left + eventRect.width / 2;
           
             setPreviewEvent(event);
