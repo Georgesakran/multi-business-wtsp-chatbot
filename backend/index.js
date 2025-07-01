@@ -14,6 +14,7 @@ const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const bookingsRoutes = require("./routes/bookingsRoutes");
+const serviceRoutes = require("./routes/serviceRoutes");
 //const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
 
 const app = express();
@@ -38,6 +39,7 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/businesses", businessRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/bookings", bookingsRoutes);
+  app.use("/api/services", serviceRoutes);
 
 app.get('/webhook', async (req, res) => {
   const mode = req.query['hub.mode'];

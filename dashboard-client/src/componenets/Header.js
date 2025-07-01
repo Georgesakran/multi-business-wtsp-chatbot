@@ -50,6 +50,11 @@ const PAGE_TITLES = {
     arabic: "الإعدادات",
     hebrew: "הגדרות",
   },
+  "/owner/services": {
+    english: "Services",
+    arabic: "الخدمات",
+    hebrew: "שירותים",
+  },
 };
 
 function Header({ setCollapsed }) {

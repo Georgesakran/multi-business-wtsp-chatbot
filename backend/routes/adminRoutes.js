@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const Business = require("../models/Business");
+const { protect } = require("../middleware/authMiddleware");
+
 
 // POST /api/admin/businesses
-router.post("/NewBusiness", async (req, res) => {
+router.post("/NewBusiness", protect,async (req, res) => {
   const {
     username,
     password,
@@ -64,7 +66,7 @@ router.post("/NewBusiness", async (req, res) => {
   }
 });
 
-router.put("/reset-password/:username", async (req, res) => {
+router.put("/reset-password/:username", protect,async (req, res) => {
   try {
     const { newPassword } = req.body;
     const hashed = await bcrypt.hash(newPassword, 10);

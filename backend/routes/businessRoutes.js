@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Business = require("../models/Business");
-const auth = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 // Only allow admin to list all businesses
-router.get("/", auth, async (req, res) => {
+router.get("/", protect, async (req, res) => {
   try {
     if (req.user.username !== "admin") {
       return res.status(403).json({ error: "Forbidden" });
@@ -18,7 +18,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // GET /api/businesses/:id - Get single business
-router.get("/:id", async (req, res) => {
+router.get("/:id", protect,async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
     if (!business) return res.status(404).json({ error: "Not found" });
@@ -39,7 +39,7 @@ router.get("/:id", async (req, res) => {
   
   
   // PUT /api/businesses/:id - Update business info
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect,async (req, res) => {
     try {
       const business = await Business.findByIdAndUpdate(req.params.id, req.body, { new: true });
       res.json(business);
@@ -49,7 +49,7 @@ router.put('/:id', async (req, res) => {
 });
 
   // PUT /api/businesses/:id - Update business settings working days and hours
-router.put("/update-settings/:id", async (req, res) => {
+router.put("/update-settings/:id", protect,async (req, res) => {
   try {
     const businessId = req.params.id;
     const { workingDays, openingTime, closingTime } = req.body;

@@ -296,18 +296,45 @@
   border: 1px solid #ccc;
   font-size: 1rem;
 }
-.booking-model-form button {
-  background: var(--primary);
-  color: white;
-  padding: 12px;
-  font-size: 1rem;
+.form-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+
+.form-close-button {
+  background-color: transparent;
+  color: #444;
   border: none;
-  border-radius: 8px;
+  font-size: 1.2rem;
+  position: absolute;
+
+  right: 20px;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
-.booking-model-form button:hover {
-  background: var(--primary-dark);
+.form-close-button:hover {
+  color: #f44336;
 }
+
+.form-submit-button {
+  margin-top: 20px;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.form-submit-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.02);
+}
+
 
 
 /* Responsive */

@@ -17,8 +17,11 @@ import OwnerSettingsPage from "./pages/OwnerSettingsPage";
 import HomePage from "./pages/HomePage";
 import BookingsPage from "./pages/BookingPage";
 import CalendarView from "./pages/CalendarView";
+import ServicesPage from "./pages/ServicesPage";
 import Layout from "./context/Layout";
 import "./styles/Global.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Helper function to read token/user
 const getUser = () => JSON.parse(localStorage.getItem("user"));
@@ -121,6 +124,14 @@ function AppContent() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/owner/services"
+                element={
+                  <ProtectedRoute role="owner">
+                    <ServicesPage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </div>
         </Layout>
@@ -136,11 +147,26 @@ function AppContent() {
 
 function App() {
   return (
-    <LanguageProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </LanguageProvider>
+    <>
+      <LanguageProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </LanguageProvider>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </>
   );
 }
 

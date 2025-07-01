@@ -23,7 +23,7 @@ const CalendarView = () => {
   const isMobile = window.innerWidth <= 480;
   const [previewEvent, setPreviewEvent] = useState(null);
   const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
-
+  const previewRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState("week");
@@ -98,15 +98,35 @@ const CalendarView = () => {
   }, [isMobile]);
 
   useEffect(() => {
+    // Close view menu when clicking outside
     const handleClickOutside = (e) => {
       if (!e.target.closest(".calendar-view-dropdown")) {
         setViewMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   
+  useEffect(() => {
+    const handleClickOrScroll = (e) => {
+      if (previewRef.current && !previewRef.current.contains(e.target)) {
+        setPreviewEvent(null); // close the preview
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOrScroll);
+    window.addEventListener("scroll", handleClickOrScroll, true); // `true` = capture phase
+  
+    return () => {
+      document.removeEventListener("mousedown", handleClickOrScroll);
+      window.removeEventListener("scroll", handleClickOrScroll, true);
+    };
+  }, []);
+  
+
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -354,6 +374,7 @@ const CalendarView = () => {
 
         {previewEvent && (
           <div
+            ref={previewRef}
             className="event-preview-box"
             style={{
               top: `${previewPosition.top - 140}px`,
@@ -410,6 +431,15 @@ const CalendarView = () => {
         overlayClassName="ReactModal__Overlay no-default-overlay-style"
       >
         <form className="booking-model-form" onSubmit={handleFormSubmit}>
+          <div className="form-header">  
+            <h2>{selectedEvent ? "Edit Booking" : "Create Booking"}</h2>
+            <button type="button"   className="form-close-button" onClick={() => {
+              setSelectedEvent(null);
+              setSelectedSlot(null);
+            }}>✖️</button>
+          </div>
+          <input placeholder="Date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
+          <input placeholder="Time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} required />
           <input placeholder="Customer Name" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} required />
           <input placeholder="Phone" value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} required />
           <input placeholder="Service" value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })} required />
@@ -420,7 +450,9 @@ const CalendarView = () => {
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <button type="submit">{selectedEvent ? "Update" : "Create"}</button>
+          <button type="submit" className="form-submit-button">
+            {selectedEvent ? "Update" : "Create"}
+          </button>        
         </form>
       </Modal>
     </div>

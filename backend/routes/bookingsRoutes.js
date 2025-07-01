@@ -4,9 +4,11 @@ const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
 const Business = require("../models/Business");
+const { protect } = require("../middleware/authMiddleware");
+
 
 // Get bookings for a specific business
-router.get("/:businessId", async (req, res) => {
+router.get("/:businessId", protect,async (req, res) => {
   try {
     const business = await Business.findById(req.params.businessId);
     if (!business || !business.enabledServices.includes("bookingFlow")) {
@@ -44,7 +46,7 @@ router.put("/update-status/:bookingId", async (req, res) => {
 });
 
 // POST /bookings - Owner manually adds a booking
-router.post("/", async (req, res) => {
+router.post("/", protect,async (req, res) => {
   const {
     businessId,
     customerName,
@@ -75,7 +77,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /bookings/:id - Edit a booking
-router.put("/:id", async (req, res) => {
+router.put("/:id", protect,async (req, res) => {
   try {
     const updated = await Booking.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -88,7 +90,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE /bookings/:id - Delete a booking
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protect,async (req, res) => {
   try {
     await Booking.findByIdAndDelete(req.params.id);
     res.json({ message: "🗑️ Booking deleted" });

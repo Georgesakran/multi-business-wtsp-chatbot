@@ -1,16 +1,54 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// Define schema for individual services
+// ==========================
+// Sub-schema: Service
+// ==========================
 const serviceSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  bookable: { type: Boolean, default: false }, // Whether it's a bookable service
-  duration: Number, // in minutes (for bookable services)
-  description: String,
+  name: {
+    en: { type: String, required: true },
+    ar: { type: String, default: "" },
+    he: { type: String, default: "" }
+  },
+  description: {
+    en: { type: String, default: "" },
+    ar: { type: String, default: "" },
+    he: { type: String, default: "" }
+  },
+  price: { type: Number, default: 0 },
+  bookable: { type: Boolean, default: false },
+  duration: { type: Number }, // in minutes
+  category: { type: String, default: "" },
+  tags: { type: [String], default: [] },
+  isActive: { type: Boolean, default: true },
+  image: { type: String, default: "" }, // image path or URL
+}, { timestamps: true });
+
+// ==========================
+// Sub-schema: Custom Fields (Optional)
+// ==========================
+const customFieldSchema = new mongoose.Schema({
+  fieldName: String,
+  fieldType: {
+    type: String,
+    enum: ["text", "number", "checkbox"],
+    default: "text"
+  },
+  required: { type: Boolean, default: false }
 });
 
-// Main Business schema
+// ==========================
+// Sub-schema: Logs (Optional)
+// ==========================
+const logSchema = new mongoose.Schema({
+  action: String,
+  timestamp: { type: Date, default: Date.now },
+  by: String
+});
+
+// ==========================
+// Main Business Schema
+// ==========================
 const businessSchema = new mongoose.Schema({
   // Multilingual names
   nameEnglish: String,
@@ -31,59 +69,82 @@ const businessSchema = new mongoose.Schema({
   language: {
     type: String,
     enum: ["arabic", "hebrew", "english"],
-    default: "arabic",
+    default: "arabic"
   },
 
   // Type of business (determines chatbot logic)
   businessType: {
     type: String,
     enum: ["booking", "product", "info", "mixed", "event", "delivery"],
-    required: true,
+    required: true
   },
 
   // Which chatbot features to enable
-  enabledServices: [String], // ["bookingFlow", "productCatalog", "customerSupport", etc.]
+  enabledServices: [String], // ["bookingFlow", "productCatalog", etc.]
 
-  // Services offered by this business
+  // Services array
   services: [serviceSchema],
 
-  // Business working schedule
-  closedDates: {
-    type: [String], // Specific dates the business is closed (YYYY-MM-DD)
-    default: [],
-  },
+  // Custom fields for bookings (optional)
+  customFields: [customFieldSchema],
 
-  // Optional configuration per flow type
+  // Business working schedule and configs
+  closedDates: {
+    type: [String], // Format: YYYY-MM-DD
+    default: []
+  },
   config: {
     booking: {
       workingDays: [String],
       openingTime: String,
       closingTime: String,
       allowNotes: Boolean,
-      slotGapMinutes: Number,
+      slotGapMinutes: Number
     },
     product: {
-      allowPriceInquiry: { type: Boolean, default: true },
+      allowPriceInquiry: { type: Boolean, default: true }
     },
     delivery: {
-      requireAddress: { type: Boolean, default: false },
+      requireAddress: { type: Boolean, default: false }
     },
     event: {
-      eventList: [String],
-    },
+      eventList: [String]
+    }
   },
 
   // Meta or Twilio
   whatsappType: {
     type: String,
     enum: ["meta", "twilio"],
-    default: "meta",
+    default: "meta"
   },
 
-  isActive: { type: Boolean, default: true },
-});
+  // Business owner info (optional)
+  owner: {
+    fullName: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    email: { type: String, default: "" }
+  },
 
-// 🔐 Password hashing middleware
+  // Location info (optional)
+  location: {
+    city: String,
+    street: String,
+    lat: Number,
+    lng: Number
+  },
+
+  // Admin log (optional)
+  logs: [logSchema],
+
+  // Status flag
+  isActive: { type: Boolean, default: true }
+
+}, { timestamps: true });
+
+// ==========================
+// Password Hash Middleware
+// ==========================
 businessSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
