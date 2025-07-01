@@ -224,7 +224,7 @@ useEffect(() => {
               <div className="dropdown-wrapper">
                 <button className="dots-button" onClick={() => toggleDropdown(b._id)}>⋮</button>
                 {openDropdownId === b._id && (
-                  <div className="dropdown-menu">
+                  <div className="dropdown-menu-actions-booking">
                     {b.status === "pending" && (
                       <>
                         <button onClick={() => handleStatusChange(b._id, "confirmed")}>✅ Confirm</button>
