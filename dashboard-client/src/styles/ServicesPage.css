@@ -1,275 +1,440 @@
-/* === Services Page Container === */
+/* ======= GENERAL STYLES ======= */
 .services-page {
-    padding: 2rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f9f9f9;
-    min-height: 100vh;
+    max-width: 1200px;
+    margin: auto;
     color: #333;
   }
   
-  /* === Filters === */
-  .services-filters {
+  /* ======= FILTERS ======= */
+  .filters-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 10px;
+    margin-bottom: 20px;
   }
   
-  .services-filters input {
-    padding: 10px 12px;
-    font-size: 1rem;
-    border-radius: 6px;
+  .filters-container input {
+    padding: 10px;
     border: 1px solid #ccc;
-    width: 250px;
-    max-width: 100%;
-    background-color: #fff;
+    border-radius: 6px;
+    flex: 1;
+    min-width: 200px;
+    font-family: "Baloo Bhaijaan 2", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
   }
   
-  /* === Services Table === */
+  /* ======= TABLE ======= */
   .services-table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #fff;
-    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: white;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
   
   .services-table thead {
-    background-color: #f0f0f0;
-    text-align: left;
+    background-color: #004080;
+    color: white;
   }
   
   .services-table th,
   .services-table td {
-    padding: 12px 16px;
-    font-size: 0.95rem;
-    border-bottom: 1px solid #eee;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
   }
   
-  .services-table td button {
-    margin-right: 8px;
-    padding: 6px 10px;
-    font-size: 0.9rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #1976d2;
-    color: #fff;
-    transition: background-color 0.2s ease;
+  .services-table tr:last-child td {
+    border-bottom: none;
   }
   
-  .services-table td button:hover {
-    background-color: #125a9c;
-  }
-  
+  /* ======= BADGES ======= */
   .badge {
-    padding: 4px 8px;
+    padding: 5px 10px;
     border-radius: 12px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: bold;
-    color: white;
-    text-align: center;
-    display: inline-block;
   }
   
   .badge.green {
     background-color: #4caf50;
+    color: white;
   }
   
   .badge.red {
     background-color: #f44336;
-  }
-  
-  /* === Pagination === */
-  .service.pagination {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    margin-top: 1.5rem;
-  }
-  
-  .service.pagination button {
-    padding: 8px 14px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background-color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .service.pagination button.active {
-    background-color: #1976d2;
     color: white;
-    border-color: #1976d2;
   }
   
-  .service.pagination button:hover {
-    background-color: #e0e0e0;
-  }
-  
-  /* === Service Form === */
-  .service-form {
-    margin-top: 2rem;
-    background: #fff;
-    padding: 20px 24px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    max-width: 600px;
-  }
-  
-  .service-form input[type="text"],
-  .service-form input[type="number"],
-  .service-form input[type="date"],
-  .service-form input[type="time"] {
-    width: 100%;
-    padding: 10px 12px;
-    margin: 8px 0;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: #fdfdfd;
-  }
-  
-  .service-form select {
-    width: 100%;
-    padding: 10px 12px;
-    margin: 8px 0;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
-  
-  .service-form label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    font-size: 0.95rem;
-  }
-  
-  .service-form button[type="submit"] {
-    margin-top: 1rem;
-    padding: 10px 18px;
-    font-size: 1rem;
-    background-color: #1976d2;
-    color: white;
+  /* ======= BUTTONS ======= */
+  button {
+    padding: 8px 12px;
+    margin-right: 5px;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
+    font-weight: 500;
     transition: background-color 0.2s ease;
+    font-family: "Baloo Bhaijaan 2", sans-serif;
+    font-optical-sizing: auto;
+    font-style:normal;
   }
   
-  .service-form button[type="submit"]:hover {
-    background-color: #125a9c;
-  }
-  
-  /* === Language Tabs === */
-  .lang-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  
-  .lang-tabs button {
-    padding: 6px 12px;
-    background-color: #eee;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-  
-  .lang-tabs button.active {
-    background-color: #1976d2;
+  .edit-btn {
+    background-color: #2196f3;
     color: white;
   }
   
-  /* === Modal === */
-  .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 1000;
+  .toggle-btn {
+    background-color: #ff9800;
+    color: white;
+  }
+  
+  .edit-btn:hover {
+    background-color: #0b7dda;
+  }
+  
+  .toggle-btn:hover {
+    background-color: #e67e22;
+  }
+  
+  /* ======= PAGINATION ======= */
+  .pagination {
     display: flex;
-    align-items: center;
     justify-content: center;
+    gap: 8px;
+    margin-bottom: 60px;
   }
   
-  .modal-content {
-    background: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    width: 100%;
+  .pagination button {
+    padding: 8px 12px;
+    background-color: #ddd;
+    border-radius: 5px;
+  }
+  
+  .pagination button.active {
+    background-color: #004080;
+    color: white;
+  }
+  
+
+
+  .service-form {
     max-width: 600px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    margin: 40px auto;
+    padding: 25px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-family: "Baloo Bhaijaan 2", sans-serif;
   }
+  /* Language tab buttons */
+.service-form .lang-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+  /* ======= MODAL ======= */
+
   
-  .modal-content h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-  }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* Modal container */
+.modal-box {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-height: 90vh;
+  max-width: 500px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+  margin:0 10px;
+  overflow-y: auto;
+
+
+}
+
+.modal-title,.service-form-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Form inputs */
+.modal-form , .service-form{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modal-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-label {
+  width: 100px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+  font-family: "Baloo Bhaijaan 2", sans-serif;
+}
+
+.modal-input, .modal-input-discription{
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: border-color 0.2s;
+  font-family: "Baloo Bhaijaan 2", sans-serif;
+}
+
+
+.modal-input-discription {
+  resize: vertical;
+  background-image:
+    radial-gradient(circle, #ccc 30%, transparent 30%),
+    linear-gradient(135deg, transparent 80%, #ccc 80%);
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-position: bottom right;
+  min-height: 80px;
+
+}
+
+
+
+.modal-field.checkbox {
+  align-items: center;
+}
+.modal-checkbox {
+  transform: scale(1.2);
+}
+.modal-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.lang-tabs {
+  padding: 6px 12px;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+  width:max-content;
+}
+
+.lang-tabs .active {
+  background: #007bff;
+  color: white;
+}
+
+/* Bookable checkbox */
+.bookable-checkbox {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Buttons */
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.save-btn-edit-service, .cancel-btn-edit-service {
+  padding: 10px 18px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.save-btn-edit-service {
+  background-color: #28a745;
+  color: white;
+}
+
+.cancel-btn-edit-service {
+  background-color: #dc3545;
+  color: white;
+}
+
+.save-btn-edit-service:hover {
+  background-color: #218838;
+}
+
+.cancel-btn-edit-service:hover {
+  background-color: #c82333;
+}
+
+/* Fade animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
   
-  .modal-content input,
-  .modal-content select {
-    width: 100%;
-    padding: 10px 12px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1rem;
-  }
   
-  .modal-actions {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
   
-  .modal-actions button {
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .modal-actions .cancel-btn {
-    background-color: #e53935;
-    color: white;
-  }
-  
-  .modal-actions .cancel-btn:hover {
-    background-color: #c62828;
-  }
-  
-  .modal-actions button[type="submit"] {
-    background-color: #43a047;
-    color: white;
-  }
-  
-  .modal-actions button[type="submit"]:hover {
-    background-color: #2e7d32;
-  }
-  
-  /* === Responsive === */
+  /* ======= MOBILE RESPONSIVENESS ======= */
   @media (max-width: 768px) {
-    .services-filters {
+    .filters-container {
       flex-direction: column;
     }
   
-    .service-form,
-    .modal-content {
-      padding: 16px;
+    .services-table {
+      display: none;
     }
   
-    .services-table th,
-    .services-table td {
-      font-size: 0.9rem;
-      padding: 10px;
+    .services-page .card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
     }
+      
+      /* Card styling */
+      .services-page .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 10px 40px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #ddd;
+      }
+      
+      .services-page .card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Card row */
+      .services-page .card .row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.3rem;
+        color: #3e3e3e;
+      }
+
+      .services-page .card .row label {
+        display: flex;
+        color: #3e3e3e;
+        width:50%;
+      }
+      
+      .services-page .card .row strong {
+        color: #444;
+        font-weight: 600;
+        width:50%;
+      }
+      
+      .services-page .card .row span{
+        display:flex;
+        color: #666;
+        font-size: 1.1rem;
+        padding: 5px;
+        margin-right: auto;
+      }
+      
+      /* Last row for buttons */
+      .services-page .card .row:last-child {
+        margin-top: 10px;
+        gap: 10px;
+      }
+      
+      /* Buttons */
+      .services-page .card button {
+        display: flex;
+        padding: 8px 16px;
+        font-size: 1.2rem;
+        font-weight: 500;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+        transition: background-color 0.2s ease;
+        font-family: "Baloo Bhaijaan 2", sans-serif;
+        font-optical-sizing: auto;
+        font-style:normal;
+      }
+      
+      .services-page .card .edit-btn {
+        background-color: #0d6efd;
+        color: #fff;
+        margin-right: auto;
+        width:fit-content;
+      }
+
+      .services-page .card .toggle-btn {
+        background-color: #ffc107;
+        color: #212529;
+        width:fit-content;
+      }
+      
+
+      .services-page .card .edit-btn:hover {
+        background-color: #084298;
+      }
+      
+      .services-page .card .toggle-btn:hover {
+        background-color: #e0a800;
+      }
+      
+      /* Badge styling */
+      .services-page .card .badge {
+        padding: 0px;
+        transition: background-color 0.7s ease;   
+      }
+    
+      .services-page .card .badge.green {
+        background-color: #28a745;
+        color: #fff;
+      }
+      
+      .services-page .card .badge.red {
+        background-color: #dc3545;
+        color: #fff;
+      }
+        /* Divider between card rows */
+      .divider {
+        height: 1px;
+        border: none;
+        background: linear-gradient(to right, transparent, #ccc, transparent);
+        margin: 10px 0;
+        }
+
+        .modal-content {
+        width: 95%;
+        margin:20px;
+        }
+  
+        .pagination {
+        flex-wrap: wrap;
+        }
   }
   

@@ -1,4 +1,4 @@
-// Updated with clean and clear classNames
+// Updated with clean classNames and mobile card layout support
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "../services/api";
@@ -54,6 +54,9 @@ const ServicesPage = () => {
     setCurrentPage(1);
   }, [search, categoryFilter, services, languageTab]);
 
+
+  
+
   const handleAddService = async (e) => {
     e.preventDefault();
     try {
@@ -101,8 +104,10 @@ const ServicesPage = () => {
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
+  const isMobile = window.innerWidth < 768;
+
   return (
-    <div className="services-container">
+    <div className="services-page">
       <div className="filters-container">
         <input
           type="text"
@@ -118,41 +123,64 @@ const ServicesPage = () => {
         />
       </div>
 
-      <table className="services-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Duration</th>
-            <th>Status</th>
-            <th>Bookable</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginated.map((s) => (
-            <tr key={s._id}>
-              <td>{s.name.en}</td>
-              <td>{s.price} ₪</td>
-              <td>{s.duration} min</td>
-              <td>
-                <span className={s.isActive ? "badge green" : "badge red"}>
-                  {s.isActive ? "Active" : "Inactive"}
-                </span>
-              </td>
-              <td>{s.bookable ? "✅" : "❌"}</td>
-              <td>
-                <button className="edit-btn" onClick={() => setEditingService(s)}>
-                  Edit
-                </button>
-                <button className="toggle-btn" onClick={() => handleToggleActive(s._id)}>
-                  Toggle
-                </button>
-              </td>
+      {!isMobile ? (
+        <table className="services-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Bookable</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {paginated.map((s) => (
+              <tr key={s._id}>
+                <td>{s.name.en}</td>
+                <td>{s.price} ₪</td>
+                <td>{s.duration} min</td>
+                <td>
+                  <span className={s.isActive ? "badge green" : "badge red"}>
+                    {s.isActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
+                <td>{s.bookable ? "True" : "False"}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => setEditingService(s)}>
+                    Edit
+                  </button>
+                  <button className="toggle-btn" onClick={() => handleToggleActive(s._id)}>
+                    Toggle
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div className="card-list">
+        {paginated.map((s) => (
+          <div key={s._id} className="card">
+            <div className="row"><strong>Name:</strong> <label>{s.name.en}</label></div>
+            <div className="divider"></div>
+            <div className="row"><strong>Price:</strong><label> {s.price} ₪</label></div>
+            <div className="divider"></div>
+            <div className="row"><strong>Duration:</strong> <label>{s.duration} min</label></div>
+            <div className="divider"></div>
+            <div className="row"><strong>Status:</strong> <span className={s.isActive ? "badge green" : "badge red"}>{s.isActive ? "Active" : "Inactive"}</span></div>
+            <div className="divider"></div>
+            <div className="row"><strong>Bookable:</strong> <label>{s.bookable ? "True" : "False"}</label></div>
+            <div className="divider"></div>
+            <div className="row">
+              <button className="edit-btn" onClick={() => setEditingService(s)}>Edit</button>
+              <button className="toggle-btn" onClick={() => handleToggleActive(s._id)}>Toggle</button>
+            </div>
+          </div>
+        ))}
+        </div>
+      )}
 
       <div className="pagination">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -165,8 +193,7 @@ const ServicesPage = () => {
           </button>
         ))}
       </div>
-
-      <h3>Add New Service</h3>
+      <h3 className="service-form-title">Add New Service</h3>
       <form onSubmit={handleAddService} className="service-form">
         <div className="lang-tabs">
           {["en", "ar", "he"].map((lang) => (
@@ -180,47 +207,83 @@ const ServicesPage = () => {
             </button>
           ))}
         </div>
-        <input type="text" placeholder={`Name (${languageTab})`} value={form.name[languageTab]} onChange={(e) => setForm({ ...form, name: { ...form.name, [languageTab]: e.target.value } })} />
-        <input type="text" placeholder={`Description (${languageTab})`} value={form.description[languageTab]} onChange={(e) => setForm({ ...form, description: { ...form.description, [languageTab]: e.target.value } })} />
-        <input type="number" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-        <input type="number" placeholder="Duration (minutes)" value={form.duration} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })} />
-        <input type="text" placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-        <label>
-          Bookable
-          <input type="checkbox" checked={form.bookable} onChange={(e) => setForm({ ...form, bookable: e.target.checked })} />
-        </label>
+        <div className="modal-field">
+          <label className="modal-label">Name:</label>
+          <input type="text" className="modal-input" placeholder={`Name (${languageTab})`} value={form.name[languageTab]} onChange={(e) => setForm({ ...form, name: { ...form.name, [languageTab]: e.target.value } })} />
+
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Description:</label>
+          <textarea className="modal-input-discription" rows={3} placeholder={`Description (${languageTab})`} value={form.description[languageTab]} onChange={(e) => setForm({ ...form, description: { ...form.description, [languageTab]: e.target.value } })} />
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Price:</label>
+          <input type="number" className="modal-input" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Duration:</label>
+          <input type="number" className="modal-input" placeholder="Duration (minutes)" value={form.duration} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })} />
+
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Category:</label>
+          <input type="text" className="modal-input" placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+
+        </div>
+        <div className="modal-field checkbox">
+          <label className="bookable-checkbox">Bookable:</label>
+          <input type="checkbox" className="modal-checkbox" checked={form.bookable} onChange={(e) => setForm({ ...form, bookable: e.target.checked })} />
+        </div>
+  
+        <div className="modal-actions">
         <button type="submit" className="submit-btn">Add Service</button>
+        </div>
       </form>
 
       {editingService && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Edit Service</h3>
-            <form onSubmit={handleEditService}>
+        <div className="modal-overlay">
+          <div className="modal-box">
+          <h3 className="modal-title">Edit Service</h3>
+          <form onSubmit={handleEditService} className="modal-form">
               <div className="lang-tabs">
                 {["en", "ar", "he"].map((lang) => (
                   <button
                     type="button"
                     key={lang}
-                    className={languageTab === lang ? "tab active" : "tab"}
+                    className={languageTab === lang ? "active" : ""}
                     onClick={() => setLanguageTab(lang)}
                   >
                     {lang.toUpperCase()}
                   </button>
                 ))}
               </div>
-              <input type="text" placeholder={`Name (${languageTab})`} value={editingService.name[languageTab]} onChange={(e) => setEditingService({ ...editingService, name: { ...editingService.name, [languageTab]: e.target.value } })} />
-              <input type="text" placeholder={`Description (${languageTab})`} value={editingService.description[languageTab]} onChange={(e) => setEditingService({ ...editingService, description: { ...editingService.description, [languageTab]: e.target.value } })} />
-              <input type="number" placeholder="Price" value={editingService.price} onChange={(e) => setEditingService({ ...editingService, price: Number(e.target.value) })} />
-              <input type="number" placeholder="Duration" value={editingService.duration} onChange={(e) => setEditingService({ ...editingService, duration: Number(e.target.value) })} />
-              <input type="text" placeholder="Category" value={editingService.category} onChange={(e) => setEditingService({ ...editingService, category: e.target.value })} />
-              <label>
-                Bookable
-                <input type="checkbox" checked={editingService.bookable} onChange={(e) => setEditingService({ ...editingService, bookable: e.target.checked })} />
-              </label>
+              <div className="modal-field">
+                <label className="modal-label">Name  :</label>
+                <input type="text" className="modal-input" placeholder={`Name (${languageTab})`} value={editingService.name[languageTab]} onChange={(e) => setEditingService({ ...editingService, name: { ...editingService.name, [languageTab]: e.target.value } })} />
+              </div>  
+              <div className="modal-field">
+                <label className="modal-label">discription  :</label>
+                 <textarea className="modal-input-discription" rows={3} placeholder={`Description (${languageTab})`} value={editingService.description[languageTab]} onChange={(e) => setEditingService({ ...editingService, description: { ...editingService.description, [languageTab]: e.target.value } })} />                
+              </div>  
+              <div className="modal-field">
+                <label className="modal-label">Price  :</label>
+                <input type="number" className="modal-input" placeholder="Price" value={editingService.price} onChange={(e) => setEditingService({ ...editingService, price: Number(e.target.value) })} />
+              </div>  
+              <div className="modal-field">
+                <label className="modal-label">Duration  :</label>
+                <input type="number" className="modal-input" placeholder="Duration" value={editingService.duration} onChange={(e) => setEditingService({ ...editingService, duration: Number(e.target.value) })} />
+              </div>  
+              <div className="modal-field">
+                <label className="modal-label">Category  :</label>
+                <input type="text" className="modal-input" placeholder="Category" value={editingService.category} onChange={(e) => setEditingService({ ...editingService, category: e.target.value })} />
+              </div>  
+              <div className="modal-field checkbox">
+                <label className="bookable-checkbox"> Bookable  :</label>   
+                <input type="checkbox" className="modal-checkbox" checked={editingService.bookable} onChange={(e) => setEditingService({ ...editingService, bookable: e.target.checked })} />
+              </div>
               <div className="modal-actions">
-                <button type="submit" className="save-btn">Save</button>
-                <button type="button" className="cancel-btn" onClick={() => setEditingService(null)}>Cancel</button>
+                <button className="save-btn-edit-service">Save</button>
+                <button className="cancel-btn-edit-service" onClick={() => setEditingService(null)}>Cancel</button>
               </div>
             </form>
           </div>
