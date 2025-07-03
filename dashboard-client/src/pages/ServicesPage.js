@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import axios from "../services/api";
 import "../styles/ServicesPage.css";
 
+
 const emptyService = {
   name: { en: "", ar: "", he: "" },
   description: { en: "", ar: "", he: "" },

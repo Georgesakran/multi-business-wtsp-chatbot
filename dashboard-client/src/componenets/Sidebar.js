@@ -4,7 +4,8 @@ import "../styles/Sidebar.css";
 import { LanguageContext } from "../context/LanguageContext";
 import { handleLogout } from "../utils/logout";
 import ConfirmationModal from "./ConfirmationModal";
-
+import translations from "../translate/translations";
+import { getLabelByLang } from "../translate/getLabelByLang"; // Adjust the import path as necessary
 
 function Sidebar({ collapsed, setCollapsed, role }) {
   const { language } = useContext(LanguageContext);
@@ -38,16 +39,8 @@ useEffect(() => {
     if (to === "/logout") {
       e.preventDefault();
       setModalConfig({
-        title: language === "arabic"
-          ? "تأكيد تسجيل الخروج"
-          : language === "hebrew"
-          ? "אישור יציאה"
-          : "Confirm Logout",
-        message: language === "arabic"
-          ? "هل أنت متأكد أنك تريد تسجيل الخروج؟"
-          : language === "hebrew"
-          ? "אתה בטוח שברצונך להתנתק?"
-          : "Are you sure you want to log out?",
+        title: getLabelByLang(translations.modals.logoutTitle, language),
+        message: getLabelByLang(translations.modals.logoutMessage, language),
         onConfirm: () => {
           handleLogout(navigate);
           setShowModal(false);
@@ -69,14 +62,18 @@ useEffect(() => {
     { to: "/logout", label: { en: "Logout", ar: "تسجيل الخروج", he: "התנתק" }, icon: "🚪" },
   ];
 
+  const t = translations.sidebar;
+
   const ownerMenu = [
-    { to: "/owner/Dashboard", label: { en: "Dashboard", ar: "لوحة التحكم", he: "לוח ניהול" }, icon: "🏠" },
-    { to: "/owner/profile", label: { en: "Business Info", ar: "معلومات النشاط", he: "פרטי העסק" }, icon: "🏢" },
-    { to: "/owner/services", label: { en: "Services", ar: "الخدمات", he: "שירותים" }, icon: "💈" },
-    { to: "/owner/bookings", label: { en: "Bookings", ar: "الحجوزات", he: "הזמנות" }, icon: "📅" },
-    { to: "/logout", label: { en: "Logout", ar: "تسجيل الخروج", he: "התנתק" }, icon: "🚪" },
-    { to: "/owner/calendar", label: { en: "Calendar", ar: "التقويم", he: "לוח שנה" }, icon: "📆" },
+    { to: "/owner/Dashboard", label: t.dashboard, icon: "🏠" },
+    { to: "/owner/profile", label: t.businessInfo, icon: "🏢" },
+    { to: "/owner/services", label: t.services, icon: "💈" },
+    { to: "/owner/bookings", label: t.bookings, icon: "📅" },
+    { to: "/owner/calendar", label: t.calendar, icon: "📆" },
+    { to: "/logout", label: t.logout, icon: "🚪" },
   ];
+  
+
 
   const menu = role === "admin" ? adminMenu : ownerMenu;
 
@@ -101,11 +98,7 @@ useEffect(() => {
               <span className="icon">{item.icon}</span>
               {!collapsed && (
                 <span className="label">
-                  {language === "arabic"
-                    ? item.label.ar
-                    : language === "hebrew"
-                    ? item.label.he
-                    : item.label.en}
+                  {getLabelByLang(item.label, language)}
                 </span>
               )}
             </NavLink>
