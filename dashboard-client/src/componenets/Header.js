@@ -104,6 +104,13 @@ function Header({ setCollapsed }) {
           ☰
         </button>
       )}
+      <img
+        src="/logo_png-noback.png"
+        alt="Logo"
+        className="logo"
+        style={{ width: "auto", height: "65px" }}
+        onClick={() => navigate("/owner/Dashboard")} 
+        /> 
       <h1 className="page-title">{title}</h1>
     </div>
   
