@@ -1,0 +1,85 @@
+.custom-dropdown {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    width: 170px;
+    font-family: "Baloo Bhaijaan 2", sans-serif;
+
+  }
+  
+  /* Adjust width on mobile */
+  .custom-dropdown.mobile {
+    min-width: 230px; /* or 100% if you prefer */
+  }
+  
+  .custom-dropdown.rtl {
+    align-items: right;
+    direction: rtl;
+  }
+  
+  .custom-dropdown.ltr {
+    direction: ltr;
+  }
+  
+  .dropdown-toggle-booking {
+    font-family: "Baloo Bhaijaan 2", sans-serif;
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    user-select: none;
+  }
+ 
+  
+  /* RTL text alignment for button */
+  .custom-dropdown.rtl .dropdown-toggle-booking {
+    text-align: right;
+
+  }
+  
+  .dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 4px;
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .dropdown-options li {
+    padding: 8px 10px;
+    cursor: pointer;
+    background-color: #ccc;
+    font-size: 1rem;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    text-align: left;
+  }
+  
+  /* RTL text alignment for options */
+  .custom-dropdown.rtl .dropdown-options li {
+    text-align: right;
+  }
+  
+  .dropdown-options li:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .dropdown-options li.selected {
+    background-color: #e6f7ff;
+    font-weight: bold;
+  }
+
+  

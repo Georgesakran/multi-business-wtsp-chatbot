@@ -56,7 +56,6 @@ router.post("/", protect,async (req, res) => {
     time,
     status
   } = req.body;
-
   try {
     const newBooking = new Booking({
       businessId,

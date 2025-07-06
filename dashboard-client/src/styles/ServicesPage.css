@@ -45,6 +45,7 @@
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    font-size: large;
   }
   
   .services-table tr:last-child td {
@@ -70,7 +71,7 @@
   }
   
   /* ======= BUTTONS ======= */
-  button {
+  .services-page button {
     padding: 8px 12px;
     margin-right: 5px;
     border: none;
@@ -121,6 +122,32 @@
   }
   
 
+/* ======= SERVICE FORM ======= */
+
+.services-page.rtl {
+  direction: rtl;
+}
+
+/* Flip label/input row */
+.services-page.rtl .modal-field {
+  justify-content: flex-start; /* prevent space between pushing them apart */
+}
+
+/* Label aligned right */
+.services-page.rtl .modal-label {
+  text-align: right;
+}
+
+/* Inputs align text to the right */
+.services-page.rtl .modal-input,
+.services-page.rtl .modal-input-discription {
+  text-align: right;
+}
+
+/* Align language buttons to the right */
+.services-page.rtl .lang-tabs {
+  justify-content: flex-end;
+}
 
   .service-form {
     max-width: 600px;
@@ -346,6 +373,7 @@
         display: flex;
         color: #3e3e3e;
         width:50%;
+        font-size: 20px;
       }
       
       .services-page .card .row strong {
@@ -359,13 +387,22 @@
         color: #666;
         font-size: 1.1rem;
         padding: 5px;
+      }
+      .services-page.rtl .card .row span {
+        margin-left: auto;
+      }
+      
+      .services-page.ltr .card .row span {
         margin-right: auto;
       }
+      
+      
       
       /* Last row for buttons */
       .services-page .card .row:last-child {
         margin-top: 10px;
         gap: 10px;
+        direction: ltr;
       }
       
       /* Buttons */

@@ -1,11 +1,11 @@
 // src/translate/getLabelByLang.js
 export function getLabelByLang(labelObj, lang) {
     switch (lang) {
-      case "arabic":
+      case "ar":
         return labelObj.ar || labelObj.en;
-      case "hebrew":
+      case "he":
         return labelObj.he || labelObj.en;
-      case "english":
+      case "en":
       default:
         return labelObj.en;
     }

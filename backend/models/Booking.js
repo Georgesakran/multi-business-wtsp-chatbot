@@ -5,7 +5,11 @@ const bookingSchema = new mongoose.Schema({
   businessId: { type: mongoose.Schema.Types.ObjectId, ref: "Business", required: true },
   customerName: String,
   phoneNumber: String,
-  service: String,
+  service: {
+    en: { type: String, required: true },
+    ar: { type: String },
+    he: { type: String },
+  },  
   date: String, // YYYY-MM-DD
   time: String, // HH:mm
   status: {

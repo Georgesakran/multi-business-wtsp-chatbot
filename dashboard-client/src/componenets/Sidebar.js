@@ -8,6 +8,7 @@ import translations from "../translate/translations";
 import { getLabelByLang } from "../translate/getLabelByLang"; // Adjust the import path as necessary
 
 function Sidebar({ collapsed, setCollapsed, role }) {
+
   const { language } = useContext(LanguageContext);
   const navigate = useNavigate();
 
@@ -70,6 +71,7 @@ useEffect(() => {
     { to: "/owner/services", label: t.services, icon: "💈" },
     { to: "/owner/bookings", label: t.bookings, icon: "📅" },
     { to: "/owner/calendar", label: t.calendar, icon: "📆" },
+    { to: "/owner/settings", label: t.settings, icon: "⚙️" },
     { to: "/logout", label: t.logout, icon: "🚪" },
   ];
   

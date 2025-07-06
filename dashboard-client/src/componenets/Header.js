@@ -2,60 +2,14 @@ import React, { useContext, useState, useEffect } from "react";
 import "../styles/Header.css";
 import { LanguageContext } from "../context/LanguageContext";
 import { useLocation, useNavigate } from "react-router-dom";
+import translations from "../translate/translations";
+import { getLabelByLang } from "../translate/getLabelByLang";
 
 const LANGUAGES = [
-  { code: "english", label: "English" },
-  { code: "arabic", label: "العربية" },
-  { code: "hebrew", label: "עברית" },
+  { code: "en", label: "English" },
+  { code: "ar", label: "العربية" },
+  { code: "he", label: "עברית" },
 ];
-
-const PAGE_TITLES = {
-  "/admin/Dashboard": {
-    english: "Admin Dashboard",
-    arabic: "لوحة التحكم",
-    hebrew: "לוח ניהול",
-  },
-  "/owner/Dashboard": {
-    english: "Dashboard",
-    arabic: "لوحة التحكم",
-    hebrew: "לוח ניהול",
-  },
-  "/admin/businesses": {
-    english: "Businesses",
-    arabic: "الأعمال",
-    hebrew: "עסקים",
-  },
-  "/profile": {
-    english: "Business Info",
-    arabic: "معلومات العمل",
-    hebrew: "פרטי העסק",
-  },
-  "/admin/add-business": {
-    english: "Add Business",
-    arabic: "إضافة عمل",
-    hebrew: "הוספת עסק",
-  },
-  "/owner/bookings": {
-    english: "Bookings",
-    arabic: "الحجوزات",
-    hebrew: "הזמנות",
-  },
-  "/owner/calendar": {
-    english: "Calendar",
-    arabic: "رزنامة",
-    hebrew: "לוח שנה",
-  },
-  "/owner/settings": {
-    english: "Settings",
-    arabic: "الإعدادات",
-    hebrew: "הגדרות",
-  },
-  "/owner/services": {
-    english: "Services",
-    arabic: "الخدمات",
-    hebrew: "שירותים",
-  },
-};
 
 function Header({ setCollapsed }) {
   const location = useLocation();
@@ -87,59 +41,61 @@ function Header({ setCollapsed }) {
     setOpen(false);
   };
 
-  const handleSettingsClick = () => navigate("/owner/settings");
+  // const handleSettingsClick = () => navigate("/owner/settings");
 
   const currentPath = location.pathname;
+  const pageTitles = translations.pageTitles;
   const title =
-    PAGE_TITLES[currentPath]?.[language] || PAGE_TITLES["/dashboard"]?.[language];
+    getLabelByLang(pageTitles[currentPath], language) ||
+    getLabelByLang(pageTitles["/owner/Dashboard"], language);
 
   return (
     <header className={`header-bar ${isScrolled ? "scrolled" : ""}`}>
-    <div className="header-left">
-      {isMobile && (
-        <button
-          className="hamburger-toggle"
-          onClick={() => setCollapsed((prev) => !prev)}
-        >
-          ☰
-        </button>
-      )}
-      <img
-        src="/logo_png-noback.png"
-        alt="Logo"
-        className="logo"
-        style={{ width: "auto", height: "65px" }}
-        onClick={() => navigate("/owner/Dashboard")} 
-        /> 
-      <h1 className="page-title">{title}</h1>
-    </div>
-  
-    <div className="header-actions">
-      <button className="settings-button" onClick={handleSettingsClick}>
-        ⚙️ {language === "arabic" ? "الإعدادات" : language === "hebrew" ? "הגדרות" : "Settings"}
-      </button>
-  
-      <div className="lang-selector">
-        <div className="lang-current" onClick={toggleDropdown}>
-          🌐 {LANGUAGES.find((l) => l.code === language).label}
-        </div>
-  
-        {open && (
-          <ul className="lang-dropdown">
-            {LANGUAGES.map((lang) => (
-              <li
-                key={lang.code}
-                className={lang.code === language ? "active" : ""}
-                onClick={() => selectLang(lang.code)}
-              >
-                {lang.label}
-              </li>
-            ))}
-          </ul>
+      <div className="header-left">
+        {isMobile && (
+          <button
+            className="hamburger-toggle"
+            onClick={() => setCollapsed((prev) => !prev)}
+          >
+            ☰
+          </button>
         )}
+        <img
+          src="/logo_png-noback.png"
+          alt="Logo"
+          className="logo"
+          style={{ width: "auto", height: "65px" }}
+          onClick={() => navigate("/owner/Dashboard")}
+        />
+        <h1 className="page-title">{title}</h1>
       </div>
-    </div>
-  </header>
+
+      <div className="header-actions">
+        {/* <button className="settings-button" onClick={handleSettingsClick}>
+          ⚙️ {getLabelByLang(translations.header.settings, language)}
+        </button> */}
+
+        <div className="lang-selector">
+          <div className="lang-current" onClick={toggleDropdown}>
+            🌐 {LANGUAGES.find((l) => l.code === language)?.label}
+          </div>
+
+          {open && (
+            <ul className="lang-dropdown">
+              {LANGUAGES.map((lang) => (
+                <li
+                  key={lang.code}
+                  className={lang.code === language ? "active" : ""}
+                  onClick={() => selectLang(lang.code)}
+                >
+                  {lang.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </header>
   );
 }
 

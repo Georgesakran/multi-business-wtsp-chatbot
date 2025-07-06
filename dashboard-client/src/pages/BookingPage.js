@@ -1,15 +1,32 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo , useContext} from "react";
+import { LanguageContext } from "../context/LanguageContext";
+import translations from "../translate/translations";
+import { getLabelByLang } from "../translate/getLabelByLang";
 import axios from "../services/api";
 import "../styles/BookingsPage.css";
+import CustomDropdown  from "../componenets/CustomDropdown";
+import {
+  isValidPhoneNumber,
+  isValidCustomerName,
+  isDateTimeInFuture,
+  isTimeWithinWorkingHours,
+} from "../utils/bookingValidation";
+import { toast } from "react-toastify";
 
 const BookingsPage = () => {
   const ownerData = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+
+  const { language } = useContext(LanguageContext);
   const businessId = ownerData?.businessId;
+  const [businessConfig, setBusinessConfig] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [loading, setLoading] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [services, setServices] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(() => new Date().toLocaleDateString("en-CA"));
@@ -24,6 +41,16 @@ const BookingsPage = () => {
     status: "pending",
   });
 
+
+  const fetchBusinessConfig = useCallback(async () => {
+    try {
+      const res = await axios.get(`/businesses/${businessId}`);
+      setBusinessConfig(res.data.config?.booking); // contains openingTime, closingTime
+    } catch (err) {
+      console.error("❌ Failed to fetch business config:", err.message);
+    }
+  }, [businessId]);
+
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
@@ -36,9 +63,25 @@ const BookingsPage = () => {
     }
   }, [businessId]);
 
+  const fetchServices = useCallback(async () => {
+    try {
+      const res = await axios.get("/services", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setServices(res.data.filter((s) => s.isActive));
+    } catch (err) {
+      console.error("❌ Failed to load services:", err.message);
+    }
+  }
+, [token]);
+
   useEffect(() => {
-    if (businessId) fetchBookings();
-  }, [businessId, fetchBookings]);
+    if (businessId) {
+      fetchBookings();
+      fetchServices();
+      fetchBusinessConfig();
+    }
+  }, [businessId, fetchBookings, fetchServices,fetchBusinessConfig]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -50,25 +93,25 @@ const BookingsPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-useEffect(() => {
-  const handleOutsideClickOrScroll = (event) => {
-    // Prevent crash by checking if target is a DOM element
-    if (
-      !(event.target instanceof Element) ||
-      !event.target.closest(".dropdown-wrapper")
-    ) {
-      setOpenDropdownId(null);
-    }
-  };
+  useEffect(() => {
+    const handleOutsideClickOrScroll = (event) => {
+      // Prevent crash by checking if target is a DOM element
+      if (
+        !(event.target instanceof Element) ||
+        !event.target.closest(".dropdown-wrapper")
+      ) {
+        setOpenDropdownId(null);
+      }
+    };
 
-  document.addEventListener("click", handleOutsideClickOrScroll);
-  document.addEventListener("scroll", handleOutsideClickOrScroll, true); // useCapture = true for better scroll detection
+    document.addEventListener("click", handleOutsideClickOrScroll);
+    document.addEventListener("scroll", handleOutsideClickOrScroll, true); // useCapture = true for better scroll detection
 
-  return () => {
-    document.removeEventListener("click", handleOutsideClickOrScroll);
-    document.removeEventListener("scroll", handleOutsideClickOrScroll, true);
-  };
-}, []);
+    return () => {
+      document.removeEventListener("click", handleOutsideClickOrScroll);
+      document.removeEventListener("scroll", handleOutsideClickOrScroll, true);
+    };
+  }, []);
 
   
 
@@ -93,20 +136,75 @@ useEffect(() => {
     }
   };
 
+
   const handleEditClick = (booking) => {
-    setFormData({ ...booking });
+    setFormData({
+      ...booking,
+      service: typeof booking.service === "object" ? JSON.stringify(booking.service) : booking.service
+    });
     setEditingId(booking._id);
     setShowForm(true);
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+  const { customerName, phoneNumber, date, time } = formData;
+
+  const config = {
+    openingTime: businessConfig?.openingTime, // You should replace this with a value from DB
+    closingTime: businessConfig?.closingTime,
+  };
+
+  let IsValid = true;   
+
+  // 🛑 Validate name
+  if (!isValidCustomerName(customerName)) {
+    IsValid = false;
+    toast.error(getLabelByLang(translations.bookingsPage.toastNotValidcustomerName, language));
+  }
+
+  // 🛑 Validate phone number
+  if (!isValidPhoneNumber(phoneNumber)) {
+    IsValid = false;
+    toast.error(getLabelByLang(translations.bookingsPage.toastNotValidPhone, language));
+  }
+
+  // 🛑 Validate date + time
+  if (!isDateTimeInFuture(date, time)) {
+    IsValid = false;
+    toast.error(getLabelByLang(translations.bookingsPage.toastNotValidDate, language));
+  }
+
+
+  // 🛑 Validate working hours
+  if (!isTimeWithinWorkingHours(time, config.openingTime, config.closingTime)) {
+    IsValid = false;
+    toast.error(
+      getLabelByLang(translations.bookingsPage.toastNotValidTime, language)
+      .replace("{openingTime}", config.openingTime )
+      .replace("{closingTime}", config.closingTime)
+      );
+  }
+    if(!IsValid)
+     return;
+
     try {
+      const serviceObj = JSON.parse(formData.service); // parse it back to object
+  
+      const payload = {
+        ...formData,
+        service: serviceObj,
+        businessId
+      };
+  
       if (editingId) {
-        await axios.put(`/bookings/${editingId}`, { ...formData, businessId });
+        await axios.put(`/bookings/${editingId}`, payload);
       } else {
-        await axios.post("/bookings", { ...formData, businessId });
+        await axios.post("/bookings", payload);
       }
+  
+      // reset
       setFormData({
         customerName: "",
         phoneNumber: "",
@@ -144,145 +242,229 @@ useEffect(() => {
     );
   }, [bookings, statusFilter, dateFilter, searchQuery]);
 
-  const bookingsPerPage = 5;
+  const bookingsPerPage =10;
   const indexOfLastBooking = currentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
   const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
 
   const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+  const statusOptions = [
+    { value: "all", label: getLabelByLang(translations.bookingsPage.all, language) },
+    { value: "pending", label: getLabelByLang(translations.bookingsPage.pending, language) },
+    { value: "confirmed", label: getLabelByLang(translations.bookingsPage.confirmed, language) },
+    { value: "cancelled", label: getLabelByLang(translations.bookingsPage.cancelled, language) },
+  ];
+  
+  
+<CustomDropdown
+  options={statusOptions}
+  value={statusFilter}
+  onChange={setStatusFilter}
+  placeholder="Select status"
+  isRtl={["ar", "he"].includes(language)}
+/>
 
+  
   if (!businessId) return <p>❌ No business ID found. Please log in again.</p>;
 
   return (
-    <div className="bookings-container">
+    <div className={`bookings-container ${["ar", "he"].includes(language) ? "rtl" : "ltr"}`}>
+
       <div className="search-byName-Number">
         <label>
-          Search Bookings :
+          {getLabelByLang(translations.bookingsPage.searchLabel, language)}:
         </label>
-        <input type="text" placeholder="🔎 Search by name or phone" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <input
+          type="text"
+          placeholder={getLabelByLang(translations.bookingsPage.searchPlaceholder, language)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
-      
+
       <div className="filters">
         <label>
-          Filter :
-          </label>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        
-        <div className="date-filter">
-        <label>
-          <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+          {getLabelByLang(translations.bookingsPage.filterLabel, language)}:
         </label>
-        <button className="reset-date-btn" onClick={handleResetDateFilter}>
-          ♻️
-        </button>
-        </div>
-        
+ 
+        <CustomDropdown
+          options={statusOptions}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          placeholder={getLabelByLang(translations.bookingsPage.selectStatus, language) || "Select status"}
+          isRtl={["ar", "he"].includes(language)}
+        />
 
+        <div className="date-filter">
+          <label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+          </label>
+          <button className="reset-date-btn" onClick={handleResetDateFilter}>
+            ♻️
+          </button>
+        </div>
       </div>
 
-      <button
-        className={showForm ? "add-new-booking-btn cancel-mode" : "add-new-booking-btn"}
-        onClick={() => setShowForm(!showForm)}
-      >
-        {showForm ? "Cancel" : "Add Booking"}
-      </button>
-      
+
       {showForm && (
         <form onSubmit={handleFormSubmit} className="booking-form">
-          <input type="text" placeholder="Customer Name" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} required />
-          <input type="tel" placeholder="Phone" value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} required />
-          <input type="text" placeholder="Service" value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })} required />
-          <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
-          <input type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} required />
-          <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button className="SaveBooking-btn" disabled={!formData.customerName || !formData.phoneNumber || !formData.date || !formData.time}>✅ Save Booking</button>
+          <input
+            type="text"
+            placeholder={getLabelByLang(translations.bookingsPage.customerNamePlaceholder, language)}
+            value={formData.customerName}
+            onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+            required
+          />
+          <input
+            type="tel"
+            placeholder={getLabelByLang(translations.bookingsPage.phonePlaceholder, language)}
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            required
+          />
+          <CustomDropdown
+            options={[
+              { value: "", label: getLabelByLang(translations.bookingsPage.selectService, language) },
+                ...services.map(s => ({
+                  value: JSON.stringify(s.name),
+                  label: s.name?.[language] || s.name?.en
+              }))
+            ]}
+            value={formData.service}
+            onChange={(val) => setFormData({ ...formData, service: val })}
+            placeholder={getLabelByLang(translations.bookingsPage.selectService, language)}
+            isRtl={["ar", "he"].includes(language)}  // example: language variable from your app
+
+
+          />
+
+          <input
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            required
+          />
+          <input
+            type="time"
+            value={formData.time}
+            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+            required
+          />
+          <CustomDropdown
+            value={formData.status}
+            onChange={(val) => setFormData({ ...formData, status: val })}
+            options={[
+              { value: "pending", label: getLabelByLang(translations.bookingsPage.pending, language) },
+              { value: "confirmed", label: getLabelByLang(translations.bookingsPage.confirmed, language) },
+              { value: "cancelled", label: getLabelByLang(translations.bookingsPage.cancelled, language) }
+            ]}
+            isRtl={["ar", "he"].includes(language)}  // example: language variable from your app
+          />
+
+          <button
+            className="SaveBooking-btn"
+            disabled={
+              !formData.customerName || !formData.phoneNumber || !formData.date || !formData.time
+            }
+          >
+            ✅ {getLabelByLang(translations.bookingsPage.save, language)}
+          </button>
         </form>
       )}
+      <button className={showForm ? "add-new-booking-btn cancel-mode" : "add-new-booking-btn"}
+        onClick={() => setShowForm(!showForm)}
+      >
+        {showForm
+          ? getLabelByLang(translations.bookingsPage.cancel, language)
+          : getLabelByLang(translations.bookingsPage.addBooking, language)}
+      </button>
+
 
       {loading ? (
-        <p>Loading bookings...</p>
-      ) : bookings.length === 0 ? (
-        <p>No bookings yet.</p>
+        <p>{getLabelByLang(translations.bookingsPage.loadingBookings, language)}</p>
+      ) : filteredBookings.length === 0 ? (
+        <p>{getLabelByLang(translations.bookingsPage.noBookings, language)}</p>
       ) : isMobile ? (
         <div className="mobile-bookings">
           {currentBookings.map((b) => (
             <div key={b._id} className="mobile-booking-card">
-              <p><strong>Name:</strong> {b.customerName}</p>
-              <p><strong>Service:</strong> {b.service}</p>
-              <p><strong>Date & Time:</strong> {b.date} {b.time}</p>
-              <p><strong>Status:</strong> {b.status}</p>
-              <div className="dropdown-wrapper">
-                <button className="dots-button" onClick={() => toggleDropdown(b._id)}>⋮</button>
-                {openDropdownId === b._id && (
-                  <div className="dropdown-menu-actions-booking">
-                    {b.status === "pending" && (
-                      <>
-                        <button onClick={() => handleStatusChange(b._id, "confirmed")}>✅ Confirm</button>
-                        <button onClick={() => handleStatusChange(b._id, "cancelled")}>❌ Cancel</button>
-                      </>
-                    )}
-                    <button onClick={() => handleEditClick(b)}>✏️ Edit</button>
-                    <button onClick={() => handleDelete(b._id)}>🗑️ Delete</button>
-                  </div>
-                )}
+              <div className="mobile-booking-header">
+                <div className="dropdown-wrapper">
+                  <button className="dots-button" onClick={() => toggleDropdown(b._id)}>⋮</button>
+                  {openDropdownId === b._id && (
+                    <div className="dropdown-menu-actions-booking">
+                      {b.status === "pending" && (
+                        <>
+                          <button onClick={() => handleStatusChange(b._id, "confirmed")}>✅ {getLabelByLang(translations.bookingsPage.confirm, language)}</button>
+                          <button onClick={() => handleStatusChange(b._id, "cancelled")}>✖️ {getLabelByLang(translations.bookingsPage.cancel, language)}</button>
+                        </>
+                      )}
+                      <button onClick={() => handleEditClick(b)}>{getLabelByLang(translations.bookingsPage.edit, language)} &nbsp; ✏️  </button>
+                      <button onClick={() => handleDelete(b._id)}>{getLabelByLang(translations.bookingsPage.delete, language)} &nbsp; 🗑️ </button>
+                    </div>
+                  )}
+                </div>
+                <p><strong>{getLabelByLang(translations.bookingsPage.customerNamePlaceholder, language)}:</strong> {b.customerName}</p>
               </div>
+              <p><strong>{getLabelByLang(translations.bookingsPage.servicePlaceholder, language)}:</strong> {b.service?.[language] || b.service?.en || "-"}</p>
+              <p><strong>{getLabelByLang(translations.bookingsPage.dateTime, language)}:</strong> {b.date} <strong>{b.time}</strong></p>
+              <p><strong>{getLabelByLang(translations.bookingsPage.status, language)}:</strong> {getLabelByLang(translations.bookingsPage[b.status], language)}</p>
+
+
             </div>
           ))}
         </div>
       ) : (
-        <table className="bookings-table">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Service</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Status</th>
+      <table className="bookings-table">
+        <thead>
+          <tr>
+            <th>{getLabelByLang(translations.bookingsPage.customerNamePlaceholder, language)}</th>
+            <th>{getLabelByLang(translations.bookingsPage.phonePlaceholder, language)}</th>
+            <th>{getLabelByLang(translations.bookingsPage.servicePlaceholder, language)}</th>
+            <th>{getLabelByLang(translations.bookingsPage.date, language)}</th>
+            <th>{getLabelByLang(translations.bookingsPage.time, language)}</th>
+            <th>{getLabelByLang(translations.bookingsPage.status, language)}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentBookings.map((b) => (
+            <tr key={b._id}>
+              <td>{b.customerName}</td>
+              <td>{b.phoneNumber}</td>
+              <td>{b.service?.[language] || b.service?.en || "-"}</td>
+              <td>{b.date}</td>
+              <td>{b.time}</td>
+              <td>
+                <strong>{getLabelByLang(translations.bookingsPage[b.status], language)}</strong>
+                <div className="actions">
+                  {b.status === "pending" && (
+                    <>
+                      <button onClick={() => handleStatusChange(b._id, "confirmed")}>✅</button>
+                      <button onClick={() => handleStatusChange(b._id, "cancelled")}>✖️</button>
+                    </>
+                  )}
+                  <button onClick={() => handleEditClick(b)}>✏️</button>
+                  <button onClick={() => handleDelete(b._id)}>🗑️</button>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {currentBookings.map((b) => (
-              <tr key={b._id}>
-                <td>{b.customerName}</td>
-                <td>{b.phoneNumber}</td>
-                <td>{b.service}</td>
-                <td>{b.date}</td>
-                <td>{b.time}</td>
-                <td>
-                  <strong>{b.status}</strong>
-                  <div className="actions">
-                    {b.status === "pending" && (
-                      <>
-                        <button onClick={() => handleStatusChange(b._id, "confirmed")}>✅</button>
-                        <button onClick={() => handleStatusChange(b._id, "cancelled")}>❌</button>
-                      </>
-                    )}
-                    <button onClick={() => handleEditClick(b)}>✏️</button>
-                    <button onClick={() => handleDelete(b._id)}>🗑️</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
       )}
-
       <div className="pagination-container">
         <div className="pagination-summary">
           {bookings.length > 0 && (
             <span>
-              Showing {filteredBookings.length === 0 ? 0 : indexOfFirstBooking + 1} to {Math.min(indexOfLastBooking, filteredBookings.length)} of {filteredBookings.length} entries
+              {getLabelByLang(translations.bookingsPage.paginationSummary, language)
+                .replace("{from}", filteredBookings.length === 0 ? 0 : indexOfFirstBooking + 1)
+                .replace("{to}", Math.min(indexOfLastBooking, filteredBookings.length))
+                .replace("{total}", filteredBookings.length)}
             </span>
           )}
         </div>
@@ -294,6 +476,7 @@ useEffect(() => {
           {currentPage < totalPages && <button onClick={() => handlePageChange(currentPage + 1)} className="circle-button">&gt;</button>}
         </div>
       </div>
+      
     </div>
   );
 };

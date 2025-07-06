@@ -43,22 +43,24 @@
   align-items: center;
   gap: 15px;
   margin-left: auto;
+  margin-right:3rem;
   flex-wrap: nowrap;
 }
 
-/* Settings + hamburger */
-.settings-button,
+/* hamburger (little side bar open)*/
 .hamburger-toggle {
   background-color: #f0f0f0;
   border: none;
-  padding: 8px 7px;
+  padding: 4px 6px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.95rem;
   color: #333;
+  font-weight: 500;
   transition: background-color 0.3s;
 }
-.settings-button:hover,
+
+
 .hamburger-toggle:hover {
   background-color: #e0e0e0;
 }
@@ -76,8 +78,8 @@
 .lang-current {
   cursor: pointer;
   font-size: 0.95rem;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 4px 6px;
+    border-radius: 6px;
   background-color: #f5f5f5;
   color: #333;
   transition: background-color 0.3s;
@@ -89,20 +91,20 @@
 
 .lang-dropdown {
   position: absolute;
-  right: 0;
+  right: -30%;
   top: 100%;
-  background-color: white;
+  background-color: #cbcbcb;
   border: 1px solid #ddd;
   border-radius: 6px;
   margin-top: 5px;
   list-style: none;
   padding: 8px 0;
-  width: 150px;
+  width: max-content;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 999;
 }
 .lang-dropdown li {
-  padding: 8px 16px;
+  padding: 8px 30px;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -139,6 +141,13 @@
 
   .header-actions {
     gap: 5px;
+    margin-right: 0;
+  }
+  .lang-dropdown{
+    right: 0;
+  }
+  .lang-dropdown li {
+    padding: 8px 28px;
   }
 
   .hamburger-toggle {
