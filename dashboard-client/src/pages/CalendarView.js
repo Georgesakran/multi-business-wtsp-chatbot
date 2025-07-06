@@ -34,7 +34,7 @@ const CalendarView = () => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const isMobile = window.innerWidth <= 480;
   const [previewEvent, setPreviewEvent] = useState(null);
-  const [ setPreviewPosition] = useState({ top: 0, left: 0 });
+  const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
   const previewRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
