@@ -34,7 +34,6 @@ const CalendarView = () => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const isMobile = window.innerWidth <= 480;
   const [previewEvent, setPreviewEvent] = useState(null);
-  const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
   const previewRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -425,30 +424,24 @@ const CalendarView = () => {
             const margin = 10;
           
             let top = eventRect.top - containerRect.top - PREVIEW_HEIGHT - margin;
-            let verticalClass = "above";
           
             // Not enough space above → flip below
             if (top < margin) {
               top = eventRect.bottom - containerRect.top + margin;
-              verticalClass = "below";
             }
           
             let left = eventRect.left - containerRect.left + (eventRect.width / 2) - (PREVIEW_WIDTH / 2);
-            let horizontalClass = "";
           
             const maxLeft = containerRect.width - PREVIEW_WIDTH - margin;
             const minLeft = margin;
           
             if (left < minLeft) {
               left = minLeft;
-              horizontalClass = "right-shift";
             } else if (left > maxLeft) {
               left = maxLeft;
-              horizontalClass = "left-shift";
             }
           
             setPreviewEvent(event);
-            setPreviewPosition({ top, left, verticalClass, horizontalClass });
           }}
           
         
