@@ -1,79 +1,280 @@
-import "../styles/Dashboard.css";
+import React, { useState, useEffect } from "react";
 import "../styles/OwnerDashboard.css";
-import "../styles/StatCard.css"; // Assuming you created this file
-import { useEffect, useState } from "react";
+import StatCard from "../componenets/dashboard/StatCard";
+import StaticsBarStatus from "../componenets/dashboard/StaticsBarStatus";
+import StaticsBySource from "../componenets/dashboard/StaticsBarSource";
 import axios from "../services/api";
-import StatCard from "../componenets/StatCard";
+import TopClients from "../componenets/dashboard/TopClients";
+import TopServices from "../componenets/dashboard/TopServices";
 
-function OwnerDashboard() {
-  const [business, setBusiness] = useState(null);
+
+// OwnerDashboard component for business owners to view booking and product statistics
+// This component fetches and displays various statistics based on the business type (booking or product)
+// It includes filters for date ranges and displays statistics in a user-friendly format
+// It also handles responsiveness for mobile devices
+
+const OwnerDashboard = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const businessId = user?.businessId;
+  const businessType = user?.businessType;
+  const [filter, setFilter] = useState("month"); // default
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [customDates, setCustomDates] = useState({ from: "", to: "" });
+  const [bookingStats, setBookingStats] = useState(null);
+   const [productStats, setProductStats] = useState(null); 
+  const [isMobile, setIsMobile] = useState(false);
+  
+
+
+    useEffect(() => {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+      checkMobile();
+      window.addEventListener("resize", checkMobile);
+      return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
+
 
   useEffect(() => {
-    const fetchBusiness = async () => {
+    if (!businessId || !["booking", "mixed"].includes(businessType)) return;
+  
+    const { from, to } = dateRange;
+    if (!from || !to) return;
+  
+    const fetchBookingStats = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        const businessId = user?.businessId;
-
-        if (!businessId) return console.error("No business ID found in localStorage");
-
-        const res = await axios.get(`/businesses/${businessId}`);
-        setBusiness(res.data);
+        const res = await axios.get(`/dashboard/${businessId}/booking-overview?from=${from}&to=${to}`);
+        setBookingStats(res.data || {});
       } catch (err) {
-        console.error("❌ Failed to fetch business data", err);
+        console.error("❌ Failed to fetch booking stats:", err);
       }
     };
+  
+    fetchBookingStats();
+  }, [businessId, businessType, dateRange]);
 
-    fetchBusiness();
-  }, []);
 
-  if (!business) return <p>Loading dashboard...</p>;
+
+  // Update date range based on filter selection
+  useEffect(() => {
+    const today = new Date();
+    let from, to;
+
+    if (filter === "day") {
+      from = to = today.toISOString().split("T")[0];
+    } else if (filter === "week") {
+      const start = new Date(today);
+      start.setDate(today.getDate() - 6);
+      from = start.toISOString().split("T")[0];
+      to = today.toISOString().split("T")[0];
+    } else if (filter === "month") {
+      const start = new Date(today);
+      start.setDate(today.getDate() - 29);
+      from = start.toISOString().split("T")[0];
+      to = today.toISOString().split("T")[0];
+    } else if (filter === "year") {
+      const start = new Date(today);
+      start.setFullYear(today.getFullYear() - 1);
+      from = start.toISOString().split("T")[0];
+      to = today.toISOString().split("T")[0];
+    } else if (filter === "custom") {
+      from = customDates.from;
+      to = customDates.to;
+    }
+
+    setDateRange({ from, to });
+  }, [filter, customDates]);
 
   return (
-    <div className="dashboard-layout">
-      <div className="dashboard-card welcome-card">
-        <h3>👋 Welcome {business.nameEnglish}</h3>
-        <p>This is your dashboard home page. Manage your bot, services, and stats.</p>
+    <div className="dashboard-wrapper">
+      {/* Dashboard Title */}
+      {isMobile && <h2 className="dashboard-title">📊 Dashboard Statistics</h2>}
+
+      {/* Filter Section */}
+      <div className="filter-bar">
+        {["day", "week", "month", "year", "custom"].map((key) => (
+          <button
+            key={key}
+            className={`filter-btn ${filter === key ? "active" : ""}`}
+            onClick={() => setFilter(key)}
+          >
+            {key.charAt(0).toUpperCase() + key.slice(1)}
+          </button>
+        ))}
       </div>
 
-      <div className="dashboard-grid">
-        <StatCard
-          icon={<span className="material-icons">bar_chart</span>}
-          iconBg="linear-gradient(195deg, #49a3f1, #1A73E8)"
-          label="Today's Users"
-          value="2,300"
-          growth={3}
-          subtext="than last month"
-        />
-        <StatCard
-          icon={<span className="material-icons">storefront</span>}
-          iconBg="linear-gradient(195deg, #66bb6a, #43a047)"
-          label="Revenue"
-          value="34k"
-          growth={1}
-          subtext="than yesterday"
-        />
-        <StatCard
-          icon={<span className="material-icons">psychology</span>}
-          iconBg="linear-gradient(195deg, #ffa726, #fb8c00)"
-          label="GPT Tokens Used"
-          value={business.gptTokensUsed || 0}
-          growth={12}
-          subtext="than last week"
-        />
+      {/* Date Range Viewer */}
+      <div className="date-range-view">
+        {filter !== "custom" ? (
+          <div className="date-range-display">
+            <span>From: {dateRange.from}</span>
+            <span>To: {dateRange.to}</span>
+          </div>
+        ) : (
+          <div className="custom-date-inputs">
+            <label>
+              From:
+              <input
+                type="date"
+                value={customDates.from}
+                onChange={(e) =>
+                  setCustomDates({ ...customDates, from: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              To:
+              <input
+                type="date"
+                value={customDates.to}
+                onChange={(e) =>
+                  setCustomDates({ ...customDates, to: e.target.value })
+                }
+              />
+            </label>
+          </div>
+        )}
       </div>
 
-      <div className="dashboard-card">
-        <h4>📞 WhatsApp</h4>
-        <p><strong>Connected Number:</strong> {business.whatsappNumber}</p>
-        <p><strong>Status:</strong> <span className="status-badge">Active</span></p>
+
+      {/* Statics of Booking / Products */}
+      <div className="stats-cards-row">
+        {["booking", "mixed"].includes(businessType) && (
+          <>
+            <StatCard
+              label="Pending Bookings"
+              value={bookingStats?.statusCounts?.pending || 0}
+              color="#ffa726"
+              icon="⏳"
+            />
+            <StatCard
+              label="Total Bookings"
+              value={bookingStats?.total || 0}
+              color="#42a5f5"
+              icon="📅"
+            />
+            <StatCard
+              label="Most Booked"
+              value={bookingStats?.mostBookedService?.[0] || "N/A"}
+              color="#66bb6a"
+              icon="🔥"
+            />
+          </>
+        )}
+      </div>  
+       {/* <div className="stats-cards-row">
+        {["product", "mixed"].includes(businessType) && (
+          <>
+            <StatCard
+              label="Pending Bookings"
+              value={bookingStats?.statusCounts?.pending || 0}
+              color="#ffa726"
+              icon="⏳"
+            />
+            <StatCard
+              label="Total Bookings"
+              value={bookingStats?.total || 0}
+              color="#42a5f5"
+              icon="📅"
+            />
+            <StatCard
+              label="Most Booked"
+              value={bookingStats?.mostBookedService?.[0] || "N/A"}
+              color="#66bb6a"
+              icon="🔥"
+            />
+          </>
+        )}
+
+        {["product", "mixed"].includes(businessType) && (
+          <>
+            <StatCard
+              label="Pending Orders"
+              value={productStats?.statusCounts?.pending || 0}
+              color="#ffa726"
+              icon="⏳"
+            />
+            <StatCard
+              label="Total Orders"
+              value={productStats?.total || 0}
+              color="#42a5f5"
+              icon="🛒"
+            />
+            <StatCard
+              label="Top Product"
+              value={productStats?.topProduct?.[0] || "N/A"}
+              color="#66bb6a"
+              icon="🥇"
+            />
+          </>
+        )}
+      </div>  */}
+
+
+
+      <div className="Bars-stats">
+        {/* Booking Status Bars for Booking / MIX */}
+        {["booking", "mixed"].includes(businessType) && bookingStats && (
+          <StaticsBarStatus
+            statusCounts={bookingStats.statusCounts}
+            total={bookingStats.total}
+          /> 
+        )}
+
+        {/* Booking Status Bars for product / MIX */}
+        {["product", "mixed"].includes(businessType) && productStats && (
+          <StaticsBarStatus
+            statusCounts={productStats.statusCounts}
+            total={productStats.total}
+          />
+        )}
+
+        {/* Booking Appointments Stats By Source */}
+        {["booking", "mixed"].includes(businessType) && bookingStats && (
+          <StaticsBySource
+            sourceCounts={bookingStats.sourceCounts}
+            total={bookingStats.total}
+          />
+        )}
+
+        {/* Orders Products Stats By Source */}
+
+        {["product", "mixed"].includes(businessType) && productStats && (
+          <StaticsBySource
+            sourceCounts={productStats.sourceCounts}
+            total={productStats.total}
+          />
+        )}
+
       </div>
 
-      <div className="dashboard-card">
-        <h4>🚀 Coming Soon</h4>
-        <p>This area will show your most recent customer messages, bookings, and alerts.</p>
+
+      <div className="top-stats">
+          {["booking", "mixed"].includes(businessType) && bookingStats && (
+              <TopClients title="Top Booking Clients" clients={bookingStats.topClients} />
+          )}
+
+          {["product", "mixed"].includes(businessType) && productStats && (
+              <TopClients title="Top Order Clients" clients={productStats.topClients} />
+          )}
+
+          {["booking", "mixed"].includes(businessType) && bookingStats?.topServices && (
+              <TopServices title="Top Booking Services" services={bookingStats.topServices} />
+          )}
+
+          {["product", "mixed"].includes(businessType) && productStats?.topServices && (
+              <TopServices title="Top Order Services" services={productStats.topServices} />
+          )}
       </div>
+
+
+
+
+
     </div>
   );
-}
+};
 
 export default OwnerDashboard;

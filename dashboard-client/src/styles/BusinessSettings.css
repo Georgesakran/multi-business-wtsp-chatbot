@@ -12,6 +12,10 @@
     font-family: "Baloo Bhaijaan 2", sans-serif;
     font-optical-sizing: auto;
     font-style:normal;
+
+  }
+  .settings-container.rtl {
+    direction: rtl;
   }
   
   .settings-container h2 {
@@ -98,7 +102,7 @@
   /* 🌐 Responsive styles for mobile */
   @media (max-width: 600px) {
     .settings-container {
-      margin-top: 10px;
+      margin-top: 130px;
       padding-top: 20px;
       border-radius: 12px;
     }

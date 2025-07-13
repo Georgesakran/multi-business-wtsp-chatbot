@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import "../styles/Header.css";
 import { LanguageContext } from "../context/LanguageContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import translations from "../translate/translations";
 import { getLabelByLang } from "../translate/getLabelByLang";
 
@@ -13,7 +13,6 @@ const LANGUAGES = [
 
 function Header({ setCollapsed }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -60,20 +59,12 @@ function Header({ setCollapsed }) {
             ☰
           </button>
         )}
-        <img
-          src="/logo_png-noback.png"
-          alt="Logo"
-          className="logo"
-          style={{ width: "auto", height: "65px" }}
-          onClick={() => navigate("/owner/Dashboard")}
-        />
+
         <h1 className="page-title">{title}</h1>
       </div>
 
       <div className="header-actions">
-        {/* <button className="settings-button" onClick={handleSettingsClick}>
-          ⚙️ {getLabelByLang(translations.header.settings, language)}
-        </button> */}
+
 
         <div className="lang-selector">
           <div className="lang-current" onClick={toggleDropdown}>

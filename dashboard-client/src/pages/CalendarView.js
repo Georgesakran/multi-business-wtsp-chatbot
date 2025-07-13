@@ -5,14 +5,21 @@ import "react-calendar/dist/Calendar.css";
 import moment from "moment";
 import "moment/locale/ar";
 import "moment/locale/he";
-
+import { toast } from "react-toastify";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import axios from "../services/api";
 import Modal from "react-modal";
+import ConfirmationModal from "../componenets/ConfirmationModal"; // adjust path as needed
 import { useRef } from "react";
 import { LanguageContext } from "../context/LanguageContext";
 import translations from "../translate/translations";
 import { getLabelByLang } from "../translate/getLabelByLang"; // this handles lang fallback
+import {
+  isValidPhoneNumber,
+  isValidCustomerName,
+  isDateTimeInFuture,
+  isTimeWithinWorkingHours,
+} from "../utils/bookingValidation";
 
 import "../styles/CalendarPage.css";
 import CustomWeekHeader from "../componenets/CustomWeekHeader"; // adjust path as needed
@@ -24,7 +31,6 @@ Modal.setAppElement("#root");
 const CalendarView = () => {
   const { language } = useContext(LanguageContext);
   const token = localStorage.getItem("token");
-
   const calendarMainRef = useRef();
   const ownerData = JSON.parse(localStorage.getItem("user"));
   const businessId = ownerData?.businessId;
@@ -41,6 +47,9 @@ const CalendarView = () => {
   const [businessConfig, setBusinessConfig] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null); 
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filters, setFilters] = useState({
     confirmed: true,
     pending: true,
@@ -62,9 +71,9 @@ const CalendarView = () => {
       const res = await axios.get(`/businesses/${businessId}`);
       setBusinessConfig(res.data.config?.booking);
     } catch (err) {
-      console.error("❌ Failed to fetch business config:", err.message);
+      toast.error(getLabelByLang(translations.calendarPage.fetchBusinessConfigError, language));
     }
-  }, [businessId]);
+  }, [businessId, language]);
 
   const getColorByStatus = (status) => {
     switch (status) {
@@ -93,9 +102,9 @@ const CalendarView = () => {
       });
       setEvents(formatted);
     } catch (err) {
-      console.error("❌ Failed to fetch bookings:", err.message);
+      toast.error(getLabelByLang(translations.calendarPage.fetchBookingsError, language));
     }
-  }, [businessId]);
+  }, [businessId, language]);
 
 
   const fetchServices = useCallback(async () => {
@@ -105,9 +114,9 @@ const CalendarView = () => {
       });
       setServices(res.data.filter((s) => s.isActive));
     } catch (err) {
-      console.error("❌ Failed to load services:", err.message);
+      toast.error(getLabelByLang(translations.calendarPage.fetchServicesError, language));
     }
-  }, [token]);
+  }, [token, language]);
   
 
   useEffect(() => {
@@ -122,18 +131,7 @@ const CalendarView = () => {
     if (isMobile) setCurrentView("day");
   }, [isMobile]);
 
-  useEffect(() => {
-    // Close view menu when clicking outside
-    const handleClickOutside = (e) => {
-      if (!e.target.closest(".calendar-view-dropdown")) {
-        setViewMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-  
   useEffect(() => {
     const handleClickOrScroll = (e) => {
       if (previewRef.current && !previewRef.current.contains(e.target)) {
@@ -149,27 +147,118 @@ const CalendarView = () => {
       window.removeEventListener("scroll", handleClickOrScroll, true);
     };
   }, []);
+
   useEffect(() => {
-    moment.locale(language === "ar" ? "ar" : language === "he" ? "he" : "en");
+    const lang = language === "ar" ? "ar" : language === "he" ? "he" : "en";
+    moment.locale(lang);
+  
+    // 🔥 Force week to start on Sunday no matter the locale
+    moment.updateLocale(lang, {
+      week: {
+        dow: 0, // Sunday
+        doy: 6
+      },
+      preparse: (str) => str,
+      postformat: (str) => str.replace(/\d/g, (d) => "0123456789"[d]),
+    });
   }, [language]);
+  
 
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (selectedEvent) {
-        await axios.put(`/bookings/${selectedEvent.id}`, { ...formData, businessId });
-      } else {
-        await axios.post("/bookings", { ...formData, businessId });
-      }
-      setFormData({ customerName: "", phoneNumber: "", service: "", date: "", time: "", status: "pending" });
-      setSelectedEvent(null);
-      setSelectedSlot(null);
-      fetchBookings();
-    } catch (err) {
-      console.error("❌ Failed to save booking:", err.message);
+
+  const handleUpdateAttempt = () => {
+    const { customerName, phoneNumber, date, time } = formData;
+  
+    const config = {
+      openingTime: businessConfig?.openingTime,
+      closingTime: businessConfig?.closingTime,
+    };
+  
+    let isValid = true;
+  
+    if (!isValidCustomerName(customerName)) {
+      isValid = false;
+      toast.error(getLabelByLang(translations.bookingsPage.toastNotValidcustomerName, language));
+    }
+  
+    if (!isValidPhoneNumber(phoneNumber)) {
+      isValid = false;
+      toast.error(getLabelByLang(translations.bookingsPage.toastNotValidPhone, language));
+    }
+  
+    if (!isDateTimeInFuture(date, time)) {
+      isValid = false;
+      toast.error(getLabelByLang(translations.bookingsPage.toastNotValidDate, language));
+    }
+  
+    if (!isTimeWithinWorkingHours(time, config.openingTime, config.closingTime)) {
+      isValid = false;
+      toast.error(
+        getLabelByLang(translations.bookingsPage.toastNotValidTime, language)
+          .replace("{openingTime}", config.openingTime)
+          .replace("{closingTime}", config.closingTime)
+      );
+    }
+  
+    if (isValid) {
+      setShowUpdateModal(true); // ✅ show confirmation modal
     }
   };
+  
+  const confirmUpdateBooking = async () => {
+    if (!selectedEvent) return;
+  
+    try {
+      const parsedService =
+        typeof formData.service === "string"
+          ? JSON.parse(formData.service)
+          : formData.service;
+  
+      const payload = {
+        ...formData,
+        service: parsedService,
+        businessId,
+      };
+  
+      await axios.put(`/bookings/${selectedEvent.id}`, payload);
+      toast.success(getLabelByLang(translations.calendarPage.saveBookingSuccess, language));
+  
+      setFormData({
+        customerName: "",
+        phoneNumber: "",
+        service: "",
+        date: "",
+        time: "",
+        status: "pending",
+      });
+  
+      setSelectedEvent(null);
+      setSelectedSlot(null);
+      setShowUpdateModal(false);
+      fetchBookings();
+    } catch (err) {
+      toast.error(getLabelByLang(translations.calendarPage.saveBookingError, language));
+    }
+  };
+  
+  
+
+  const handleDeleteBooking = async () => {
+    if (!eventToDelete) return;
+  
+    try {
+      await axios.delete(`/bookings/${eventToDelete.id}`);
+      toast.success(getLabelByLang(translations.calendarPage.deleteBookingSuccess, language));
+      setPreviewEvent(null);
+      setShowDeleteModal(false);
+      setEventToDelete(null);
+      fetchBookings();
+    } catch (err) {
+      toast.error(getLabelByLang(translations.calendarPage.deleteBookingError, language));
+    }
+  };
+
+  
 
   const minTime = businessConfig?.openingTime ? moment(businessConfig.openingTime, "HH:mm").toDate() : new Date(2023, 1, 1, 8);
   const maxTime = businessConfig?.closingTime ? moment(businessConfig.closingTime, "HH:mm").toDate() : new Date(2023, 1, 1, 20);
@@ -238,8 +327,10 @@ const CalendarView = () => {
           return m.format("MMMM D, YYYY");
       }
     }
+
   };
   
+ 
 
   
   return (
@@ -326,18 +417,18 @@ const CalendarView = () => {
         <div className="calendar-sidebar">
 
         <CalendarPicker
-  value={currentDate}
-  onChange={setCurrentDate}
-  locale={language}
-  nextLabel="›"
-  prevLabel="‹"
-  formatShortWeekday={(locale, date) =>
-    new Intl.DateTimeFormat(language, { weekday: 'short' }).format(date)
-  }
-  formatMonthYear={(locale, date) =>
-    new Intl.DateTimeFormat(language, { month: 'long', year: 'numeric' }).format(date)
-  }
-/>
+          value={currentDate}
+          onChange={setCurrentDate}
+          locale={language}
+          nextLabel="›"
+          prevLabel="‹"
+          formatShortWeekday={(locale, date) =>
+            new Intl.DateTimeFormat(language, { weekday: 'short' }).format(date)
+          }
+          formatMonthYear={(locale, date) =>
+            new Intl.DateTimeFormat(language, { month: 'long', year: 'numeric' }).format(date)
+          }
+        />
 
         <div className="status-filters">
           <label>
@@ -377,7 +468,6 @@ const CalendarView = () => {
         <div className="calendar-main" style={{ position: "relative" }} ref={calendarMainRef}>
         {["week", "day"].includes(currentView) && (
           <CustomWeekHeader
-            start={moment(currentDate).startOf("week")}
             currentDate={currentDate}
             currentView={currentView}
             workingDays={businessConfig?.workingDays ?? []}
@@ -527,10 +617,9 @@ const CalendarView = () => {
                     ✏️
                   </button>
                   <button
-                    onClick={async () => {
-                      await axios.delete(`/bookings/${previewEvent.id}`);
-                      setPreviewEvent(null);
-                      fetchBookings();
+                    onClick={() => {
+                      setEventToDelete(previewEvent);
+                      setShowDeleteModal(true);
                     }}
                   >
                     🗑
@@ -556,7 +645,7 @@ const CalendarView = () => {
           className="ReactModal__Content no-default-modal-style"
           overlayClassName="ReactModal__Overlay no-default-overlay-style"
         >
-          <form className="booking-model-form" onSubmit={handleFormSubmit}>
+          <form className="booking-model-form" onSubmit={(e) => e.preventDefault()}>
             <div 
               className="form-header"
               style={{ direction: language === "ar" || language === "he" ? "rtl" : "ltr" }}
@@ -666,13 +755,39 @@ const CalendarView = () => {
               )}
             </div>
 
-            <button type="submit" className="form-submit-button">
-              {selectedEvent
-                ? getLabelByLang(translations.calendarPage.update, language)
-                : getLabelByLang(translations.calendarPage.create, language)}
+            <button
+              type="button"
+              className="form-submit-button"
+              onClick={handleUpdateAttempt} // ✅ only shows modal if valid
+            >
+              {getLabelByLang(translations.calendarPage.update, language)}
             </button>
+
+
           </form>
+
         </Modal>
+        {showDeleteModal && (
+          <ConfirmationModal
+            title={getLabelByLang(translations.calendarPage.deleteConfirmTitle, language)}
+            message={getLabelByLang(translations.calendarPage.deleteConfirmMessage, language)}
+            onConfirm={handleDeleteBooking}
+            onCancel={() => {
+              setShowDeleteModal(false);
+              setEventToDelete(null);
+            }}
+          />
+        )}
+        {showUpdateModal && (
+          <ConfirmationModal
+            title={getLabelByLang(translations.calendarPage.updateConfirmTitle, language)}
+            message={getLabelByLang(translations.calendarPage.updateConfirmMessage, language)}
+            onConfirm={confirmUpdateBooking} // ✅ real update happens here
+            onCancel={() => setShowUpdateModal(false)}
+          />
+        )}
+
+
     </div>
   );
 };

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "../services/api";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginPage.css"; // Link to the new CSS file
+import { useContext } from "react";
+import { LanguageContext } from "../context/LanguageContext";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -9,6 +11,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { setLanguage } = useContext(LanguageContext);
 
   const navigate = useNavigate();
 
@@ -16,15 +19,18 @@ function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
+  
     try {
       const role = username === "admin" ? "admin" : "owner";
       const res = await axios.post("/auth/login", { username, password, role });
       const { token, user } = res.data;
-
+  
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
+      localStorage.setItem("lang", res.data.lang);
+      localStorage.setItem("justLoggedIn", "true"); // ✅ Set this correctly
+      setLanguage(res.data.lang);
+  
       if (user.role === "admin") {
         navigate("/admin/Dashboard");
       } else {

@@ -1,0 +1,44 @@
+.stat-card {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    border-radius: 8px;
+    padding: 10px;
+    flex:1 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .stat-icon {
+    font-size: 28px;
+  }
+  
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .stat-value {
+    text-align: center;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 100%;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0 auto;
+    padding: 13px;
+    line-height: 1.2;
+  }
+  
+  .stat-label {
+    text-align: center;
+    white-space: normal;       /* allows text to wrap */
+    word-wrap: break-word;     /* breaks long words */
+    max-width: 100%;           /* prevent overflowing */
+    font-size: 0.9rem;         /* optional: slightly smaller for mobile */
+    margin: 0 auto;            /* center it horizontally */
+    line-height: 1.2;          /* tighten line spacing for better 2-line fit */
+  }
+  

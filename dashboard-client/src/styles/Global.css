@@ -1,6 +1,6 @@
 /* Base reset */
 @import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400..800&family=Poiret+One&display=swap');
-body {
+  body {
     margin: 0;
     padding: 0;
     background-color: #f4f6f8;
@@ -14,8 +14,53 @@ body {
   .main-content {
     margin-top: 110px; /* header + spacing */
     margin-left: auto; /* sidebar space */
-    width: calc(100% - 240px); /* header + spacing */
+    width: calc(100% - 260px); /* header + spacing */
   }
+  .toast-container-custom {
+    top: 50px !important;
+    width: auto !important; 
+    box-sizing: border-box;
+    font-family: "Baloo Bhaijaan 2", sans-serif;
+  }
+  .toast-container-custom.rtl {
+    direction: rtl;
+
+  }  
+  .toast-container-custom .Toastify__toast {
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+  @keyframes slideInTop {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOutTop {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+  
+  .slide-in-top {
+    animation: slideInTop 0.5s forwards;
+  }
+  
+  .slide-out-top {
+    animation: slideOutTop 0.5s forwards;
+  }
+
+
   
   /* Responsive mobile layout */
   @media (max-width: 768px) {

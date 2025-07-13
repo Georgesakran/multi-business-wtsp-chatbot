@@ -17,10 +17,16 @@ const bookingSchema = new mongoose.Schema({
     enum: ["pending", "confirmed", "cancelled"],
     default: "pending"
   },
+  source: {
+    type: String,
+    enum: ["chatbot", "manual", "whatsapp", "other"],
+    default: "manual"
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
+
 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

@@ -65,6 +65,7 @@ router.post("/", protect,async (req, res) => {
       date,
       time,
       status: status || "pending",
+      source:"manual",
     });
 
     await newBooking.save();

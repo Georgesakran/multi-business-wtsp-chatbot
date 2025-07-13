@@ -43,7 +43,9 @@ router.post("/login", async (req, res) => {
           role: "owner",
           businessId: business._id,
           username: business.username,
+          businessType: business.businessType
         },
+        lang :"he",
       });
     }
   } catch (err) {

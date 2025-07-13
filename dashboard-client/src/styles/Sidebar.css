@@ -100,11 +100,11 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 300px;
+    width: max-content;
     height: 100vh;
     z-index: 999;
     transition: transform 0.3s ease;
-    padding-top: 70px; 
+    padding-top: 0;
   }
 
 

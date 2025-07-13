@@ -6,7 +6,7 @@
  * - Must start with "05"
  * - The third digit must be one of [0,1,2,3,4,5,8,9]
  */
-export function isValidPhoneNumber(phone) {
+  export function isValidPhoneNumber(phone) {
     return /^05[01234589]\d{7}$/.test(phone);
   }
   

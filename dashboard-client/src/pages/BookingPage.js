@@ -12,6 +12,7 @@ import {
   isTimeWithinWorkingHours,
 } from "../utils/bookingValidation";
 import { toast } from "react-toastify";
+import ConfirmationModal from "../componenets/ConfirmationModal"; 
 
 const BookingsPage = () => {
   const ownerData = JSON.parse(localStorage.getItem("user"));
@@ -20,7 +21,14 @@ const BookingsPage = () => {
   const { language } = useContext(LanguageContext);
   const businessId = ownerData?.businessId;
   const [businessConfig, setBusinessConfig] = useState(null);
-
+  const [modalData, setModalData] = useState({
+    show: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    onCancel: null,
+  });
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [loading, setLoading] = useState(false);
@@ -113,7 +121,6 @@ const BookingsPage = () => {
     };
   }, []);
 
-  
 
   const handleResetDateFilter = () => {
     setDateFilter("");
@@ -137,6 +144,7 @@ const BookingsPage = () => {
   };
 
 
+
   const handleEditClick = (booking) => {
     setFormData({
       ...booking,
@@ -146,90 +154,109 @@ const BookingsPage = () => {
     setShowForm(true);
   };
 
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-
-  const { customerName, phoneNumber, date, time } = formData;
-
-  const config = {
-    openingTime: businessConfig?.openingTime, // You should replace this with a value from DB
-    closingTime: businessConfig?.closingTime,
-  };
-
-  let IsValid = true;   
-
-  // 🛑 Validate name
-  if (!isValidCustomerName(customerName)) {
-    IsValid = false;
-    toast.error(getLabelByLang(translations.bookingsPage.toastNotValidcustomerName, language));
-  }
-
-  // 🛑 Validate phone number
-  if (!isValidPhoneNumber(phoneNumber)) {
-    IsValid = false;
-    toast.error(getLabelByLang(translations.bookingsPage.toastNotValidPhone, language));
-  }
-
-  // 🛑 Validate date + time
-  if (!isDateTimeInFuture(date, time)) {
-    IsValid = false;
-    toast.error(getLabelByLang(translations.bookingsPage.toastNotValidDate, language));
-  }
-
-
-  // 🛑 Validate working hours
-  if (!isTimeWithinWorkingHours(time, config.openingTime, config.closingTime)) {
-    IsValid = false;
-    toast.error(
-      getLabelByLang(translations.bookingsPage.toastNotValidTime, language)
-      .replace("{openingTime}", config.openingTime )
-      .replace("{closingTime}", config.closingTime)
+    const { customerName, phoneNumber, date, time } = formData;
+    let isValid = true;
+  
+    const config = {
+      openingTime: businessConfig?.openingTime,
+      closingTime: businessConfig?.closingTime,
+    };
+  
+    if (!isValidCustomerName(customerName)) {
+      isValid = false;
+      toast.error(getLabelByLang(translations.bookingsPage.toastNotValidcustomerName, language));
+    }
+    if (!isValidPhoneNumber(phoneNumber)) {
+      isValid = false;
+      toast.error(getLabelByLang(translations.bookingsPage.toastNotValidPhone, language));
+    }
+    if (!isDateTimeInFuture(date, time)) {
+      isValid = false;
+      toast.error(getLabelByLang(translations.bookingsPage.toastNotValidDate, language));
+    }
+    if (!isTimeWithinWorkingHours(time, config.openingTime, config.closingTime)) {
+      isValid = false;
+      toast.error(
+        getLabelByLang(translations.bookingsPage.toastNotValidTime, language)
+          .replace("{openingTime}", config.openingTime)
+          .replace("{closingTime}", config.closingTime)
       );
-  }
-    if(!IsValid)
-     return;
-
-    try {
-      const serviceObj = JSON.parse(formData.service); // parse it back to object
+    }
   
-      const payload = {
-        ...formData,
-        service: serviceObj,
-        businessId
-      };
+    if (!isValid) return;
   
-      if (editingId) {
-        await axios.put(`/bookings/${editingId}`, payload);
-      } else {
-        await axios.post("/bookings", payload);
+    const actionType = editingId ? "edit" : "add";
+    const titleKey = actionType === "edit"
+      ? "confirmationTitleEdit"
+      : "confirmationTitleAdd";
+    const messageKey = actionType === "edit"
+      ? "confirmationMessageEdit"
+      : "confirmationMessageAdd";
+  
+    setModalData({
+      show: true,
+      title: getLabelByLang(translations.bookingsPage[titleKey], language),
+      message: getLabelByLang(translations.bookingsPage[messageKey], language),
+      onConfirm: async () => {
+        try {
+          const serviceObj = JSON.parse(formData.service);
+          const payload = {
+            ...formData,
+            service: serviceObj,
+            businessId,
+            source: "manual", // 👈 Add this
+          };  
+          if (editingId) {
+            await axios.put(`/bookings/${editingId}`, payload);
+          } else {
+            await axios.post("/bookings", payload);
+          }
+  
+          setFormData({
+            customerName: "",
+            phoneNumber: "",
+            service: "",
+            date: "",
+            time: "",
+            status: "pending",
+          });
+          setEditingId(null);
+          setShowForm(false);
+          fetchBookings();
+        } catch (err) {
+          console.error("❌ Failed to submit booking:", err.message);
+        } finally {
+          setModalData({ show: false });
+        }
+      },
+      onCancel: () => setModalData({ show: false }),
+    });
+  };
+  
+  
+const confirmDelete = (bookingId) => {
+  setModalData({
+    show: true,
+    title: getLabelByLang(translations.bookingsPage.deleteConfirmTitle, language),
+    message: getLabelByLang(translations.bookingsPage.deleteConfirmMessage, language),
+    onConfirm: async () => {
+      try {
+        await axios.delete(`/bookings/${bookingId}`);
+        setBookings(bookings.filter((b) => b._id !== bookingId));
+      } catch (err) {
+        console.error("❌ Failed to delete booking:", err.message);
+      } finally {
+        setModalData({ show: false });
       }
-  
-      // reset
-      setFormData({
-        customerName: "",
-        phoneNumber: "",
-        service: "",
-        date: "",
-        time: "",
-        status: "pending",
-      });
-      setEditingId(null);
-      setShowForm(false);
-      fetchBookings();
-    } catch (err) {
-      console.error("❌ Failed to submit booking:", err.message);
-    }
-  };
+    },
+    onCancel: () => setModalData({ show: false }),
+  });
+};
 
-  const handleDelete = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to delete this booking?")) return;
-    try {
-      await axios.delete(`/bookings/${bookingId}`);
-      setBookings(bookings.filter((b) => b._id !== bookingId));
-    } catch (err) {
-      console.error("❌ Failed to delete booking:", err.message);
-    }
-  };
+  
+
 
   const filteredBookings = useMemo(() => {
     return bookings.filter(b =>
@@ -405,7 +432,7 @@ const BookingsPage = () => {
                         </>
                       )}
                       <button onClick={() => handleEditClick(b)}>{getLabelByLang(translations.bookingsPage.edit, language)} &nbsp; ✏️  </button>
-                      <button onClick={() => handleDelete(b._id)}>{getLabelByLang(translations.bookingsPage.delete, language)} &nbsp; 🗑️ </button>
+                      <button onClick={() => confirmDelete(b._id)}>{getLabelByLang(translations.bookingsPage.delete, language)} &nbsp; 🗑️ </button>
                     </div>
                   )}
                 </div>
@@ -449,7 +476,7 @@ const BookingsPage = () => {
                     </>
                   )}
                   <button onClick={() => handleEditClick(b)}>✏️</button>
-                  <button onClick={() => handleDelete(b._id)}>🗑️</button>
+                  <button onClick={() => confirmDelete(b._id)}>🗑️</button>
                 </div>
               </td>
             </tr>
@@ -476,7 +503,16 @@ const BookingsPage = () => {
           {currentPage < totalPages && <button onClick={() => handlePageChange(currentPage + 1)} className="circle-button">&gt;</button>}
         </div>
       </div>
-      
+
+      {modalData.show && (
+  <ConfirmationModal
+    title={modalData.title}
+    message={modalData.message}
+    onConfirm={modalData.onConfirm}
+    onCancel={modalData.onCancel}
+  />
+)}
+
     </div>
   );
 };
