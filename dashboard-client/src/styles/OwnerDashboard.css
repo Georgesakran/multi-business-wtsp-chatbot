@@ -87,7 +87,7 @@
 .Bars-stats {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 24px;
   align-items: flex-start; /* ✅ fixes the uneven height issue */
   margin-bottom: 24px;
   flex-wrap: wrap; /* optional: wraps if width is too small */
@@ -96,13 +96,20 @@
 .top-stats{
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 24px;
   align-items: flex-start; /* ✅ fixes the uneven height issue */
   margin-bottom: 24px;
   flex-wrap: wrap; /* optional: wraps if width is too small */
-
 }
 
+.chat-messages-stats{
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  align-items: flex-start; /* ✅ fixes the uneven height issue */
+  margin-bottom: 24px;
+  flex-wrap: wrap; /* optional: wraps if width is too small */
+}
 
 
 

@@ -6,6 +6,7 @@ import StaticsBySource from "../componenets/dashboard/StaticsBarSource";
 import axios from "../services/api";
 import TopClients from "../componenets/dashboard/TopClients";
 import TopServices from "../componenets/dashboard/TopServices";
+import ChatTimeDistribution from "../componenets/dashboard/ChatTimeDistribution";
 
 
 // OwnerDashboard component for business owners to view booking and product statistics
@@ -21,7 +22,8 @@ const OwnerDashboard = () => {
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [customDates, setCustomDates] = useState({ from: "", to: "" });
   const [bookingStats, setBookingStats] = useState(null);
-   const [productStats, setProductStats] = useState(null); 
+  const [productStats, setProductStats] = useState(null); 
+  const [chatbotTimeData, setChatbotTimeData] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   
 
@@ -56,6 +58,22 @@ const OwnerDashboard = () => {
   }, [businessId, businessType, dateRange]);
 
 
+
+  useEffect(() => {
+    if (!businessId || !dateRange.from || !dateRange.to) return;
+    const fetchChatbotActivity = async () => {
+      try {
+        const res = await axios.get(
+          `/dashboard/${businessId}/chatbot-activity?from=${dateRange.from}&to=${dateRange.to}`
+        );
+        setChatbotTimeData(res.data); // { total, timeBuckets }
+      } catch (err) {
+        console.error("❌ Failed to fetch chatbot activity", err);
+      }
+    };
+  
+    fetchChatbotActivity();
+  }, [businessId, dateRange]);
 
   // Update date range based on filter selection
   useEffect(() => {
@@ -269,6 +287,13 @@ const OwnerDashboard = () => {
           )}
       </div>
 
+
+      {/* Chat Time Distribution Chart */}
+      <div className="chat-messages-stats">
+        {["booking", "mixed", "product"].includes(businessType) && (
+          <ChatTimeDistribution timeData={chatbotTimeData?.timeBuckets} />
+        )}
+      </div>
 
 
 

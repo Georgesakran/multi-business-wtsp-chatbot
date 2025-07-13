@@ -1,85 +1,87 @@
-/* Container Card */
 .top-card {
-  background: #fdfdff;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 20px 24px;
-  width:100%;
-  transition: all 0.3s ease;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  width: 100%;
 }
 
-/* Card Title */
-.top-card h4 {
-  font-size: 18px;  color: #333;
+.top-card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.top-card h4 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+  margin-top:10px;
   text-align: center;
   font-weight: 600;
-  border-bottom: 1px solid #eaeaea;
   padding-bottom: 8px;
 }
 
-/* List Layout */
-.top-card ul {
+.top-card-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.top-card-buttons button {
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.top-card-buttons button:hover {
+  background-color: #f0f0f0;
+}
+
+.top-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-/* Each List Item */
-.top-card li {
+.top-list-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #f4f6fa;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  transition: background 0.2s ease;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
 }
 
-.top-card li:hover {
-  background: #e7ebf3;
+.top-list-item:last-child {
+  border-bottom: none;
 }
 
-/* Rank Number */
-.top-card .rank {
-  background: #d1d9e6;
-  color: #333;
+.rank {
   font-weight: bold;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  color: #666;
+  width: 30px;
 }
 
-/* Phone Label */
-.top-card .label {
-  flex-grow: 1;
+.label {
+  flex: 1;
   text-align: center;
-  font-size: 0.95rem;
-  font-family: "Segoe UI", sans-serif;
-  color: #555;
-  word-break: break-word;
-  padding: 0 8px;
+  color: #333;
+  font-weight: 500;
 }
 
-/* Count */
-.top-card .count {
-  font-weight: 600;
-  color: #4a90e2;
-  font-size: 1rem;
+.count {
+  width: 40px;
+  text-align: right;
+  color: #666;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-  .top-card {
-    padding: 5px;
-  }
-
-  .top-card .label {
-    font-size: 0.85rem;
-  }
-
-  .top-card .count {
-    font-size: 0.9rem;
-  }
+.donut-container {
+  max-width: 300px;
+  margin: 0 auto;
 }

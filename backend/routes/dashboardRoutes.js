@@ -106,79 +106,43 @@ router.get('/:id/booking-overview', protect, async (req, res) => {
   }
 });
 
-// ✅ Chatbot Analytics (unchanged)
-router.get("/:id/analytics", protect, async (req, res) => {
+router.get("/:id/chatbot-activity", protect, async (req, res) => {
+  const { id: businessId } = req.params;
+  const { from, to } = req.query;
+
   try {
-    const businessId = req.params.id;
-    const business = await Business.findById(businessId);
-    if (!business) return res.status(404).json({ error: "Business not found" });
-
-    const messages = await Message.find({ businessId });
-    const totalMessages = messages.length;
-
-    const customerInteractions = new Set(
-      messages.filter((m) => m.role === "user").map((m) => m.customerId)
-    ).size;
-
-    const openWindow = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const openConversations = new Set(
-      messages.filter((m) => m.role === "user" && m.timestamp >= openWindow).map((m) => m.customerId)
-    ).size;
-
-    const questionCounts = {};
-    messages.forEach((m) => {
-      if (m.role === "user") {
-        const text = m.content.toLowerCase().trim();
-        questionCounts[text] = (questionCounts[text] || 0) + 1;
-      }
-    });
-
-    const faqTrends = Object.entries(questionCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map((entry) => entry[0]);
-
-    const suggestions = [];
-    const unanswered = messages.filter(m => m.role === 'user').length - messages.filter(m => m.role === 'assistant').length;
-    if (unanswered > 5) suggestions.push("You have many unanswered messages.");
-    if (faqTrends[0]) suggestions.push(`The question "${faqTrends[0]}" is common. Add to FAQ.`);
-
-    res.json({
-      businessInfo: {
-        name: business.nameEnglish || business.nameArabic || business.nameHebrew,
-        type: business.businessType,
-        language: business.language,
-        whatsappNumber: business.whatsappNumber,
-      },
-      chatbotStats: {
-        totalMessages,
-        customerInteractions,
-        openConversations,
-        faqTrends,
-        suggestions: suggestions.length ? suggestions : ["Chatbot is running well."],
-      },
-    });
-  } catch (err) {
-    console.error("❌ Analytics error:", err);
-    res.status(500).json({ error: "Failed to fetch analytics" });
-  }
-});
-
-// ✅ Upcoming Bookings
-router.get("/:id/upcoming", protect, async (req, res) => {
-  try {
-    const businessId = req.params.id;
-    const today = new Date().toISOString().split("T")[0];
-
-    const upcoming = await Booking.find({
+    const messages = await Message.find({
       businessId,
-      date: { $gte: today },
-    }).sort({ date: 1 }).limit(5);
+      role: "user", // only customer messages
+      timestamp: {
+        $gte: new Date(from + "T00:00:00Z"),
+        $lte: new Date(to + "T23:59:59Z"),
+      },
+    });
 
-    res.json(upcoming);
+    const timeBuckets = {
+      morning: 0,    // 6–12
+      afternoon: 0,  // 12–18
+      evening: 0,    // 18–24
+      night: 0       // 0–6
+    };
+
+    messages.forEach((msg) => {
+      const hour = new Date(msg.timestamp).getHours(); // ✅ FIXED HERE
+      if (hour >= 6 && hour < 12) timeBuckets.morning++;
+      else if (hour >= 12 && hour < 18) timeBuckets.afternoon++;
+      else if (hour >= 18 && hour < 24) timeBuckets.evening++;
+      else timeBuckets.night++;
+    });
+
+    const totalMessages = Object.values(timeBuckets).reduce((sum, count) => sum + count, 0);
+    if (totalMessages === 0) {
+      return res.json({ total: 0, timeBuckets: {} });
+    }
+    res.json({ total: totalMessages, timeBuckets });
   } catch (err) {
-    console.error("❌ Error fetching upcoming bookings", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Failed to fetch chatbot activity", err);
+    res.status(500).json({ error: "Internal error" });
   }
 });
 

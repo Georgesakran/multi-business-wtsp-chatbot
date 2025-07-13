@@ -1,0 +1,19 @@
+.chat-time-chart-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .chat-bar-wrapper {
+    width: 100%;
+  }
+
+  .chat-time-header h4 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #333;
+    text-align: center;
+  }

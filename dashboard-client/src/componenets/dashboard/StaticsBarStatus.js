@@ -49,7 +49,9 @@ const StaticsBarStatus = ({ statusCounts = {}, total = 0 }) => {
           <button onClick={toggleMinimize}>
             {minimized ? "➕" : "➖"}
           </button>
-          <button onClick={toggleDonut}>🍩</button>
+          <button onClick={toggleDonut}>
+          {showDonut ? "📊" : "🍩"}
+          </button>
         </div>
       </div>
 
