@@ -1,16 +1,17 @@
-.ChatTime-bar-card {
+.weekday-bar-card {
   width: 100%;
   margin: 0 auto;
+  padding: 15px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   height: 300px !important; /* 💥 Increase height for horizontal bars */
-  }
 
+}
 
-  @media (max-width: 768px) {
-    .ChatTime-bar-card {
-      height: 200px !important; /* 💥 Increase height for horizontal bars */
-      overflow-x: auto;
-    }
+@media (max-width: 768px) {
+  .weekday-bar-card {
+    height: 300px !important; /* 💥 Increase height for horizontal bars */
+    overflow-x: auto;
   }
+}

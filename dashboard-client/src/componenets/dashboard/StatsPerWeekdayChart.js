@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -9,33 +9,24 @@ import {
   Legend,
   Title,
 } from "chart.js";
-import "./ChatTimeDistribution.css"; // Assuming you have some styles for the chart
+import "./StatsPerWeekdayChart.css";
 
-import annotationPlugin from "chartjs-plugin-annotation";
-ChartJS.register(annotationPlugin);
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
-const ChatTimeDistribution = ({ timeData = {} }) => {
+const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const StatsPerWeekdayChart = ({ title = "📆 Weekly Distribution", data }) => {
   const chartRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const labels = ["Night", "Morning", "Afternoon", "Evening"];
-  const rawData = [
-    timeData.Night || 0,
-    timeData.Morning || 0,
-    timeData.Afternoon || 0,
-    timeData.Evening || 0,
-  ];
-
-  const total = rawData.reduce((a, b) => a + b, 0);
+  const values = dayLabels.map((_, i) => data?.[i] || 0);
+  const total = values.reduce((sum, val) => sum + val, 0);
 
   const getGradient = (ctx, color1, color2) => {
     const gradient = ctx.createLinearGradient(0, 0, isMobile ? 0 : 400, isMobile ? 400 : 0);
@@ -44,23 +35,26 @@ const ChatTimeDistribution = ({ timeData = {} }) => {
     return gradient;
   };
 
-  const data = {
-    labels,
+  const chartData = {
+    labels: dayLabels,
     datasets: [
       {
-        label: "Messages",
-        data: rawData,
+        label: title,
+        data: values,
         backgroundColor: (context) => {
           const chart = chartRef.current;
           const ctx = chart?.ctx;
-          if (!ctx) return "#888";
+          if (!ctx) return "#ccc";
           const colors = [
-            ["#8e24aa", "#ba68c8"],
             ["#42a5f5", "#90caf9"],
-            ["#ffb300", "#ffe082"],
-            ["#ef5350", "#ef9a9a"],
+            ["#66bb6a", "#a5d6a7"],
+            ["#ffb74d", "#ffe082"],
+            ["#ec407a", "#f8bbd0"],
+            ["#5c6bc0", "#9fa8da"],
+            ["#26a69a", "#80cbc4"],
+            ["#8d6e63", "#bcaaa4"],
           ];
-          return getGradient(ctx, ...colors[context.dataIndex]);
+          return getGradient(ctx, ...colors[context.dataIndex % colors.length]);
         },
         borderRadius: 20,
         barThickness: 20,
@@ -79,12 +73,13 @@ const ChatTimeDistribution = ({ timeData = {} }) => {
         left: isMobile ? 10 : 50,
         right: isMobile ? 10 : 50,
       },
+
     },
     plugins: {
       legend: { display: false },
       title: {
         display: true,
-        text: "🕒 Chat Time Distribution",
+        text: title,
         font: { size: 20 },
         color: "#333",
         padding: { bottom: 20 },
@@ -94,7 +89,7 @@ const ChatTimeDistribution = ({ timeData = {} }) => {
           label: (ctx) => {
             const val = ctx.parsed[isMobile ? "x" : "y"];
             const percent = total ? Math.round((val / total) * 100) : 0;
-            return `${val} messages (${percent}%)`;
+            return `${val} entries (${percent}%)`;
           },
         },
       },
@@ -127,17 +122,15 @@ const ChatTimeDistribution = ({ timeData = {} }) => {
           ticks: { color: "#555" },
         },
       },
-    animation: {
-      duration: 800,
-    },
+  
+    animation: { duration: 800 },
   };
 
-
   return (
-    <div className="ChatTime-bar-card">
-        <Bar ref={chartRef} data={data} options={options} />
+    <div className="weekday-bar-card">
+      <Bar ref={chartRef} data={chartData} options={options} />
     </div>
   );
 };
 
-export default ChatTimeDistribution;
+export default StatsPerWeekdayChart;

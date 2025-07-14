@@ -22,7 +22,7 @@ const TopClients = ({ clients = [], title = "Top Clients" }) => {
           {clients.map((client, index) => (
             <li key={index} className="top-list-item">
               <span className="rank">#{index + 1}</span>
-              <span className="label">{client.phone}</span>
+              <span className="label">{client.name}</span>
               <span className="count">{client.count}x</span>
             </li>
           ))}

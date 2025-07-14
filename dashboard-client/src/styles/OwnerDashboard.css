@@ -1,5 +1,5 @@
 .dashboard-wrapper {
-  padding-top:5px;
+  padding:25px;
 }
 
 .dashboard-title {
@@ -102,7 +102,7 @@
   flex-wrap: wrap; /* optional: wraps if width is too small */
 }
 
-.chat-messages-stats{
+.chat-messages-stats , .weekday-stats{
   display: flex;
   flex-direction: row;
   gap: 24px;
@@ -113,7 +113,13 @@
 
 
 
+
 @media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding:5px;
+
+  }
+  
   .date-range-view {
     margin-left: 5%;
     margin-right: 5%;

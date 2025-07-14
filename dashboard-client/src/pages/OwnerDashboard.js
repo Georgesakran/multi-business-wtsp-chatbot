@@ -7,6 +7,7 @@ import axios from "../services/api";
 import TopClients from "../componenets/dashboard/TopClients";
 import TopServices from "../componenets/dashboard/TopServices";
 import ChatTimeDistribution from "../componenets/dashboard/ChatTimeDistribution";
+import StatsPerWeekdayChart from "../componenets/dashboard/StatsPerWeekdayChart";
 
 
 // OwnerDashboard component for business owners to view booking and product statistics
@@ -24,6 +25,8 @@ const OwnerDashboard = () => {
   const [bookingStats, setBookingStats] = useState(null);
   const [productStats, setProductStats] = useState(null); 
   const [chatbotTimeData, setChatbotTimeData] = useState(null);
+  const [weekdayBookings, setWeekdayBookings] = useState(null);
+  const [weekdayOrders, setWeekdayOrders] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   
 
@@ -37,74 +40,75 @@ const OwnerDashboard = () => {
       return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
-
-
-  useEffect(() => {
-    if (!businessId || !["booking", "mixed"].includes(businessType)) return;
+    useEffect(() => {
+      const today = new Date();
+      let from, to;
   
-    const { from, to } = dateRange;
-    if (!from || !to) return;
-  
-    const fetchBookingStats = async () => {
-      try {
-        const res = await axios.get(`/dashboard/${businessId}/booking-overview?from=${from}&to=${to}`);
-        setBookingStats(res.data || {});
-      } catch (err) {
-        console.error("❌ Failed to fetch booking stats:", err);
+      if (filter === "day") {
+        from = to = today.toISOString().split("T")[0];
+      } else if (filter === "week") {
+        const start = new Date(today);
+        start.setDate(today.getDate() - 6);
+        from = start.toISOString().split("T")[0];
+        to = today.toISOString().split("T")[0];
+      } else if (filter === "month") {
+        const start = new Date(today);
+        start.setDate(today.getDate() - 29);
+        from = start.toISOString().split("T")[0];
+        to = today.toISOString().split("T")[0];
+      } else if (filter === "year") {
+        const start = new Date(today);
+        start.setFullYear(today.getFullYear() - 1);
+        from = start.toISOString().split("T")[0];
+        to = today.toISOString().split("T")[0];
+      } else if (filter === "custom") {
+        from = customDates.from;
+        to = customDates.to;
       }
-    };
   
-    fetchBookingStats();
-  }, [businessId, businessType, dateRange]);
+      setDateRange({ from, to });
+    }, [filter, customDates]);
+
+    useEffect(() => {
+      if (!businessId || !dateRange.from || !dateRange.to) return;
+    
+      const fetchAllDashboardStats = async () => {
+        try {
+          const res = await axios.get(
+            `/dashboard/${businessId}/full-overview?from=${dateRange.from}&to=${dateRange.to}`
+          );
+    
+          const {
+            bookingStats,
+            productStats,
+            chatbotTime,
+            weekdayBookings,
+            weekdayOrders,
+          } = res.data;
+
+          if (["booking", "mixed"].includes(businessType)) {
+            setBookingStats(bookingStats);
+            setWeekdayBookings(weekdayBookings);
+          }
+
+          if (["product", "mixed"].includes(businessType)) {
+            setProductStats(productStats);
+            setWeekdayOrders(weekdayOrders);
+          }
+    
+          setChatbotTimeData(chatbotTime);
+
+        } catch (err) {
+          console.error("❌ Failed to fetch full dashboard stats:", err);
+        }
+      };
+    
+      fetchAllDashboardStats();
+    }, [businessId, businessType, dateRange]);
 
 
 
-  useEffect(() => {
-    if (!businessId || !dateRange.from || !dateRange.to) return;
-    const fetchChatbotActivity = async () => {
-      try {
-        const res = await axios.get(
-          `/dashboard/${businessId}/chatbot-activity?from=${dateRange.from}&to=${dateRange.to}`
-        );
-        setChatbotTimeData(res.data); // { total, timeBuckets }
-      } catch (err) {
-        console.error("❌ Failed to fetch chatbot activity", err);
-      }
-    };
   
-    fetchChatbotActivity();
-  }, [businessId, dateRange]);
-
-  // Update date range based on filter selection
-  useEffect(() => {
-    const today = new Date();
-    let from, to;
-
-    if (filter === "day") {
-      from = to = today.toISOString().split("T")[0];
-    } else if (filter === "week") {
-      const start = new Date(today);
-      start.setDate(today.getDate() - 6);
-      from = start.toISOString().split("T")[0];
-      to = today.toISOString().split("T")[0];
-    } else if (filter === "month") {
-      const start = new Date(today);
-      start.setDate(today.getDate() - 29);
-      from = start.toISOString().split("T")[0];
-      to = today.toISOString().split("T")[0];
-    } else if (filter === "year") {
-      const start = new Date(today);
-      start.setFullYear(today.getFullYear() - 1);
-      from = start.toISOString().split("T")[0];
-      to = today.toISOString().split("T")[0];
-    } else if (filter === "custom") {
-      from = customDates.from;
-      to = customDates.to;
-    }
-
-    setDateRange({ from, to });
-  }, [filter, customDates]);
-
   return (
     <div className="dashboard-wrapper">
       {/* Dashboard Title */}
@@ -182,53 +186,30 @@ const OwnerDashboard = () => {
           </>
         )}
       </div>  
-       {/* <div className="stats-cards-row">
+       <div className="stats-cards-row">
         {["product", "mixed"].includes(businessType) && (
           <>
             <StatCard
               label="Pending Bookings"
-              value={bookingStats?.statusCounts?.pending || 0}
-              color="#ffa726"
-              icon="⏳"
-            />
-            <StatCard
-              label="Total Bookings"
-              value={bookingStats?.total || 0}
-              color="#42a5f5"
-              icon="📅"
-            />
-            <StatCard
-              label="Most Booked"
-              value={bookingStats?.mostBookedService?.[0] || "N/A"}
-              color="#66bb6a"
-              icon="🔥"
-            />
-          </>
-        )}
-
-        {["product", "mixed"].includes(businessType) && (
-          <>
-            <StatCard
-              label="Pending Orders"
               value={productStats?.statusCounts?.pending || 0}
               color="#ffa726"
               icon="⏳"
             />
             <StatCard
-              label="Total Orders"
+              label="Total Bookings"
               value={productStats?.total || 0}
               color="#42a5f5"
-              icon="🛒"
+              icon="📅"
             />
             <StatCard
-              label="Top Product"
-              value={productStats?.topProduct?.[0] || "N/A"}
+              label="Most Booked"
+              value={productStats?.mostBookedService?.[0] || "N/A"}
               color="#66bb6a"
-              icon="🥇"
+              icon="🔥"
             />
           </>
         )}
-      </div>  */}
+      </div> 
 
 
 
@@ -258,18 +239,18 @@ const OwnerDashboard = () => {
         )}
 
         {/* Orders Products Stats By Source */}
-
         {["product", "mixed"].includes(businessType) && productStats && (
           <StaticsBySource
             sourceCounts={productStats.sourceCounts}
             total={productStats.total}
           />
         )}
-
       </div>
 
 
+
       <div className="top-stats">
+        
           {["booking", "mixed"].includes(businessType) && bookingStats && (
               <TopClients title="Top Booking Clients" clients={bookingStats.topClients} />
           )}
@@ -288,16 +269,25 @@ const OwnerDashboard = () => {
       </div>
 
 
-      {/* Chat Time Distribution Chart */}
-      <div className="chat-messages-stats">
-        {["booking", "mixed", "product"].includes(businessType) && (
-          <ChatTimeDistribution timeData={chatbotTimeData?.timeBuckets} />
-        )}
-      </div>
+      <div className="dashboard-charts1">
+        {/* Chat Time Distribution Chart */}
+        <div className="chat-messages-stats">
+            {["booking", "mixed", "product"].includes(businessType) && (
+              <ChatTimeDistribution timeData={chatbotTimeData?.timeBuckets} />
+            )}
+        </div>
 
+        {/* Weekday Bookings and Orders Charts */}
+        <div className="weekday-stats">
+            {["booking", "mixed"].includes(businessType) && weekdayBookings && (
+              <StatsPerWeekdayChart title="📅 Bookings per Day" data={weekdayBookings} />
+            )}
 
-
-
+            {["product", "mixed"].includes(businessType) && weekdayOrders && (
+              <StatsPerWeekdayChart title="🛒 Orders per Day" data={weekdayOrders} />
+            )}
+        </div>
+      </div>  
     </div>
   );
 };
