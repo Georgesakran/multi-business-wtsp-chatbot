@@ -128,14 +128,17 @@ router.get("/:id/full-overview", protect, async (req, res) => {
 
     bookings.forEach(b => {
       const d = new Date(b.date);
+      console.log(d);
       const day = d.getDay()+1;
+      console.log(day);
+      console.log("****************************");
       weekdayBookings[day]++;
     });
 
 
     // orders.forEach(o => {
     //   const d = new Date(o.createdAt);
-    //   const day = d.getDay();
+    //   const day = d.getDay()+1;
     //   weekdayOrders[day]++;
     // });
 
