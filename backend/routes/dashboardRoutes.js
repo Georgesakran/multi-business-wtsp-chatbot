@@ -111,6 +111,7 @@ router.get("/:id/full-overview", protect, async (req, res) => {
 
     messages.forEach((msg) => {
       const hour = new Date(msg.timestamp).getHours();
+      console.log(hour);
       if (hour >= 6 && hour < 12) timeBuckets.Morning++;
       else if (hour >= 12 && hour < 18) timeBuckets.Afternoon++;
       else if (hour >= 18 && hour < 24) timeBuckets.Evening++;
