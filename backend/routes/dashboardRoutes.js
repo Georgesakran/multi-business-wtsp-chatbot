@@ -110,7 +110,7 @@ router.get("/:id/full-overview", protect, async (req, res) => {
     };
 
     messages.forEach((msg) => {
-      const hour = new Date(msg.timestamp).getHours();
+      const hour = new Date(msg.timestamp).getUTCHours(); 
       if (hour >= 6 && hour < 13) timeBuckets.Morning++;
       else if (hour >= 13 && hour < 18) timeBuckets.Afternoon++;
       else if (hour >= 18 && hour < 24) timeBuckets.Evening++;
@@ -128,10 +128,7 @@ router.get("/:id/full-overview", protect, async (req, res) => {
 
     bookings.forEach(b => {
       const d = new Date(b.date);
-      console.log(d);
       const day = d.getDay();
-      console.log(day);
-      console.log("****************************");
       weekdayBookings[day]++;
     });
 
