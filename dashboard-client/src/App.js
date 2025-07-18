@@ -10,6 +10,7 @@ import {
 import { SlideFromTop } from "./utils/toastAnimations";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import OverviewPage from "./pages/OverviewPage"
 import OwnerDashboard from "./pages/OwnerDashboard";
 import BusinessesPage from "./pages/BusinessesPage";
 import AddBusinessPage from "./pages/AddBusinessPage";
@@ -66,6 +67,7 @@ function AppContent() {
           <div className="main-content">
             <Routes>
               <Route path="/admin/Dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/owner/Overview" element={<ProtectedRoute role="owner"><OverviewPage /></ProtectedRoute>} />
               <Route path="/owner/Dashboard" element={<ProtectedRoute role="owner"><OwnerDashboard /></ProtectedRoute>} />
               <Route path="/admin/add-business" element={<ProtectedRoute role="admin"><AddBusinessPage /></ProtectedRoute>} />
               <Route path="/admin/businesses" element={<ProtectedRoute role="admin"><BusinessesPage /></ProtectedRoute>} />

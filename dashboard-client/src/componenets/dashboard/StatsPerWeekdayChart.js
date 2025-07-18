@@ -13,9 +13,10 @@ import "./StatsPerWeekdayChart.css";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
-const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const StatsPerWeekdayChart = ({ title = "📆 Weekly Distribution", data }) => {
+  const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
   const chartRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -44,7 +45,6 @@ const StatsPerWeekdayChart = ({ title = "📆 Weekly Distribution", data }) => {
         backgroundColor: (context) => {
           const chart = chartRef.current;
           const ctx = chart?.ctx;
-          if (!ctx) return "#ccc";
           const colors = [
             ["#42a5f5", "#90caf9"],
             ["#66bb6a", "#a5d6a7"],
@@ -54,6 +54,11 @@ const StatsPerWeekdayChart = ({ title = "📆 Weekly Distribution", data }) => {
             ["#26a69a", "#80cbc4"],
             ["#8d6e63", "#bcaaa4"],
           ];
+          if (!ctx) {
+            const tempCanvas = document.createElement("canvas");
+            const tempCtx = tempCanvas.getContext("2d");
+            return getGradient(tempCtx, ...colors[context.dataIndex % colors.length]);
+          }
           return getGradient(ctx, ...colors[context.dataIndex % colors.length]);
         },
         borderRadius: 20,

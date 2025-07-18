@@ -60,7 +60,8 @@ function Sidebar({ collapsed, setCollapsed, role }) {
   ];
 
   const baseOwnerMenu = [
-    { to: "/owner/Dashboard", label: translations.sidebar.dashboard, icon: "🏠" },
+    { to: "/owner/Overview", label: translations.sidebar.overview, icon: "🏠" },
+    { to: "/owner/Dashboard", label: translations.sidebar.dashboard, icon: "📊" },
     { to: "/owner/chatbot", label: translations.sidebar.chatbot, icon: "🤖" },
     { to: "/owner/conversations", label: translations.sidebar.conversations, icon: "💬" },
     { to: "/owner/qa", label: translations.sidebar.qna, icon: "❓" },

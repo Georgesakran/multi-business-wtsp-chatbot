@@ -3,6 +3,12 @@
 const translations = {
 
     sidebar: {
+      overview: {
+        en: "Overview",
+        ar: "نظرة عامة",
+        he: "סקירה כללית",
+      },
+    
       dashboard: {
         en: "Dashboard",
         ar: "لوحة التحكم",
@@ -107,6 +113,11 @@ const translations = {
         en: "Admin Dashboard",
         ar: "لوحة التحكم",
         he: "לוח ניהול",
+      },
+      "/owner/Overview": {
+        en: "Overview",
+        ar: "نظرة عامة",
+        he: "סקירה כללית",
       },
       "/owner/Dashboard": {
         en: "Dashboard",

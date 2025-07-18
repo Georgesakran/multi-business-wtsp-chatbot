@@ -1,0 +1,12 @@
+.day-hours-box {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  font-size: 16px;
+}
+
+.status-row {
+  margin-top: 8px;
+  color: #444;
+}
