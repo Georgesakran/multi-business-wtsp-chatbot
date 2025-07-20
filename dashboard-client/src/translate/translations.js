@@ -1,6 +1,11 @@
 // src/translations.js
 
 const translations = {
+  welcome: {
+    en: "Welcome",
+    ar: "أهلا بك",
+    he: "ברוך הבא",
+  },
 
     sidebar: {
       overview: {
@@ -667,7 +672,8 @@ const translations = {
         he: "האם אתה בטוח שברצונך לעדכן את ההזמנה?",
       }
     },
-      businessSettings: {
+    
+    businessSettings: {
         workingDays: {
           en: "Working Days",
           ar: "أيام العمل",
@@ -722,7 +728,7 @@ const translations = {
           Friday: { en: "Friday", ar: "الجمعة", he: "שישי" },
           Saturday: { en: "Saturday", ar: "السبت", he: "שבת" },
         },
-      },
+    },
 
     dashboard: {
         totalBookings: { en: "Total Bookings", ar: "إجمالي الحجوزات", he: "סה״כ תורים" },
@@ -733,7 +739,43 @@ const translations = {
         workingHours: { en: "Working Hours", ar: "ساعات العمل", he: "שעות פתיחה" }      
     },
     
-
+      overview: {
+        off: {
+          en: "OFF",
+          ar: "مغلق",
+          he: "סגור"
+        },
+        booking: {
+          en: "booking",
+          ar: "موعد",
+          he: "תור"
+        },
+        bookings: {
+          en: "bookings",
+          ar: "مواعيد",
+          he: "תורים"
+        },
+        bookingDetails: {
+          name: { en: "Name", ar: "الاسم", he: "שם" },
+          phone: { en: "Phone", ar: "الهاتف", he: "טלפון" },
+          time: { en: "Time", ar: "الوقت", he: "שעה" },
+          service: { en: "Service", ar: "الخدمة", he: "שירות" },
+        },
+        dayHours: {
+          totalBookings: { en: "Total Bookings", ar: "إجمالي الحجوزات", he: "סך כל ההזמנות" },
+          noBookings: { en: "There are no bookings today", ar: "لا توجد حجوزات اليوم", he: "אין הזמנות היום" },
+          closedToday: { en: "Closed Today", ar: "مغلق اليوم", he: "סגור היום" },
+          open: { en: "Open", ar: "مفتوح", he: "פתוח" },
+        },
+        status: {
+          pending: { en: "Pending", ar: "قيد الانتظار", he: "ממתין" },
+          confirmed: { en: "Confirmed", ar: "تم التأكيد", he: "מאושר" },
+          cancelled: { en: "Cancelled", ar: "ألغيت", he: "מבוטל" },
+        }
+      },
+    
+    
+    
     
   };
   

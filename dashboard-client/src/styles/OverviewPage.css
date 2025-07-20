@@ -1,0 +1,12 @@
+/* LTR layout (default) */
+.overview-container.ltr {
+    direction: ltr;
+    text-align: left;
+  }
+  
+  /* RTL layout for Arabic and Hebrew */
+  .overview-container.rtl {
+    direction: rtl;
+    text-align: right;
+  }
+  

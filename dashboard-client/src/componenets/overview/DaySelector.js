@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import "./DaySelector.css";
+import { LanguageContext } from "../../context/LanguageContext";
+import translations from "../../translate/translations";
 
 const DaySelector = ({ selectedDate, onChange, weekSummary }) => {
+  const { language } = useContext(LanguageContext);
   const today = new Date();
 
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -9,6 +12,11 @@ const DaySelector = ({ selectedDate, onChange, weekSummary }) => {
     d.setDate(today.getDate() + i);
     return d;
   });
+
+  const t = translations.overview || {};
+  const offText = t.off?.[language] || "OFF";
+  const bookingText = t.booking?.[language] || "booking";
+  const bookingsText = t.bookings?.[language] || "bookings";
 
   return (
     <div className="day-scroll-wrapper">
@@ -19,7 +27,7 @@ const DaySelector = ({ selectedDate, onChange, weekSummary }) => {
           const dayInfo = weekSummary?.[dateStr];
           const isOff = dayInfo?.isOff;
           const bookingsCount = dayInfo?.totalBookings || 0;
-  
+
           return (
             <div
               key={idx}
@@ -27,11 +35,13 @@ const DaySelector = ({ selectedDate, onChange, weekSummary }) => {
               onClick={() => onChange(date)}
             >
               <div className="weekday">
-                {date.toLocaleDateString("en-GB", { weekday: "short" })}
+                {date.toLocaleDateString(language === "he" ? "he-IL" : language === "ar" ? "ar-EG" : "en-GB", { weekday: "short" })}
               </div>
               <div className="day-num">{date.getDate()}</div>
               <div className="booking-count">
-                {isOff ? "OFF" : `${bookingsCount} booking${bookingsCount !== 1 ? "s" : ""}`}
+                {isOff
+                  ? offText
+                  : `${bookingsCount} ${bookingsCount === 1 ? bookingText : bookingsText}`}
               </div>
             </div>
           );
@@ -39,7 +49,6 @@ const DaySelector = ({ selectedDate, onChange, weekSummary }) => {
       </div>
     </div>
   );
-  
 };
 
 export default DaySelector;

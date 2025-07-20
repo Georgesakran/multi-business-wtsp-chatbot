@@ -47,16 +47,23 @@ router.get("/:businessId/week-summary", protect, async (req, res) => {
         close,
         totalBookings: dayBookings.length,
         statusCounts,
-        bookings: dayBookings, // 👈 Add this line
+        bookings: dayBookings,
       };
-      
     }
 
-    res.json({ days });
+    // 🟢 Add business name here
+    const businessName = {
+      en: business.nameEnglish || "",
+      ar: business.nameArabic || "",
+      he: business.nameHebrew || ""
+    };
+    
+    res.json({ businessName, days });
   } catch (err) {
     console.error("❌ Failed to get week summary", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 module.exports = router;
