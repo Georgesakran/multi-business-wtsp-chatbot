@@ -3,14 +3,14 @@ import axios from "../services/api";
 import WelcomeMessage from "../componenets/overview/WelcomeMessage";
 import DaySelector from "../componenets/overview/DaySelector";
 import DayOpeningHours from "../componenets/overview/DayOpeningHours";
-import "../styles/OverviewPage.css"; // Assuming you have some styles for the overview page
+import "../styles/OverviewPage.css";
 
 const OverviewPage = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const businessId = user?.businessId;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [weekSummary, setWeekSummary] = useState({}); // renamed to match what you're actually setting
+  const [weekSummary, setWeekSummary] = useState({});
 
   useEffect(() => {
     const fetchWeekSummary = async () => {
@@ -25,17 +25,29 @@ const OverviewPage = () => {
   }, [businessId]);
 
   const selectedDateStr = selectedDate.toISOString().split("T")[0];
-  const selectedOverview = weekSummary[selectedDateStr]; // This gives us the day's info
+  const selectedOverview = weekSummary[selectedDateStr];
 
   return (
     <div className="overview-container">
-      <WelcomeMessage businessName={user.businessName} username={user.username} />
+      <WelcomeMessage
+        nameEnglish={user.businessName}
+        username={user.username}
+      />
       <DaySelector
         selectedDate={selectedDate}
         onChange={setSelectedDate}
-        weekSummary={weekSummary} // pass this to show booking counts under date
+        weekSummary={weekSummary}
       />
-      {selectedOverview && <DayOpeningHours {...selectedOverview} />}
+
+      {selectedOverview && (
+        <DayOpeningHours
+          isOff={selectedOverview.isOff}
+          open={selectedOverview.open}
+          close={selectedOverview.close}
+          bookingsCount={selectedOverview.totalBookings}
+          bookings={selectedOverview.bookings || []} // 👈 pass detailed bookings here
+        />
+      )}
     </div>
   );
 };

@@ -47,7 +47,9 @@ router.get("/:businessId/week-summary", protect, async (req, res) => {
         close,
         totalBookings: dayBookings.length,
         statusCounts,
+        bookings: dayBookings, // 👈 Add this line
       };
+      
     }
 
     res.json({ days });

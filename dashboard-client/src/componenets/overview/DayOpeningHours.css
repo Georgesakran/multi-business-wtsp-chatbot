@@ -1,12 +1,130 @@
-.day-hours-box {
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+/* Main container for the day's overview */
+.overview-selectedDate {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 20px 0;
+  padding: 0 16px;
+}
+
+/* Info box like "Open: 09:00 - 18:00" */
+.overview-day-box {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 18px 20px;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.overview-day-box:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.content-day-hours-box {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2e2e2e;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Collapsible section like Confirmed, Pending */
+.status-section {
+  margin-top: 18px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.status-left {
+  margin-left: 5%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.status-count {
+  margin-right:5%;
+  font-weight: bold;
   font-size: 16px;
 }
 
-.status-row {
-  margin-top: 8px;
-  color: #444;
+
+
+.status-header:hover {
+  background: #eaeaea;
+}
+
+.status-bookings-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+/* Booking card inside each status section */
+.booking-details-card {
+  border: 1px solid #ddd;
+  border-left: 5px solid #1976d2;
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  transition: transform 0.2s ease;
+}
+
+.booking-details-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.booking-detail {
+  margin-bottom: 6px;
+}
+
+
+
+/* Responsive improvements */
+@media (max-width: 600px) {
+  .overview-day-box {
+    padding: 14px;
+  }
+
+  .content-day-hours-box {
+    font-size: 16px;
+  }
+
+  .status-header {
+    font-size: 15px;
+    padding: 8px 12px;
+  }
+
+  .booking-details-card {
+    font-size: 13px;
+    padding: 12px 14px;
+  }
+  .status-bookings-wrapper {
+    flex-direction: column;
+  }
 }
