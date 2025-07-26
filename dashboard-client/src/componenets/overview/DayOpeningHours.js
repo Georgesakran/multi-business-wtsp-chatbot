@@ -34,7 +34,15 @@ const StatusSection = ({ title, icon, count, bookings }) => {
           <img src={icon} alt={title} className="status-icon" />
           <span>{title}</span>
         </div>
-        <div className="status-count">{count}</div>
+        <div className="status-count">
+          <span>{count}</span>
+          <img
+            src="/images/dropdown.png"
+            alt="dropdown"
+            className={`dropdown-icon ${open ? "open" : ""}`}
+          />
+        </div>
+
       </div>
 
       {open && (
@@ -73,7 +81,7 @@ const DayOpeningHours = ({ isOff, open, close, bookingsCount, bookings = [] }) =
 
       <div className="overview-day-box">
         {bookings.length > 0 ? (
-          <div title={totalBookingsLabel}>📅 {totalBookingsLabel}: {bookings.length}</div>
+          <div title={totalBookingsLabel}>📅 {totalBookingsLabel} - {bookings.length}</div>
         ) : (
           <div title={totalBookingsLabel}>{noBookingsLabel} - {bookings.length}</div>
         )}

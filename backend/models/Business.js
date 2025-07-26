@@ -24,6 +24,30 @@ const serviceSchema = new mongoose.Schema({
   image: { type: String, default: "" }, // image path or URL
 }, { timestamps: true });
 
+
+
+  // ==========================
+// Sub-schema: FAQ
+// ==========================
+const faqSchema = new mongoose.Schema({
+  question: {
+    en: { type: String, required: true },
+    ar: { type: String, default: "" },
+    he: { type: String, default: "" }
+  },
+  answer: {
+    en: { type: String, required: true },
+    ar: { type: String, default: "" },
+    he: { type: String, default: "" }
+  },
+  createdAt: { type: Date, default: Date.now },
+  //updatedAt: { type: Date, default: Date.now },
+  
+});
+
+
+
+
 // ==========================
 // Sub-schema: Custom Fields (Optional)
 // ==========================
@@ -36,6 +60,7 @@ const customFieldSchema = new mongoose.Schema({
   },
   required: { type: Boolean, default: false }
 });
+
 
 // ==========================
 // Sub-schema: Logs (Optional)
@@ -93,7 +118,21 @@ const businessSchema = new mongoose.Schema({
     type: [String], // Format: YYYY-MM-DD
     default: []
   },
+
+  faqs: [faqSchema],
+
+
   config: {
+    chatbotEnabled: { type: Boolean, default: false },
+    language: { type: String, enum: ["arabic", "hebrew", "english"], default: "arabic" },
+    systemPrompt: { type: String, default: "" },
+    welcomeMessage: { type: String, default: "" },
+    fallbackMessage: { type: String, default: "" },
+    features: {
+      autoBooking: { type: Boolean, default: false },
+      productReplies: { type: Boolean, default: false },
+      faqSupport: { type: Boolean, default: false }
+    },
     booking: {
       workingDays: [String],
       openingTime: String,

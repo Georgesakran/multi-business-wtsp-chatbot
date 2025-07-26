@@ -4,7 +4,6 @@
   flex-direction: column;
   gap: 24px;
   margin: 20px 0;
-  padding: 0 16px;
 }
 
 /* Info box like "Open: 09:00 - 18:00" */
@@ -52,7 +51,6 @@
 }
 
 .status-left {
-  margin-left: 5%;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -64,10 +62,21 @@
 }
 
 .status-count {
-  margin-right:5%;
-  font-weight: bold;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* spacing between count and image */
 }
+
+.dropdown-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-icon.open {
+  transform: rotate(180deg); /* rotate when open */
+}
+
 
 
 
@@ -77,9 +86,10 @@
 
 .status-bookings-wrapper {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: 12px;
 }
+
 
 /* Booking card inside each status section */
 .booking-details-card {
@@ -92,6 +102,8 @@
   line-height: 1.6;
   color: #333;
   transition: transform 0.2s ease;
+  flex: 1 1 250px; /* Allows flexibility */
+  max-width: 300px;
 }
 
 .booking-details-card:hover {
@@ -121,8 +133,10 @@
   }
 
   .booking-details-card {
-    font-size: 13px;
+    font-size: 14px;
     padding: 12px 14px;
+    flex: none;
+    max-width: none;
   }
   .status-bookings-wrapper {
     flex-direction: column;

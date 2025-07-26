@@ -3,17 +3,20 @@
   -webkit-overflow-scrolling: touch;
   width: 100%;
   margin-bottom: 20px;
+  background: linear-gradient(135deg, #A8D5BA, #E0F7D4);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
 }
+
 
 
 
 .overview-day-selector {
   display: flex;
   gap: 10px;
-  min-width: max-content; /* Ensures it can overflow horizontally */
-  background-color: #9AB973;
+  width: max-content; /* Ensures it can overflow horizontally */
   border-radius: 20px;
-  padding: 10px;
 }
 
 .day-box {
@@ -63,15 +66,13 @@
   .day-scroll-wrapper {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
-    max-width: 95vw; /* ✅ Forces scrolling */
+    max-width: 90vw; /* ✅ Forces scrolling */
   }
 
   .overview-day-selector {
     display: flex;
     flex-wrap: nowrap;
     min-width: max-content;
-    gap: 10px;
   }
 }
 

@@ -1,0 +1,97 @@
+.chatbot-section {
+  flex:1 1;
+  background: #f9f9f9;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 10px;
+  box-shadow:  0 4px 10px rgba(0,0,0,0.3);
+}
+
+.chatbot-section h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.chatbot-section p {
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.chatbot-section select {
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+
+.chatbot-section textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+  background: #fff;
+  margin-bottom: 10px;
+}
+
+.chatbot-section button {
+  background-color: #1976d2;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.chatbot-section button:hover {
+  background-color: #155a9b;
+}
+
+.chatbot-section label {
+  display: block;
+  margin: 8px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chatbot-section input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.stat-box {
+  flex: 1 1 200px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.stat-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1976d2;
+}
+
+@media (max-width: 768px) {
+  .chatbot-section {
+    font-size: small;
+  }
+}

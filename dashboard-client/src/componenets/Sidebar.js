@@ -64,7 +64,7 @@ function Sidebar({ collapsed, setCollapsed, role }) {
     { to: "/owner/Dashboard", label: translations.sidebar.dashboard, icon: "📊" },
     { to: "/owner/chatbot", label: translations.sidebar.chatbot, icon: "🤖" },
     { to: "/owner/conversations", label: translations.sidebar.conversations, icon: "💬" },
-    { to: "/owner/qa", label: translations.sidebar.qna, icon: "❓" },
+    { to: "/owner/faq", label: translations.sidebar.qna, icon: "❓" },
     { to: "/owner/profile", label: translations.sidebar.businessInfo, icon: "🏢" },
     { to: "/owner/settings", label: translations.sidebar.settings, icon: "⚙️" },
   ];
@@ -109,13 +109,13 @@ function Sidebar({ collapsed, setCollapsed, role }) {
   if (["product", "mixed"].includes(businessType)) {
     ownerMenu.push(...productExtras);
   }
-  if (["info", "mixed"].includes(businessType)) {
+  if (["info"].includes(businessType)) {
     ownerMenu.push(...infoExtras);
   }
-  if (["delivery", "mixed"].includes(businessType)) {
+  if (["delivery"].includes(businessType)) {
     ownerMenu.push(...deliveryExtras);
   }
-  if (["event", "mixed"].includes(businessType)) {
+  if (["event"].includes(businessType)) {
     ownerMenu.push(...eventExtras);
   }
 

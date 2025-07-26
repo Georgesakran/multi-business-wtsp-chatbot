@@ -1,0 +1,141 @@
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  background: #fff;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.conversation-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sticky header with search bar */
+.conversation-header {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 5;
+  padding: 15px 15px;
+  border-bottom: 1px solid #eee;
+  justify-items: center;
+}
+
+.conversation-title {
+  margin: 10px 0;
+  font-size: 1.2em;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Search bar styling */
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width:100%;
+}
+
+.search-wrapper input {
+  width: 100%;
+  padding: 8px 34px 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95em;
+  background-color: #f9f9f9;
+  outline: none;
+  transition: border 0.2s ease;
+}
+
+.search-wrapper input:focus {
+  border-color: #007bff;
+  background-color: #fff;
+}
+
+/* Clear (×) button */
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.2em;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.clear-btn:hover {
+  color: #222;
+}
+
+/* Conversation list items */
+.conversation-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.conversation-item:hover {
+  background-color: #f8f8f8;
+}
+
+.conversation-item.selected {
+  background-color: #e6f2ff;
+}
+
+.avatar {
+  font-size: 24px;
+  margin-right: 10px;
+}
+.avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
+.convo-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+}
+
+.convo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.convo-header strong {
+  font-size: 1em;
+  color: #222;
+}
+
+.timestamp {
+  font-size: 0.75em;
+  color: #999;
+  margin-left: 8px;
+}
+
+.preview {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-convo {
+  padding: 20px;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+}

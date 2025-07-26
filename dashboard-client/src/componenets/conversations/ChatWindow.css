@@ -1,0 +1,105 @@
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  background: url("../../../public/images/backwhatsappchat.jpg") no-repeat center center;
+  background-size: cover;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
+}
+.chat-header-avatar-wrapper {
+  display: flex;
+  align-items: center;
+}
+.chat-header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+}
+.chat-header-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: rgba(255, 255, 255, 0.8); /* transparent layer */
+}
+
+.message-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-label {
+  align-self: center;
+  background: #e0e0e0;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #444;
+  font-weight: 500;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 10px;
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  word-wrap: break-word;
+}
+
+.chat-bubble.left {
+  background: #ffffff;
+  align-self: flex-start;
+  border: 1px solid #ddd;
+}
+
+.chat-bubble.right {
+  background: #dcf8c6;
+  align-self: flex-end;
+  border: 1px solid #c2e5b2;
+}
+
+.message-content {
+  white-space: pre-wrap;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 4px;
+  text-align: right;
+}
+.back-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 1rem;
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .back-btn {
+    display: block;
+  }
+}
+

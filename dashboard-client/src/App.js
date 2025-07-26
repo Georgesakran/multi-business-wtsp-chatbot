@@ -18,7 +18,10 @@ import OwnerSettingsPage from "./pages/OwnerSettingsPage";
 import HomePage from "./pages/HomePage";
 import BookingsPage from "./pages/BookingPage";
 import CalendarView from "./pages/CalendarView";
+import ConversationsPage from "./pages/ConversationsPage";
+import ChatbotPage from "./pages/ChatbotPage";
 import ServicesPage from "./pages/ServicesPage";
+import FaqPage from "./pages/FaqPage";
 import Layout from "./context/Layout";
 
 import "./styles/Global.css";
@@ -71,7 +74,11 @@ function AppContent() {
               <Route path="/owner/Dashboard" element={<ProtectedRoute role="owner"><OwnerDashboard /></ProtectedRoute>} />
               <Route path="/admin/add-business" element={<ProtectedRoute role="admin"><AddBusinessPage /></ProtectedRoute>} />
               <Route path="/admin/businesses" element={<ProtectedRoute role="admin"><BusinessesPage /></ProtectedRoute>} />
-              <Route path="/owner/settings" element={<ProtectedRoute role="owner"><OwnerSettingsPage /></ProtectedRoute>} />
+              <Route path="/owner/settings" element={<ProtectedRoute role="owner"><OwnerSettingsPage /></ProtectedRoute>} />              <Route path="/owner/services" element={<ProtectedRoute role="owner"><ServicesPage /></ProtectedRoute>} />
+              <Route path="/owner/chatbot" element={<ProtectedRoute role="owner"><ChatbotPage /></ProtectedRoute>} />
+              <Route path="/owner/faq" element={<ProtectedRoute role="owner"><FaqPage /></ProtectedRoute>} />
+              <Route path="/owner/conversations" element={<ProtectedRoute role="owner"><ConversationsPage /></ProtectedRoute>} />
+
               <Route path="/owner/bookings" element={<ProtectedRoute role="owner"><BookingsPage /></ProtectedRoute>} />
               <Route path="/owner/calendar" element={<ProtectedRoute role="owner"><CalendarView /></ProtectedRoute>} />
               <Route path="/owner/services" element={<ProtectedRoute role="owner"><ServicesPage /></ProtectedRoute>} />

@@ -129,6 +129,21 @@ const translations = {
         ar: "لوحة التحكم",
         he: "לוח ניהול",
       },
+      "/owner/chatbot": {
+        en: "Chatbot",
+        ar: "شات بوت",
+        he: "צ'אטבוט",
+      },
+      "/owner/conversations": {
+        en: "Chat History",
+        ar: "سجل الدردشة",
+        he: "היסטוריית שיחות",
+      },
+      "/owner/faq": {
+        en: "FAQ",
+        ar: "الأسئلة الشائعة",
+        he: "שאלות נפוצות",
+      },
       "/admin/businesses": {
         en: "Businesses",
         ar: "الأعمال",
@@ -773,6 +788,176 @@ const translations = {
           cancelled: { en: "Cancelled", ar: "ألغيت", he: "מבוטל" },
         }
       },
+
+
+
+
+
+      chatbotmanegement: {
+        chatbotUsageTitle: {
+          en: "Chatbot Usage Stats",
+          ar: "إحصائيات استخدام الشات بوت",
+          he: "סטטיסטיקת שימוש בצ'אטבוט"
+        },
+        totalMessagesReceived: {
+          en: "Total Messages Received",
+          ar: "إجمالي الرسائل المستلمة",
+          he: "סך כל ההודעות שהתקבלו"
+        },
+        botFailedToUnderstand: {
+          en: "Bot Failed to Understand",
+          ar: "فشل الشات بوت في الفهم",
+          he: "הבוט לא הבין את ההודעה"
+        },
+        bookingsViaBot: {
+          en: "Bookings via Bot",
+          ar: "الحجوزات عبر الشات بوت",
+          he: "הזמנות דרך הצ'אטבוט"
+        },
+        lastActive: {
+          en: "Last Active",
+          ar: "آخر نشاط",
+          he: "פעילות אחרונה"
+        },
+        notAvailable: {
+          en: "N/A",
+          ar: "غير متاح",
+          he: "לא זמין"
+        },
+
+        featureControlsTitle: {
+          en: "Feature Controls",
+          ar: "التحكم في الميزات",
+          he: "שליטה בפיצ'רים"
+        },
+        featureControlsDescription: {
+          en: "Enable or disable advanced chatbot capabilities below:",
+          ar: "قم بتمكين أو تعطيل ميزات الشات بوت المتقدمة أدناه:",
+          he: "הפעל או כבה תכונות מתקדמות של הצ'אטבוט:"
+        },
+        autoBooking: {
+          en: "Auto Booking",
+          ar: "الحجز التلقائي",
+          he: "הזמנה אוטומטית"
+        },
+        productReplies: {
+          en: "Product Replies",
+          ar: "ردود المنتجات",
+          he: "תגובות על מוצרים"
+        },
+        faqSupport: {
+          en: "FAQ Support",
+          ar: "دعم الأسئلة الشائعة",
+          he: "תמיכה בשאלות נפוצות"
+        },
+        chatbotLanguageTitle: {
+          en: "Chatbot Language",
+          ar: "لغة الشات بوت",
+          he: "שפת הצ'אטבוט"
+        },
+        chatbotLanguageDescription: {
+          en: "Select the main language for chatbot replies:",
+          ar: "اختر اللغة الرئيسية لردود الشات بوت:",
+          he: "בחר את השפה הראשית של תגובות הצ'אטבוט:"
+        },
+        languageEnglish: {
+          en: "English",
+          ar: "الإنجليزية",
+          he: "אנגלית"
+        },
+        languageArabic: {
+          en: "Arabic",
+          ar: "العربية",
+          he: "ערבית"
+        },
+        languageHebrew: {
+          en: "Hebrew",
+          ar: "العبرية",
+          he: "עברית"
+        },
+        chatbotToggleTitle: {
+          en: "Enable Chatbot",
+          ar: "تفعيل الشات بوت",
+          he: "הפעלת צ'אטבוט"
+        },
+        chatbotToggleDescription: {
+          en: "Turn the chatbot on or off for your business.",
+          ar: "قم بتشغيل أو إيقاف الشات بوت لنشاطك التجاري.",
+          he: "הפעל או השבת את הצ'אטבוט לעסק שלך."
+        },
+        chatbotToggleSuccess: {
+          en: "Chatbot status updated ✅",
+          ar: "تم تحديث حالة الشات بوت ✅",
+          he: "מצב הצ'אטבוט עודכן ✅"
+        },
+        chatbotToggleError: {
+          en: "Failed to update chatbot status ❌",
+          ar: "فشل في تحديث حالة الشات بوت ❌",
+          he: "עדכון מצב הצ'אטבוט נכשל ❌"
+        },
+      
+      },
+
+
+      faq: {
+        currentFaqs: {
+          en: "Current FAQs",
+          ar: "الأسئلة الشائعة الحالية",
+          he: "שאלות נפוצות נוכחיות"
+        },
+        deleteButton: {
+          en: "🗑️ Delete",
+          ar: "🗑️ حذف",
+          he: "🗑️ מחק"
+        },
+        deleteSuccess: {
+          en: "FAQ deleted 🗑️",
+          ar: "تم حذف السؤال الشائع 🗑️",
+          he: "שאלה נמחקה 🗑️"
+        },
+        deleteFail: {
+          en: "Failed to delete FAQ ❌",
+          ar: "فشل في حذف السؤال الشائع ❌",
+          he: "נכשל במחיקת שאלה ❌"
+        },
+        addFaq: {
+          en: "Add FAQ",
+          ar: "أضف سؤالاً شائعاً",
+          he: "הוסף שאלה נפוצה"
+        },
+        questionPlaceholder: {
+          en: "Question",
+          ar: "السؤال",
+          he: "שאלה"
+        },
+        answerPlaceholder: {
+          en: "Answer",
+          ar: "الإجابة",
+          he: "תשובה"
+        },
+        submitButton: {
+          en: "➕ Add FAQ",
+          ar: "➕ أضف",
+          he: "➕ הוסף"
+        },
+        addSuccess: {
+          en: "FAQ added ✅",
+          ar: "تمت إضافة السؤال ✅",
+          he: "השאלה נוספה ✅"
+        },
+        addFail: {
+          en: "Failed to add FAQ ❌",
+          ar: "فشل في إضافة السؤال ❌",
+          he: "נכשל להוסיף שאלה ❌"
+        },
+        pageTitle: {
+          en: "❓ FAQ Management",
+          ar: "❓ إدارة الأسئلة الشائعة",
+          he: "❓ ניהול שאלות נפוצות"
+        }  
+      }
+
+      
     
     
     

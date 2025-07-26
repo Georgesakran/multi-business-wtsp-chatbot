@@ -1,0 +1,18 @@
+.chatbot-page.rtl{
+    direction: rtl;
+  }
+
+ .first-section-chatbot-page{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap:20px;
+ } 
+
+
+ @media (max-width: 768px) {
+    .first-section-chatbot-page{
+        flex-direction: column;
+        gap:0px;
+    }
+ }
