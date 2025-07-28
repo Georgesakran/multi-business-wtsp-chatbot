@@ -789,10 +789,6 @@ const translations = {
         }
       },
 
-
-
-
-
       chatbotmanegement: {
         chatbotUsageTitle: {
           en: "Chatbot Usage Stats",
@@ -898,7 +894,6 @@ const translations = {
       
       },
 
-
       faq: {
         currentFaqs: {
           en: "Current FAQs",
@@ -954,8 +949,40 @@ const translations = {
           en: "❓ FAQ Management",
           ar: "❓ إدارة الأسئلة الشائعة",
           he: "❓ ניהול שאלות נפוצות"
-        }  
+        },
+        confirmationTitleDelete: {
+          en: "Delete FAQ",
+          ar: "هل تريد حذف هذا السؤال؟",
+          he: "האם אתה בטוח שברצונך למחוק שאלה זו?"
+        },
+        confirmationMessageDelete: {
+          en: "Are you sure you want to delete this FAQ?",
+          ar: "هل أنت متأكد أنك تريد حذف هذا السؤال؟",
+          he: "האם אתה בטוח שברצונך למחוק את השאלה?"
+        }
+        
+      },
+      
+      chatHistory: {
+        chatTitle: {
+          en: "Chat list",
+          ar: "قائمة التشات",
+          he: "רשימת צ'אטים",
+        },
+        
+        
+        searchByNumber: {
+          en: "Search By Number",
+          ar: "ابحث بواسطة الرقم",
+          he: "חיפוש לפי מספר",
+        },
+        botname: {
+          en: "BOT : ",
+          ar: "البوت : ",
+          he: "בוט : ",
+        }
       }
+      
 
       
     

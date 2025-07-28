@@ -1,15 +1,17 @@
 /* Main Sidebar container */
 .modern-sidebar {
   width: auto;
-  height: 100vh;
+  height: 90vh;
   background-color: #ffffff;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   transition: width 0.3s ease;
-  overflow: hidden;
-  position: fixed;
+  overflow-y: auto; /* enable vertical scroll */
+  overflow-x: hidden;
+  scrollbar-width: thin; /* optional: thinner scrollbar */
+  scrollbar-color: #ccc transparent; /* optional scrollbar color */  position: fixed;
   top: 0;
   left: 0;
-  padding-top: 90px; /* leave space for header */
+  padding-top: 90px;
   z-index: 999;
   font-family: "Baloo Bhaijaan 2", sans-serif;
   font-optical-sizing: auto;

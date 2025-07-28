@@ -40,18 +40,19 @@ const FAQForm = ({ businessId, setFaqs }) => {
 
       {["en", "ar", "he"].map((lang) => (
         <div key={lang}>
-          <input
+          <textarea className="question-textarea"
             placeholder={`${getLabelByLang(translations.faq.questionPlaceholder, language)} (${lang})`}
             value={faq.question[lang]}
             onChange={(e) => handleChange(lang, "question", e.target.value)}
           />
-          <textarea
+          <textarea className="answer-textarea"
             placeholder={`${getLabelByLang(translations.faq.answerPlaceholder, language)} (${lang})`}
             value={faq.answer[lang]}
             onChange={(e) => handleChange(lang, "answer", e.target.value)}
           />
         </div>
       ))}
+      
 
       <button type="submit">
         {getLabelByLang(translations.faq.submitButton, language)}

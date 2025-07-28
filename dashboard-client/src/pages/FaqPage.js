@@ -27,13 +27,15 @@ const FaqPage = () => {
   return (
     <div className="faq-page">
       <h2>{getLabelByLang(translations.faq.pageTitle, language)}</h2>
-      <FAQForm businessId={user.businessId} setFaqs={setFaqs} />
-      <FAQList
-        faqs={faqs}
-        setFaqs={setFaqs}
-        language={language}
-        businessId={user.businessId}
-      />
+      <div className="faq-page-row">
+        <FAQForm businessId={user.businessId} setFaqs={setFaqs} />
+        <FAQList
+          faqs={faqs}
+          setFaqs={setFaqs}
+          language={language}
+          businessId={user.businessId}
+        />
+      </div>
     </div>
   );
 };
