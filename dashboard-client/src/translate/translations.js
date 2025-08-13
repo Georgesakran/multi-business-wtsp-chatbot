@@ -179,6 +179,11 @@ const translations = {
         ar: "الخدمات",
         he: "שירותים",
       },
+      "/owner/clients": {
+        en: "Clients",
+        ar: "العملاء",
+        he: "לקוחות",
+      },
     },
 
     modals: {
@@ -946,9 +951,9 @@ const translations = {
           he: "נכשל להוסיף שאלה ❌"
         },
         pageTitle: {
-          en: "❓ FAQ Management",
-          ar: "❓ إدارة الأسئلة الشائعة",
-          he: "❓ ניהול שאלות נפוצות"
+          en: "FAQ Management",
+          ar: "إدارة الأسئلة الشائعة",
+          he: "ניהול שאלות נפוצות"
         },
         confirmationTitleDelete: {
           en: "Delete FAQ",

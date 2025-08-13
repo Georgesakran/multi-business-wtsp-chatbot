@@ -1,0 +1,33 @@
+/* ClientsPage.css */
+
+.clients-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  min-height: 100vh;
+}
+
+/* Page Title */
+.clients-page h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #222;
+}
+
+/* Optional: Add transition for modal open/close */
+.clients-page .modal-overlay {
+  transition: opacity 0.2s ease;
+}
+
+
+@media (max-width: 768px) {
+  .clients-page {
+    padding: 20px 10px;
+  }
+
+  .clients-page h2 {
+    font-size: 22px;
+    text-align: center;
+  }
+}

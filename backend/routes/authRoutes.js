@@ -11,12 +11,15 @@ const { generateToken } = require("../utils/jwt");
 router.post("/login", async (req, res) => {
   const { username, password, role = "owner" } = req.body;
 
+
   try {
     if (role === "admin") {
       const admin = await Admin.findOne({ username });
       if (!admin) return res.status(401).json({ error: "Invalid admin username" });
 
+
       const isMatch = await bcrypt.compare(password, admin.password);
+
       if (!isMatch) return res.status(401).json({ error: "Invalid password" });
 
       const token = generateToken(admin._id, "admin");
@@ -32,7 +35,9 @@ router.post("/login", async (req, res) => {
       const business = await Business.findOne({ username });
       if (!business) return res.status(401).json({ error: "Invalid business username" });
 
+
       const isMatch = await bcrypt.compare(password, business.password);
+
       if (!isMatch) return res.status(401).json({ error: "Invalid password" });
 
       const token = generateToken(business._id, "owner");
@@ -43,16 +48,17 @@ router.post("/login", async (req, res) => {
           role: "owner",
           businessId: business._id,
           username: business.username,
-          businessType: business.businessType
+          businessType: business.businessType,
         },
-        lang :"he",
+        lang: "he",
       });
     }
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("❌ Login error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // ========================================
 // 🔐 POST /api/auth/logout

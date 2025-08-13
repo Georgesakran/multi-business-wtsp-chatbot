@@ -1,7 +1,6 @@
 .day-scroll-wrapper {
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
-  width: 100%;
   margin-bottom: 20px;
   background: linear-gradient(135deg, #A8D5BA, #E0F7D4);
   border-radius: 12px;

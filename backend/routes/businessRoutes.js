@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
 const Business = require("../models/Business");
 const Message = require("../models/Message");
 const Booking = require("../models/Booking");
@@ -40,6 +41,52 @@ router.get("/:id", protect,async (req, res) => {
   }
 });
   
+
+// PUT /api/business/:id/profile - Update business profile securely
+router.put("/:id/profile", protect, async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) return res.status(404).json({ error: "Business not found" });
+
+    const {
+      nameEnglish,
+      nameArabic,
+      nameHebrew,
+      owner,
+      location,
+      password
+    } = req.body;
+
+    // Update profile fields
+    if (nameEnglish !== undefined) business.nameEnglish = nameEnglish;
+    if (nameArabic !== undefined) business.nameArabic = nameArabic;
+    if (nameHebrew !== undefined) business.nameHebrew = nameHebrew;
+
+    if (owner) {
+      business.owner.fullName = owner.fullName || "";
+      business.owner.phone = owner.phone || "";
+      business.owner.email = owner.email || "";
+    }
+
+    if (location) {
+      business.location.city = location.city || "";
+      business.location.street = location.street || "";
+    }
+
+    // If password is provided, hash and update
+    if (password && password.trim().length > 0) {
+      const bcrypt = require("bcryptjs");
+      const salt = await bcrypt.genSalt(10);
+      business.password = await bcrypt.hash(password, salt);
+    }
+
+    await business.save();
+    res.json({ message: "✅ Profile updated successfully" });
+  } catch (err) {
+    console.error("❌ Failed to update profile:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
   
   // PUT /api/businesses/:id - Update business info
 router.put('/:id', protect,async (req, res) => {
@@ -231,7 +278,65 @@ router.delete("/:id/faqs/:faqId", protect, async (req, res) => {
 });
 
 
+// PUT /api/businesses/:id/password
+router.put("/:id/password", protect, async (req, res) => {
+  const businessId = req.params.id;
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  // Validate input
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: "New passwords do not match" });
+  }
+
+  try {
+    // Fetch the business by ID
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    // Check if the current password matches
+    const isMatch = await bcrypt.compare(currentPassword, business.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update the password using findByIdAndUpdate
+    await Business.findByIdAndUpdate(businessId, { password: hashedPassword });
+
+    res.status(200).json({ message: "✅ Password updated successfully" });
+  } catch (err) {
+    console.error("Error updating password:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 
+
+router.put('/:id/reset-password', async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(newPassword, salt);
+    await Business.findByIdAndUpdate(req.params.id, { password: hashed });
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error resetting password' });
+  }
+});
 
 module.exports = router;

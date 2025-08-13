@@ -4,8 +4,8 @@ import "../styles/FaqPage.css";
 import FAQForm from "../componenets/faq/FAQForm";
 import FAQList from "../componenets/faq/FAQList";
 import { LanguageContext } from "../context/LanguageContext";
-import { getLabelByLang } from "../translate/getLabelByLang";
-import translations from "../translate/translations";
+// import { getLabelByLang } from "../translate/getLabelByLang";
+// import translations from "../translate/translations";
 
 const FaqPage = () => {
   const { language } = useContext(LanguageContext);
@@ -25,8 +25,9 @@ const FaqPage = () => {
   }, [user.businessId]);
 
   return (
-    <div className="faq-page">
-      <h2>{getLabelByLang(translations.faq.pageTitle, language)}</h2>
+    
+    <div className={`faq-page ${["ar", "he"].includes(language) ? "rtl" : "ltr"}`}>
+      {/* <h2>{getLabelByLang(translations.faq.pageTitle, language)}</h2> */}
       <div className="faq-page-row">
         <FAQForm businessId={user.businessId} setFaqs={setFaqs} />
         <FAQList

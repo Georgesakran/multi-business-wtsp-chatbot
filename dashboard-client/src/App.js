@@ -20,7 +20,9 @@ import BookingsPage from "./pages/BookingPage";
 import CalendarView from "./pages/CalendarView";
 import ConversationsPage from "./pages/ConversationsPage";
 import ChatbotPage from "./pages/ChatbotPage";
+import ClientsPage from "./pages/ClientPage.js";
 import ServicesPage from "./pages/ServicesPage";
+import BusinessProfilePage from "./pages/BusinessProfilePage";
 import FaqPage from "./pages/FaqPage";
 import Layout from "./context/Layout";
 
@@ -78,6 +80,8 @@ function AppContent() {
               <Route path="/owner/chatbot" element={<ProtectedRoute role="owner"><ChatbotPage /></ProtectedRoute>} />
               <Route path="/owner/faq" element={<ProtectedRoute role="owner"><FaqPage /></ProtectedRoute>} />
               <Route path="/owner/conversations" element={<ProtectedRoute role="owner"><ConversationsPage /></ProtectedRoute>} />
+              <Route path="/owner/profile" element={<ProtectedRoute role="owner"><BusinessProfilePage /></ProtectedRoute>} />
+              <Route path="/owner/clients" element={<ProtectedRoute role="owner"><ClientsPage /></ProtectedRoute>} />
 
               <Route path="/owner/bookings" element={<ProtectedRoute role="owner"><BookingsPage /></ProtectedRoute>} />
               <Route path="/owner/calendar" element={<ProtectedRoute role="owner"><CalendarView /></ProtectedRoute>} />

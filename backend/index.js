@@ -18,9 +18,11 @@ const serviceRoutes = require("./routes/serviceRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const overviewRoutes = require("./routes/overviewRoutes");
 const conversationRoutes = require("./routes/conversationsRoutes");
+const clientsRoutes = require("./routes/clientsRoutes");
 //const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
 
 const app = express();
+
 
 app.use(cors({
   origin: [
@@ -46,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/overview", overviewRoutes);
   app.use("/api/conversations", conversationRoutes);
+  app.use("/api/clients", clientsRoutes);
 
 
 app.get('/webhook', async (req, res) => {

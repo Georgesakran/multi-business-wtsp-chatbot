@@ -20,12 +20,15 @@ const FAQCard = ({ faq, language, onDelete }) => {
       {/* Question Row */}
       <div className="faq-question-row">
         <strong className="faq-question-text">{faq.question[language]}</strong>
-        <button className="toggle-btn-hide-show" onClick={() => setShowAnswer((prev) => !prev)}>
-          {showAnswer
-            ? getLabelByLang({ en: "Hide", ar: "إخفاء", he: "הסתר" }, language)
-            : getLabelByLang({ en: "Show", ar: "عرض", he: "הצג" }, language)}
+        <button className="toggle-btn-hide-show" onClick={() => setShowAnswer(prev => !prev)}>
+          <img
+            src="/images/dropdown.png"
+            alt="Toggle Answer"
+            className={`dropdown-icon ${showAnswer ? "rotated" : ""}`}
+          />
         </button>
       </div>
+
 
       {/* Answer Section */}
       {showAnswer && (

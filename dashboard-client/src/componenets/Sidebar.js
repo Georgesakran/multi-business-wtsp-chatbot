@@ -84,20 +84,20 @@ function Sidebar({ collapsed, setCollapsed, role }) {
     { to: "/owner/sales-report", label: translations.sidebar.salesReport, icon: "📈" },
   ];
 
-  const infoExtras = [
-    { to: "/owner/faq", label: { en: "FAQs", ar: "الأسئلة الشائعة", he: "שאלות נפוצות" }, icon: "📖" },
-    { to: "/owner/contact-requests", label: { en: "Contact Requests", ar: "طلبات التواصل", he: "בקשות יצירת קשר" }, icon: "📬" },
-  ];
+  // const infoExtras = [
+  //   { to: "/owner/faq", label: { en: "FAQs", ar: "الأسئلة الشائعة", he: "שאלות נפוצות" }, icon: "📖" },
+  //   { to: "/owner/contact-requests", label: { en: "Contact Requests", ar: "طلبات التواصل", he: "בקשות יצירת קשר" }, icon: "📬" },
+  // ];
   
-  const deliveryExtras = [
-    { to: "/owner/orders", label: translations.sidebar.orders, icon: "🛵" },
-    { to: "/owner/delivery-status", label: { en: "Delivery Status", ar: "حالة التوصيل", he: "סטטוס משלוחים" }, icon: "🚚" },
-  ];
+  // const deliveryExtras = [
+  //   { to: "/owner/orders", label: translations.sidebar.orders, icon: "🛵" },
+  //   { to: "/owner/delivery-status", label: { en: "Delivery Status", ar: "حالة التوصيل", he: "סטטוס משלוחים" }, icon: "🚚" },
+  // ];
   
-  const eventExtras = [
-    { to: "/owner/events", label: { en: "Events", ar: "الفعاليات", he: "אירועים" }, icon: "🎉" },
-    { to: "/owner/tickets", label: { en: "Tickets", ar: "التذاكر", he: "כרטיסים" }, icon: "🎟️" },
-  ];
+  // const eventExtras = [
+  //   { to: "/owner/events", label: { en: "Events", ar: "الفعاليات", he: "אירועים" }, icon: "🎉" },
+  //   { to: "/owner/tickets", label: { en: "Tickets", ar: "التذاكر", he: "כרטיסים" }, icon: "🎟️" },
+  // ];
 
   const logoutItem = { to: "/logout", label: translations.sidebar.logout, icon: "🚪" };
 
@@ -109,15 +109,15 @@ function Sidebar({ collapsed, setCollapsed, role }) {
   if (["product", "mixed"].includes(businessType)) {
     ownerMenu.push(...productExtras);
   }
-  if (["info"].includes(businessType)) {
-    ownerMenu.push(...infoExtras);
-  }
-  if (["delivery"].includes(businessType)) {
-    ownerMenu.push(...deliveryExtras);
-  }
-  if (["event"].includes(businessType)) {
-    ownerMenu.push(...eventExtras);
-  }
+  // if (["info"].includes(businessType)) {
+  //   ownerMenu.push(...infoExtras);
+  // }
+  // if (["delivery"].includes(businessType)) {
+  //   ownerMenu.push(...deliveryExtras);
+  // }
+  // if (["event"].includes(businessType)) {
+  //   ownerMenu.push(...eventExtras);
+  // }
 
   ownerMenu.push(logoutItem);
 

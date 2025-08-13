@@ -2,6 +2,16 @@
 .faq-page {
     color: #333;
   }
+  .faq-page.ltr {
+    direction: ltr;
+    text-align: left;
+  }
+  
+  /* RTL layout for Arabic and Hebrew */
+  .faq-page.rtl {
+    direction: rtl;
+    text-align: right;
+  }
   
   .faq-page-row {
     display: flex;
@@ -28,7 +38,6 @@
   
   
   /* Toggle, Delete, Switch Buttons */
-  .toggle-btn-hide-show,
   .switch-btn-lan,
   .delete-btn-faq {
     color: white;
@@ -39,14 +48,18 @@
     font-size: 0.85rem;
     padding: 0.4rem 0.9rem;
   }
-  
   .toggle-btn-hide-show {
-    background-color: #1976d2;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
-  .toggle-btn-hide-show:hover {
-    background-color: #125aa5;
-  }
+
   
   .switch-btn-lan {
     font-size: 1.2rem;
@@ -180,6 +193,17 @@
     gap: 1rem;
     margin-top: 0.5rem;
   }
+
+  .dropdown-icon {
+    width: 20px; /* adjust as needed */
+    height: 20px;
+    transition: transform 0.3s ease;
+  }
+  
+  .dropdown-icon.rotated {
+    transform: rotate(180deg);
+  }
+  
   
   /* Animations */
   @keyframes fadeInUp {
@@ -195,12 +219,14 @@
   
   /* Responsive */
   @media (max-width: 768px) {
-    .faq-page {
-      padding: 1.5rem 1rem;
+    .faq-page-row {
+      flex-direction: column;
     }
+    
   
     .faq-form,
     .faq-list {
+      width:auto;
       padding: 1.25rem 1rem;
     }
   
@@ -220,6 +246,11 @@
     .delete-btn-faq,
     .faq-item button {
       font-size: 0.85rem;
+    }
+    .faq-item 
+    {
+      padding: 1.25rem 1rem;
+
     }
   }
   
