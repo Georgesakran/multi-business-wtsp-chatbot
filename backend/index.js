@@ -26,6 +26,12 @@ const uploadRoutes = require("./routes/upload");
 const verifyMetaSignature = require('./utils/verifyMetaSignature');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 
+const verifyTwilioSignature = require("./utils/verifyTwilioSignature");
+const { sendWhatsApp } = require("./utils/sendTwilio");
+const Message = require('./models/Message');
+const Business = require('./models/Business');
+const ConversationState = require('./models/ConversationState');
+
 //const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
 
 const app = express();
@@ -80,15 +86,55 @@ app.get('/webhook', async (req, res) => {
   return res.sendStatus(403);
 });
 
-app.post('/webhook', verifyMetaSignature, async (req, res) => {
+app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
   try {
-    // 1) Determine business by phone_number_id or recipient
-    // 2) Persist WebhookEvent (direction: "in")
-    // 3) Route to: handleBookingFlow(...) or getReply(...) based on ConversationState.mode/step
-    // 4) Send response (200)
+    const fromRaw = req.body.From;   // "whatsapp:+9725..."
+    const toRaw = req.body.To;       // "whatsapp:+1415..."
+    const body = (req.body.Body || "").trim();
+
+    const from = fromRaw?.replace("whatsapp:", "");
+    const to = toRaw?.replace("whatsapp:", "");
+
+    const business = await Business.findOne({ whatsappNumber: to, isActive: true });
+    if (!business) return res.sendStatus(200);
+
+    // log inbound
+    await Message.create({
+      businessId: business._id,
+      customerId: from,
+      role: "user",
+      content: body
+    });
+
+    // find/create conversation
+    let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
+    if (!state) {
+      state = await ConversationState.create({
+        businessId: business._id,
+        phoneNumber: from,
+        mode: business.config?.chatbotEnabled ? "gpt" : "flow",
+        step: "menu",
+        data: {}
+      });
+    }
+
+    // basic reply
+    let reply = business.config?.fallbackMessage || "Hello 👋";
+    if (/menu|start|ابدأ|help/i.test(body)) reply = business.config?.welcomeMessage || "Welcome!";
+    if (/book|احجز|הזמן/i.test(body)) reply = "Sure! Which service would you like to book?";
+
+    await sendWhatsApp(from, reply);
+
+    await Message.create({
+      businessId: business._id,
+      customerId: from,
+      role: "assistant",
+      content: reply
+    });
+
     res.sendStatus(200);
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error("Webhook error:", err);
     res.sendStatus(500);
   }
 });
