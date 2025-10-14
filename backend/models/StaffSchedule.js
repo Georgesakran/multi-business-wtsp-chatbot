@@ -1,4 +1,7 @@
  // models/StaffSchedule.js
+ 
+ const mongoose = require("mongoose");
+
  const StaffScheduleSchema = new mongoose.Schema({
     businessId: { type: mongoose.Schema.Types.ObjectId, ref:"Business", index:true, required:true },
     staffId: { type: mongoose.Schema.Types.ObjectId, ref:"Staff", index:true, required:true },

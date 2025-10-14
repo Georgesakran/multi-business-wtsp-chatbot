@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 // models/Staff.js
 const StaffSchema = new mongoose.Schema({
     businessId: { type: mongoose.Schema.Types.ObjectId, ref:"Business", index:true, required:true },
