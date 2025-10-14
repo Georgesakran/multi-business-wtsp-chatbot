@@ -17,11 +17,11 @@ const courseRoutes = require("./routes/courseRoutes");
 const productRoutes = require("./routes/productsRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const uploadRoutes = require("./routes/upload");
-const verifyMetaSignature = require('./utils/verifyMetaSignature');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 
 const waFlowsRoutes = require("./routes/waFlowRoutes");
 const { handleFlowIncoming } = require("./utils/waFlow");
+const verifyMetaSignature = require('./utils/verifyMetaSignature');
 const verifyTwilioSignature = require("./utils/verifyTwilioSignature");
 const { sendWhatsApp } = require("./utils/sendTwilio");
 const ConversationState = require('./models/ConversationState');
@@ -121,7 +121,7 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
       content: reply
     });
 
-    res.sendStatus(200);
+    // res.sendStatus(200);
   } catch (err) {
     console.error("Webhook error:", err);
     res.sendStatus(500);
