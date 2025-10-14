@@ -17,16 +17,14 @@ const serviceSchema = new mongoose.Schema({
   },
   price: { type: Number, default: 0 },
   bookable: { type: Boolean, default: false },
-  duration: { type: Number }, // in minutes
+  duration: { type: Number }, // minutes
   category: { type: String, default: "" },
   tags: { type: [String], default: [] },
   isActive: { type: Boolean, default: true },
-  image: { type: String, default: "" }, // image path or URL
+  image: { type: String, default: "" },
 }, { timestamps: true });
 
-
-
-  // ==========================
+// ==========================
 // Sub-schema: FAQ
 // ==========================
 const faqSchema = new mongoose.Schema({
@@ -41,12 +39,7 @@ const faqSchema = new mongoose.Schema({
     he: { type: String, default: "" }
   },
   createdAt: { type: Date, default: Date.now },
-  //updatedAt: { type: Date, default: Date.now },
-  
 });
-
-
-
 
 // ==========================
 // Sub-schema: Custom Fields (Optional)
@@ -60,7 +53,6 @@ const customFieldSchema = new mongoose.Schema({
   },
   required: { type: Boolean, default: false }
 });
-
 
 // ==========================
 // Sub-schema: Logs (Optional)
@@ -84,11 +76,37 @@ const businessSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 
-  // WhatsApp integration
-  whatsappNumber: { type: String, required: true },
+  // (LEGACY) WhatsApp integration (kept for backward compatibility)
+  whatsappNumber: { type: String, default: "" }, // old field you already have
   phoneNumberId: String,
   verifyToken: String,
   accessToken: String,
+
+  // NEW WhatsApp/Twilio + Flows configuration (per business)
+  wa: {
+    number: { type: String, default: "" },               // E.164, e.g. +972525561686 (Twilio WA sender)
+    messagingServiceSid: { type: String, default: "" },  // Twilio Messaging Service SID (recommended)
+    locale: { type: String, enum: ["en","ar","he"], default: "en" },
+    useFlows: { type: Boolean, default: true },
+
+    flows: {
+      booking: {
+        id: { type: String, default: "" },      // Meta Flow ID (Booking)
+        version: { type: String, default: "" }
+      },
+      order: {
+        id: { type: String, default: "" },      // Meta Flow ID (Order)
+        version: { type: String, default: "" }
+      }
+    },
+
+    templates: {
+      bookingLaunch: { type: String, default: "" }, // Twilio Content Template SID to launch Booking Flow
+      orderLaunch:   { type: String, default: "" }, // Twilio Content Template SID to launch Order Flow
+      bookingConfirm:{ type: String, default: "" }, // (optional) confirmation template SID
+      orderConfirm:  { type: String, default: "" }  // (optional)
+    }
+  },
 
   // Language preference
   language: {
@@ -115,12 +133,11 @@ const businessSchema = new mongoose.Schema({
 
   // Business working schedule and configs
   closedDates: {
-    type: [String], // Format: YYYY-MM-DD
+    type: [String], // YYYY-MM-DD
     default: []
   },
 
   faqs: [faqSchema],
-
 
   config: {
     chatbotEnabled: { type: Boolean, default: false },
@@ -180,6 +197,10 @@ const businessSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true }
 
 }, { timestamps: true });
+
+// Helpful indexes for fast routing by number
+businessSchema.index({ "wa.number": 1 });
+businessSchema.index({ whatsappNumber: 1 }); // legacy
 
 // ==========================
 // Password Hash Middleware
