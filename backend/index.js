@@ -20,7 +20,7 @@ const uploadRoutes = require("./routes/upload");
 const verifyMetaSignature = require('./utils/verifyMetaSignature');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 
-const waFlowsRoutes = require("./routes/waFlowsRoutes");
+const waFlowsRoutes = require("./routes/waFlowRoutes");
 const { handleFlowIncoming } = require("./utils/waFlow");
 const verifyTwilioSignature = require("./utils/verifyTwilioSignature");
 const { sendWhatsApp } = require("./utils/sendTwilio");
