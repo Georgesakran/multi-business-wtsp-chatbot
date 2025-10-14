@@ -34,7 +34,7 @@ function LoginPage() {
       if (user.role === "admin") {
         navigate("/admin/Dashboard");
       } else {
-        navigate("/owner/Dashboard");
+        navigate("/owner/Overview");
       }
     } catch (err) {
       setError(err.response?.data?.error || "Login failed");

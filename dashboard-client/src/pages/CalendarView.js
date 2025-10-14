@@ -64,7 +64,23 @@ const CalendarView = () => {
     time: "",
     status: "pending",
   });
+// ---- service helpers (new + legacy safe) ----
+const getServiceLabel = (bookingOrEvent, lang) => {
+  const snap = bookingOrEvent?.serviceSnapshot?.name;
+  if (snap && (snap[lang] || snap.en)) return snap[lang] || snap.en;
 
+  // legacy fallback (old rows)
+  const legacy = bookingOrEvent?.service;
+  if (legacy && typeof legacy === "object") return legacy[lang] || legacy.en || "N/A";
+  if (typeof legacy === "string" && legacy.trim()) return legacy;
+
+  return "N/A";
+};
+
+const getDurationMinutes = (bookingOrEvent) => {
+  const d = bookingOrEvent?.serviceSnapshot?.duration;
+  return Number.isFinite(d) && d > 0 ? d : 30; // default 30 min
+};
 
   const fetchBusinessConfig = useCallback(async () => {
     try {
@@ -88,16 +104,22 @@ const CalendarView = () => {
       const res = await axios.get(`/bookings/${businessId}`);
       const formatted = res.data.map((booking) => {
         const start = new Date(`${booking.date}T${booking.time}`);
-        const end = new Date(start.getTime() + 30 * 60000);
+        const duration = getDurationMinutes(booking);
+        const end = new Date(start.getTime() + duration * 60000);
+  
         return {
           id: booking._id,
-          title: `${booking.customerName} - ${booking.service}`,
           start,
           end,
           allDay: false,
           status: booking.status,
           resource: { color: getColorByStatus(booking.status) },
+  
+          // keep full booking for preview / edit
           ...booking,
+  
+          // title uses new snapshot (fallback safe)
+          title: `${booking.customerName} - ${getServiceLabel(booking, language)}`,
         };
       });
       setEvents(formatted);
@@ -209,15 +231,15 @@ const CalendarView = () => {
     if (!selectedEvent) return;
   
     try {
-      const parsedService =
-        typeof formData.service === "string"
-          ? JSON.parse(formData.service)
-          : formData.service;
-  
       const payload = {
-        ...formData,
-        service: parsedService,
         businessId,
+        customerName: formData.customerName,
+        phoneNumber: formData.phoneNumber,
+        date: formData.date,
+        time: formData.time,
+        status: formData.status,
+        serviceId: formData.serviceId || null, // 👈 let backend rebuild snapshot
+        source: "manual",
       };
   
       await axios.put(`/bookings/${selectedEvent.id}`, payload);
@@ -226,7 +248,7 @@ const CalendarView = () => {
       setFormData({
         customerName: "",
         phoneNumber: "",
-        service: "",
+        serviceId: "",
         date: "",
         time: "",
         status: "pending",
@@ -264,17 +286,11 @@ const CalendarView = () => {
   const maxTime = businessConfig?.closingTime ? moment(businessConfig.closingTime, "HH:mm").toDate() : new Date(2023, 1, 1, 20);
 
   const filteredEvents = events.filter(e => filters[e.status]);
-  const formattedEvents = filteredEvents.map((event) => {
-    const serviceName =
-      typeof event.service === "object"
-        ? getLabelByLang(event.service, language)
-        : event.service;
-  
-    return {
-      ...event,
-      title: `${event.customerName} - ${serviceName}`,
-    };
-  });
+
+  const formattedEvents = filteredEvents.map((event) => ({
+    ...event,
+    title: `${event.customerName} - ${getServiceLabel(event, language)}`
+  }));
   
   const getStep = () => {
     switch (currentView) {
@@ -584,7 +600,7 @@ const CalendarView = () => {
 
                   <div className="event-preview-row"> 
                     {getLabelByLang(translations.servicesPage.duration, language)}&nbsp;-&nbsp;
-                    {moment(previewEvent.end).diff(previewEvent.start, "minutes")} {getLabelByLang(translations.calendarPage.minutes, language)}
+                    {getDurationMinutes(previewEvent)} {getLabelByLang(translations.calendarPage.minutes, language)}
                   </div>
                 </div>
                 <div className="event-preview-column">
@@ -595,9 +611,7 @@ const CalendarView = () => {
 
                   <div>
                     {getLabelByLang(translations.calendarPage.service, language)}&nbsp;-&nbsp;
-                    {typeof previewEvent.service === "object"
-                      ? getLabelByLang(previewEvent.service, language)
-                      : previewEvent.service}
+                    {getServiceLabel(previewEvent, language)}
                   </div>
 
                   <div>
@@ -607,10 +621,19 @@ const CalendarView = () => {
                 </div>
               </div>
               <div className="event-preview-actions">
-                  <button
+                 <button
                     onClick={() => {
                       setSelectedEvent(previewEvent);
-                      setFormData({ ...previewEvent });
+                      setFormData({
+                        // only what you actually edit:
+                        id: previewEvent.id,
+                        date: previewEvent.date,                // keep your shape if you store it
+                        time: previewEvent.time,                // or format from previewEvent.start if needed
+                        customerName: previewEvent.customerName,
+                        phoneNumber: previewEvent.phoneNumber,
+                        status: previewEvent.status,
+                        serviceId: previewEvent.serviceId || "", // 👈 important
+                      });
                       setPreviewEvent(null);
                     }}
                   >
@@ -706,26 +729,30 @@ const CalendarView = () => {
                 className="custom-dropdown-wrapper"
                 style={{ direction: language === "ar" || language === "he" ? "rtl" : "ltr" }}
               >
-                <div className="custom-dropdown-header" onClick={() => setServiceDropdownOpen(!serviceDropdownOpen)}>
-                {formData.service ? getLabelByLang(formData.service, language) : getLabelByLang(translations.calendarPage.selectService, language)}
-                <span className="arrow">▾</span>
+       <div className="custom-dropdown-header" onClick={() => setServiceDropdownOpen(!serviceDropdownOpen)}>
+              {formData.serviceId
+                ? getLabelByLang(services.find(s => String(s._id) === String(formData.serviceId))?.name || {}, language)
+                : getLabelByLang(translations.calendarPage.selectService, language)}
+              <span className="arrow">▾</span>
+            </div>
+
+            {serviceDropdownOpen && (
+              <div className="custom-dropdown-list">
+                {services.map((s) => (
+                  <div
+                    key={s._id}
+                    className="custom-dropdown-option"
+                    onClick={() => {
+                      setFormData({ ...formData, serviceId: String(s._id) }); // 👈 store serviceId
+                      setServiceDropdownOpen(false);
+                    }}
+                  >
+                    {getLabelByLang(s.name, language)}
+                  </div>
+                ))}
               </div>
-              {serviceDropdownOpen && (
-                <div className="custom-dropdown-list">
-                  {services.map((s) => (
-                    <div
-                      key={s._id}
-                      className="custom-dropdown-option"
-                      onClick={() => {
-                        setFormData({ ...formData, service: s.name });
-                        setServiceDropdownOpen(false);
-                      }}
-                    >
-                      {getLabelByLang(s.name, language)}
-                    </div>
-                  ))}
-                </div>
-              )}
+            )}
+              
             </div>
 
             {/* Status Custom Dropdown */}

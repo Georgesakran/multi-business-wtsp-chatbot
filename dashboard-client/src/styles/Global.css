@@ -12,10 +12,16 @@
   
   /* Desktop layout (default) */
   .main-content {
-    margin-top: 110px; /* header + spacing */
-    margin-left: auto; /* sidebar space */
-    width: calc(100% - 260px); /* header + spacing */
+    margin-top: 110px;
+    margin-left: auto;
+    width: calc(100% - 260px);
+    transition: width 0.3s ease, margin 0.3s ease;
   }
+  
+  .modern-sidebar.collapsed ~ div .main-content {
+    width: calc(100% - 80px);
+  }
+  
   .toast-container-custom {
     top: 50px !important;
     width: auto !important; 
@@ -70,7 +76,7 @@
       }
     .main-content {
       margin-top: 90px; /* slightly smaller top margin on mobile */
-      width: 100%;
+      width: 100% !important;
     }
   
 

@@ -184,6 +184,23 @@ const translations = {
         ar: "العملاء",
         he: "לקוחות",
       },
+      "/owner/courses": {
+        en: "Courses",
+        ar: "الدورات",
+        he: "קורסים",
+      },
+      "/owner/products": {
+        en: "Products",
+        ar: "المنتجات",
+        he: "מוצרים"
+      },
+      "/owner/orders": {
+        en: "Orders",
+        ar: "الطلبات",
+        he: "הזמנות"
+      },
+
+
     },
 
     modals: {

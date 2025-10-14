@@ -4,22 +4,40 @@ import { LanguageContext } from "../../context/LanguageContext";
 import translations from "../../translate/translations";
 import { getLabelByLang } from "../../translate/getLabelByLang";
 
+/** Safe resolver for the service label (new + legacy) */
+const getServiceLabel = (booking, lang) => {
+  // ✅ new shape
+  const snap = booking?.serviceSnapshot?.name;
+  if (snap && (snap[lang] || snap.en)) return snap[lang] || snap.en;
+
+  // 🕰 legacy shape
+  const legacy = booking?.service;
+  if (legacy && typeof legacy === "object") return legacy[lang] || legacy.en || "N/A";
+  if (typeof legacy === "string" && legacy.trim()) return legacy;
+
+  return "N/A";
+};
+
 const BookingDetails = ({ booking }) => {
   const { language } = useContext(LanguageContext);
 
   return (
     <div className="booking-details-card">
       <div className="booking-detail">
-        <strong>{getLabelByLang(translations.overview.bookingDetails.name, language)}:</strong> {booking.customerName}
+        <strong>{getLabelByLang(translations.overview.bookingDetails.name, language)}:</strong>{" "}
+        {booking.customerName}
       </div>
       <div className="booking-detail">
-        <strong>{getLabelByLang(translations.overview.bookingDetails.phone, language)}:</strong> {booking.phoneNumber}
+        <strong>{getLabelByLang(translations.overview.bookingDetails.phone, language)}:</strong>{" "}
+        {booking.phoneNumber}
       </div>
       <div className="booking-detail">
-        <strong>{getLabelByLang(translations.overview.bookingDetails.time, language)}:</strong> {booking.time}
+        <strong>{getLabelByLang(translations.overview.bookingDetails.time, language)}:</strong>{" "}
+        {booking.time}
       </div>
       <div className="booking-detail">
-        <strong>{getLabelByLang(translations.overview.bookingDetails.service, language)}:</strong> {booking.service?.[language] || "N/A"}
+        <strong>{getLabelByLang(translations.overview.bookingDetails.service, language)}:</strong>{" "}
+        {getServiceLabel(booking, language)}
       </div>
     </div>
   );
@@ -42,13 +60,12 @@ const StatusSection = ({ title, icon, count, bookings }) => {
             className={`dropdown-icon ${open ? "open" : ""}`}
           />
         </div>
-
       </div>
 
       {open && (
         <div className="status-bookings-wrapper">
           {bookings.map((b, i) => (
-            <BookingDetails key={i} booking={b} />
+            <BookingDetails key={b._id || i} booking={b} />
           ))}
         </div>
       )}

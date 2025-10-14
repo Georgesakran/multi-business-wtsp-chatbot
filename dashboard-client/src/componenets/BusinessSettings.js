@@ -68,7 +68,7 @@ const BusinessSettings = ({ BusinessId }) => {
   return (
 
     <div className={`settings-container ${["ar", "he"].includes(language) ? "rtl" : "ltr"}`}>
-      <form onSubmit={handleSubmit}>
+      <form className="business-settings-form" onSubmit={handleSubmit}>
         <div>
           <label>{getLabelByLang(translations.businessSettings.workingDays, language)}:</label>
           <div className="day-selector">

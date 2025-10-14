@@ -4,16 +4,13 @@
   top: 0;
   right:0;
   left: 0;
-  z-index: 999;
-  background-color: #ffffff;
+  background-color: #f4f6f8;
   padding: 10px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
   box-shadow: none;
-  transition: box-shadow 0.3s ease;
-
+  height: 70px;
 }
 .header-left{
   display: flex;
@@ -27,14 +24,32 @@
 
 /* Add shadow when scrolled */
 .header-bar.scrolled {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1); /* translucent white */
+  backdrop-filter: blur(10px);          /* blur the background */
+  -webkit-backdrop-filter: blur(10px);  /* Safari support */
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
+
 
 .page-title {
   font-size: 1.4rem;
   font-weight: bold;
   color: #333;
-  flex-shrink: 0;
+  transition: margin-left 0.3s ease;
+}
+
+/* Desktop spacing */
+.expanded-margin {
+  margin-left: 260px;
+}
+
+.collapsed-margin {
+  margin-left: 100px;
+}
+
+/* Mobile (no margin) */
+.mobile-title {
+  margin-left: 0;
 }
 
 /* Header buttons + language */

@@ -1,0 +1,24 @@
+.chips-wrap { margin: 8px 0 6px; }
+.chips-list {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0;
+  list-style: none;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface-2, #f7f7f9);
+  border: 1px solid var(--border, #e5e7eb);
+  color: var(--text, #111827);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.chip .chip-x {
+  border: none; background: transparent; cursor: pointer; font-size: 14px; line-height: 1;
+  opacity: .7;
+}
+.chip .chip-x:hover { opacity: 1; }
+
+.chip-clear-all { background: transparent; border-style: dashed; }
+.chip-clear-btn {
+  border: none; background: transparent; cursor: pointer; font-weight: 600; font-size: 12px;
+}

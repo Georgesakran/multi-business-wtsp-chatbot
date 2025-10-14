@@ -20,7 +20,7 @@
 .clients-table th,
 .clients-table td {
   padding: 14px 16px;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid #e2e2e2;
   font-size: 15px;
 }
@@ -61,7 +61,8 @@
 @media (max-width: 768px) {
   .clients-table {
     font-size: 14px;
-    min-width: 100%;
+    min-width: unset; /* remove the 600px min-width */
+    width: 100%;       /* ensure it takes full container width */
   }
 
   .clients-table th,
@@ -74,3 +75,5 @@
     border-radius: 0;
   }
 }
+
+

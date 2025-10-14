@@ -1,0 +1,242 @@
+/* ========== TOKENS ==========
+   (inherits existing tokens if you already defined them elsewhere)
+*/
+:root{
+    --surface:#fff; 
+    --surface-2:#f7f7f9; 
+    --text:#111827; 
+    --muted:#6b7280;
+    --border:#e5e7eb; 
+    --primary:#2563eb; 
+    --radius:12px; 
+    --radius-sm:10px;
+    --shadow:0 10px 30px rgba(0,0,0,.08); 
+    --focus:0 0 0 3px rgba(37,99,235,.35);
+  }
+  
+  @media (prefers-color-scheme: dark){
+    :root{
+      --surface:#0f172a; 
+      --surface-2:#111827; 
+      --text:#e5e7eb; 
+      --muted:#9ca3af; 
+      --border:#1f2937;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  
+  /* ========== FILTER WRAP ========== */
+  .cb-filters {
+    display: grid;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: var(--shadow);
+    /* ⬇️ this must NOT be set */
+    /* overflow: hidden; */
+  }
+  
+  /* Rows stack on mobile; become grid on desktop */
+  .cb-row{
+    display:grid;
+    gap:12px;
+  }
+  
+  @media (min-width: 880px){
+    .cb-row{
+      grid-template-columns: repeat(12, 1fr);
+      align-items:end;
+    }
+  }
+  
+  /* ========== FIELDS ========== */
+  .cb-field{
+    display:grid;
+    gap:6px;
+  }
+  
+  /* labels */
+  .cb-field label{
+    color:var(--muted);
+    font-size:12px;
+  }
+  
+  /* inputs & selects */
+  .cb-field input,
+  .cb-field select{
+    box-sizing: border-box;
+    width:100%;
+    height:44px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    background:var(--surface);
+    color:var(--text);
+    padding:10px 12px;
+    font: 500 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;    outline:none;
+    transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .cb-field select {
+    -webkit-appearance: menulist !important;
+    appearance: menulist !important;
+    background-image: none;  /* let iOS/Android render it natively */
+    padding-right: 12px;     /* reset padding */
+  }
+
+  /* .cb-field input[type="number"] {
+    -moz-appearance: textfield;
+  } */
+
+  .cb-field input[type="number"]::-webkit-outer-spin-button,
+  .cb-field input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+    margin:0
+  }
+
+  .cb-field input::placeholder{ color: color-mix(in srgb, var(--muted) 70%, transparent); }
+  
+  .cb-field input:focus,
+  .cb-field select:focus{
+    border-color: transparent;
+    box-shadow: var(--focus);
+  }
+  /* Tidy calendar icon so date inputs align */
+.cb-field input[type="date"]::-webkit-calendar-picker-indicator{
+  opacity: .7;
+  margin-right: 2px;
+}
+.cb-field input[type="date"]{
+  appearance: none;
+  -webkit-appearance: none;
+  text-transform: lowercase;    /* optional to match placeholder style */
+}
+
+/* Buttons in the actions row should match control height */
+.cb-actions .btn{
+  height: 44px;
+  padding: 0 14px;
+}
+
+/* Ensure the “Actions” block aligns to the bottom like other fields */
+@media (min-width:880px){
+  .cb-row:nth-of-type(3) .cb-actions{
+    grid-column: 10 / span 3;
+    align-self: end;
+  }
+}
+
+/* Optional: slightly larger first row controls for visual rhythm */
+@media (min-width:880px){
+  .cb-row:first-of-type .cb-field--grow,
+  .cb-row:first-of-type .cb-field:nth-child(2),
+  .cb-row:first-of-type .cb-field:nth-child(3){
+    align-self: end;
+  }
+}
+  /* Desktop column spans for row 1 (Search, Instructor, Sort) */
+  @media (min-width: 880px){
+    .cb-row:first-of-type .cb-field--grow{ grid-column: span 6; }   /* Search */
+    .cb-row:first-of-type .cb-field:nth-child(2){ grid-column: span 3; } /* Instructor */
+    .cb-row:first-of-type .cb-field:nth-child(3){ grid-column: span 3; } /* Sort */
+  }
+  
+  /* Desktop column spans for row 2 (Price/Capacity) */
+  @media (min-width: 880px){
+    .cb-row:nth-of-type(2) .cb-field{ grid-column: span 3; }
+  }
+  
+  /* Desktop column spans for row 3 (Dates, Status, Actions) */
+  @media (min-width: 880px){
+    .cb-row:nth-of-type(3) .cb-field{ grid-column: span 3; }
+  }
+  
+  /* ========== ACTIONS ========== */
+  .cb-actions{
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+  }
+  
+  @media (min-width: 880px){
+    .cb-row:nth-of-type(3) .cb-actions{
+      grid-column: 10 / span 3; /* right side */
+    }
+  }
+  
+  /* Buttons (reuse across app if you like) */
+  .btn{
+    height:40px;
+    padding:0 14px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    cursor:pointer;
+    font-weight:600;
+    background:var(--surface);
+    color:var(--text);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+  }
+  .btn:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0,0,0,.08);
+  }
+  .btn.primary{
+    background:var(--primary);
+    color:#fff;
+    border-color: transparent;
+  }
+  .btn.primary.pending {
+    position: relative;
+  }
+  
+  .btn.primary.pending::after {
+    content: "";
+    position: absolute;
+    top: -4px;                 /* sits at top-right corner */
+    right: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;       /* emerald green; pick your brand color */
+    box-shadow: 0 0 0 0 rgba(16,185,129,0.6);
+    animation: pulseDot 1.8s ease-out infinite;
+  }
+
+  .filters-hint {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #d97706; /* amber/orange */
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  .btn.ghost{
+    background:transparent;
+  }
+  
+  /* ========== RTL niceties ========== */
+  html[dir="rtl"] .cb-actions{
+    justify-content:flex-start;
+  }
+
+  /* gentle pulse */
+@keyframes pulseDot {
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+/* dark mode contrast (optional) */
+@media (prefers-color-scheme: dark) {
+  .btn.primary.pending::after {
+    background: #22c55e;
+  }
+}
+@media (max-width: 768px) {
+  .cb-field select {
+    appearance: auto !important;
+    background-image: none !important;
+    padding-right: 12px;
+  }
+}

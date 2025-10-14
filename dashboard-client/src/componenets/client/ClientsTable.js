@@ -10,8 +10,7 @@ const ClientsTable = ({ clients, onSelectClient }) => {
           <tr>
             <th>Name</th>
             <th>Phone</th>
-            <th>Email</th>
-            <th>Visits</th>
+            <th>Book/Order</th>
             <th>Last Activity</th>
           </tr>
         </thead>
@@ -31,7 +30,6 @@ const ClientsTable = ({ clients, onSelectClient }) => {
               >
                 <td>{c.name}</td>
                 <td>{c.phoneNumber}</td>
-                <td>{c.email || "-"}</td>
                 <td>{c.visits}</td>
                 <td>
                   {c.lastActivity

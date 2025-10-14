@@ -11,12 +11,11 @@ const LANGUAGES = [
   { code: "he", label: "עברית" },
 ];
 
-function Header({ setCollapsed }) {
+function Header({ collapsed, setCollapsed }) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
   const { language, setLanguage } = useContext(LanguageContext);
 
   useEffect(() => {
@@ -40,8 +39,6 @@ function Header({ setCollapsed }) {
     setOpen(false);
   };
 
-  // const handleSettingsClick = () => navigate("/owner/settings");
-
   const currentPath = location.pathname;
   const pageTitles = translations.pageTitles;
   const title =
@@ -51,6 +48,7 @@ function Header({ setCollapsed }) {
   return (
     <header className={`header-bar ${isScrolled ? "scrolled" : ""}`}>
       <div className="header-left">
+        {/* Hamburger only for mobile */}
         {isMobile && (
           <button
             className="hamburger-toggle"
@@ -60,12 +58,21 @@ function Header({ setCollapsed }) {
           </button>
         )}
 
-        <h1 className="page-title">{title}</h1>
+        {/* Page title always visible */}
+        <h1
+          className={`page-title ${
+            isMobile
+              ? "mobile-title"
+              : collapsed
+              ? "collapsed-margin"
+              : "expanded-margin"
+          }`}
+        >
+          {title}
+        </h1>
       </div>
 
       <div className="header-actions">
-
-
         <div className="lang-selector">
           <div className="lang-current" onClick={toggleDropdown}>
             🌐 {LANGUAGES.find((l) => l.code === language)?.label}

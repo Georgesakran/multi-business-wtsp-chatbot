@@ -1,0 +1,283 @@
+/* ---------- Page shell ---------- */
+.order-page-wrap {
+  --bg: #f7f8fa;
+  --card-bg: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --shadow: 0 8px 24px rgba(0,0,0,.06);
+  --radius: 14px;
+
+  --chip-bg: #eef2ff;
+  --chip-text: #3730a3;
+
+  --success-bg: #ecfdf5;
+  --success-text: #047857;
+
+  --warn-bg: #fff7ed;
+  --warn-text: #c2410c;
+
+  --danger-bg: #fef2f2;
+  --danger-text: #b91c1c;
+
+  --paid-bg: #ecfdf5;
+  --paid-text: #065f46;
+
+  --unpaid-bg: #fff7ed;
+  --unpaid-text: #92400e;
+
+  --refunded-bg: #eff6ff;
+  --refunded-text: #1d4ed8;
+
+  background: var(--bg);
+  min-height: 100dvh;
+  color: var(--text);
+}
+
+/* ---------- Header ---------- */
+.order-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.order-page-header h2 {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 700;
+}
+
+.order-page-header .spacer {
+  justify-self: end;
+}
+
+.back-btn-orderPage {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .05s ease, box-shadow .2s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+}
+.back-btn-orderPage:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.back-btn-orderPage:active { transform: translateY(1px); }
+
+/* ---------- Content grid ---------- */
+.order-page-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+/* Stack on small screens */
+@media (max-width: 1024px) {
+  .order-page-content { grid-template-columns: 1fr; }
+}
+
+/* ---------- “Cards” ---------- */
+.ov-top,
+.ov-items,
+.ov-notes {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.ov-top {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+@media (max-width: 720px) {
+  .ov-top { grid-template-columns: 1fr; }
+}
+
+/* ---------- Sections inside cards ---------- */
+.ov-section {
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, rgba(99,102,241,.06), rgba(14,165,233,.06)) border-box;
+}
+
+.ov-section-title {
+  font-weight: 700;
+  letter-spacing: .2px;
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+.ov-kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+.ov-kv:last-child { border-bottom: 0; }
+
+.ov-kv > span {
+  color: var(--muted);
+}
+.ov-kv > strong {
+  font-weight: 600;
+}
+
+/* ---------- Status chips ---------- */
+.ov-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: .3px;
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+/* order status */
+.status-badge.o-pending   { background: var(--warn-bg);     color: var(--warn-text); }
+.status-badge.o-fulfilled { background: var(--success-bg);  color: var(--success-text); }
+.status-badge.o-cancelled { background: var(--danger-bg);   color: var(--danger-text); }
+.status-badge.o-refunded  { background: var(--refunded-bg); color: var(--refunded-text); }
+.status-badge.o-paid      { background: var(--success-bg);  color: var(--success-text); }
+
+/* payment status */
+.status-badge.p-paid      { background: var(--paid-bg);     color: var(--paid-text); }
+.status-badge.p-unpaid    { background: var(--unpaid-bg);   color: var(--unpaid-text); }
+.status-badge.p-partial   { background: #fdf4ff;            color: #7e22ce; }
+.status-badge.p-refunded  { background: var(--refunded-bg); color: var(--refunded-text); }
+
+/* ---------- Totals rows ---------- */
+.ov-total-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+.ov-total-row:last-child { border-bottom: 0; }
+.ov-total-row span { color: var(--muted); }
+
+.ov-grand {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* ---------- Items card ---------- */
+.ov-items {
+  padding: 8px 16px 8px;
+}
+
+.ov-section-title {
+  padding: 14px 16px 8px;
+}
+
+.ov-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ov-item {
+  display: grid;
+grid-template-columns: auto 20fr 1fr 2fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.ov-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+}
+.ov-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ov-thumb--ph {
+  font-size: 20px;
+  color: #9ca3af;
+}
+
+.ov-item-main {
+  min-width: 0;
+}
+.ov-item-title {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-item-sub {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.ov-item-total {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* ---------- Notes ---------- */
+.ov-notes {
+  margin-top: 18px;
+  padding: 12px 16px 16px;
+}
+.ov-notes p {
+  margin: 6px 0 0;
+  color: #374151;
+  line-height: 1.5;
+}
+
+/* ---------- Empty states ---------- */
+.ov-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------- Small niceties ---------- */
+@media (hover:hover) {
+  .ov-item:hover {
+    box-shadow: 0 8px 18px rgba(0,0,0,.05);
+    transform: translateY(-1px);
+    transition: .15s ease;
+  }
+}
+
+.line-between-sections{
+  border-bottom: 1px dashed rgba(0,0,0,.2);
+  margin: 0 -14px;
+}

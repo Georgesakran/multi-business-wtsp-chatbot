@@ -24,8 +24,8 @@ function Layout({ children, role, collapsed, setCollapsed }) {
     <div className="app-layout" style={{ display: "flex", flexDirection: "row" }}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} role={role} />
       <div style={{ flex: 1 }}>
-        <Header setCollapsed={setCollapsed} />
-        <div className="content" style={contentStyle}>
+      <Header collapsed={collapsed} setCollapsed={setCollapsed} />
+      <div className="content" style={contentStyle}>
           {children}
         </div>
       </div>

@@ -40,7 +40,6 @@ const ChatbotPage = () => {
 
   return (
     <div className={`chatbot-page ${["ar", "he"].includes(language) ? "rtl" : "ltr"}`}>
-      <h2>🤖 Chatbot Management</h2>
       <div className="first-section-chatbot-page">
         <ChatbotToggleSection config={config} setConfig={setConfig} />
         <ChatbotLanguageSelector config={config} setConfig={setConfig} />

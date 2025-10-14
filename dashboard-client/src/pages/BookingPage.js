@@ -49,6 +49,11 @@ const BookingsPage = () => {
     status: "pending",
   });
 
+  const svcName = (b) =>
+    b?.serviceSnapshot?.name?.[language] ||
+    b?.serviceSnapshot?.name?.en ||
+    "-";
+
 
   const fetchBusinessConfig = useCallback(async () => {
     try {
@@ -147,8 +152,12 @@ const BookingsPage = () => {
 
   const handleEditClick = (booking) => {
     setFormData({
-      ...booking,
-      service: typeof booking.service === "object" ? JSON.stringify(booking.service) : booking.service
+      customerName: booking.customerName,
+      phoneNumber: booking.phoneNumber,
+      serviceId: booking.serviceId ? String(booking.serviceId) : "",
+      date: booking.date,
+      time: booking.time,
+      status: booking.status,
     });
     setEditingId(booking._id);
     setShowForm(true);
@@ -201,18 +210,19 @@ const BookingsPage = () => {
       message: getLabelByLang(translations.bookingsPage[messageKey], language),
       onConfirm: async () => {
         try {
-          const serviceObj = JSON.parse(formData.service);
+          //const serviceObj = JSON.parse(formData.service);
           const payload = {
-            ...formData,
-            service: serviceObj,
             businessId,
-            source: "manual", // 👈 Add this
-          };  
-          if (editingId) {
-            await axios.put(`/bookings/${editingId}`, payload);
-          } else {
-            await axios.post("/bookings", payload);
-          }
+            customerName: formData.customerName,
+            phoneNumber: formData.phoneNumber,
+            serviceId: formData.serviceId || null,       // 👈 send serviceId
+            date: formData.date,
+            time: formData.time,
+            status: formData.status,
+            source: "manual",
+          };
+          if (editingId) await axios.put(`/bookings/${editingId}`, payload);
+          else await axios.post("/bookings", payload);
   
           setFormData({
             customerName: "",
@@ -357,17 +367,15 @@ const confirmDelete = (bookingId) => {
           <CustomDropdown
             options={[
               { value: "", label: getLabelByLang(translations.bookingsPage.selectService, language) },
-                ...services.map(s => ({
-                  value: JSON.stringify(s.name),
-                  label: s.name?.[language] || s.name?.en
+              ...services.map(s => ({
+                value: String(s._id),
+                label: s.name?.[language] || s.name?.en
               }))
             ]}
-            value={formData.service}
-            onChange={(val) => setFormData({ ...formData, service: val })}
+            value={String(formData.serviceId || "")}
+            onChange={(val) => setFormData({ ...formData, serviceId: val })}
             placeholder={getLabelByLang(translations.bookingsPage.selectService, language)}
-            isRtl={["ar", "he"].includes(language)}  // example: language variable from your app
-
-
+            isRtl={["ar", "he"].includes(language)}
           />
 
           <input
@@ -438,7 +446,10 @@ const confirmDelete = (bookingId) => {
                 </div>
                 <p><strong>{getLabelByLang(translations.bookingsPage.customerNamePlaceholder, language)}:</strong> {b.customerName}</p>
               </div>
-              <p><strong>{getLabelByLang(translations.bookingsPage.servicePlaceholder, language)}:</strong> {b.service?.[language] || b.service?.en || "-"}</p>
+              <p>
+                <strong>{getLabelByLang(translations.bookingsPage.servicePlaceholder, language)}:</strong>
+                {" "}{svcName(b)}
+              </p>              
               <p><strong>{getLabelByLang(translations.bookingsPage.dateTime, language)}:</strong> {b.date} <strong>{b.time}</strong></p>
               <p><strong>{getLabelByLang(translations.bookingsPage.status, language)}:</strong> {getLabelByLang(translations.bookingsPage[b.status], language)}</p>
 
@@ -463,7 +474,7 @@ const confirmDelete = (bookingId) => {
             <tr key={b._id}>
               <td>{b.customerName}</td>
               <td>{b.phoneNumber}</td>
-              <td>{b.service?.[language] || b.service?.en || "-"}</td>
+              <td>{svcName(b)}</td>
               <td>{b.date}</td>
               <td>{b.time}</td>
               <td>

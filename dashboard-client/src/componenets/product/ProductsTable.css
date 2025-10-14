@@ -1,0 +1,28 @@
+
+  
+  /* Badges */
+  .status-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 999px;
+    text-transform: capitalize;
+  }
+  .status-badge.active { background:#ecfdf5; color:#047857; }
+  .status-badge.archived { background:#f3f4f6; color:#374151; }
+  
+  .stock-badge.low {
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+  }
+
+
+  
+
+  

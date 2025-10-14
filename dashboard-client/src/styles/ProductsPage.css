@@ -1,0 +1,169 @@
+/* ====== Layout ====== */
+.products-page {
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --primary-600: #1d4ed8;
+    --success: #16a34a;
+    --success-600: #15803d;
+    --border: #e5eaf1;
+    --shadow: 0 8px 28px rgba(16, 24, 40, 0.08);
+    padding: 20px;
+    padding-bottom: 100px;
+    min-height: 100%;
+  }
+  
+
+  @media (max-width: 768px) {
+    .products-page {
+      padding: 0;
+    }
+  }
+  
+  /* ====== Header ====== */
+  .products-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .products-header h2 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--ink);
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cb-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  
+  .cb-page-btn {
+    padding: 6px 14px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+  
+  .cb-page-btn:hover:not(:disabled) {
+    background: #f5f5f5;
+    border-color: #bbb;
+  }
+  
+  .cb-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .cb-page-indicator {
+    font-weight: 500;
+    color: #333;
+  }
+  
+
+  
+
+
+  /* ====== Add Product button ====== */
+.add-product-btn {
+  padding: 10px 16px;
+  background: var(--success);
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.06s ease, background 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.25);
+  white-space: nowrap;
+}
+
+.add-product-btn:hover {
+  background: var(--success-600);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.28);
+}
+
+.add-product-btn:active {
+  transform: translateY(1px);
+}
+
+/* ====== Loading State ====== */
+.products-loading {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--muted);
+  font-weight: 500;
+  gap: 14px;
+}
+
+.products-loading::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid #ccd6e4;
+  border-top-color: var(--primary);
+  animation: productSpin 0.9s linear infinite;
+}
+
+@keyframes productSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ====== Empty State ====== */
+.products-empty {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  color: var(--muted);
+}
+
+.products-empty p {
+  margin: 0 0 16px;
+  font-size: 15px;
+}
+
+.products-empty .add-product-btn {
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.25);
+}
+
+  /* ====== Utilities (optional) ====== */
+  .hidden { display: none !important; }
+  
+  /* ====== Dark mode (auto) ====== */
+  @media (prefers-color-scheme: dark) {
+    .products-page {
+      --bg: #0b1220;
+      --card: #0f172a;
+      --ink: #e5e7eb;
+      --muted: #9aa3b2;
+      --primary: #60a5fa;
+      --primary-600: #3b82f6;
+      --success: #22c55e;
+      --success-600: #16a34a;
+      --border: #1e293b;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+  
+    .products-empty { color: #cbd5e1; }
+    .products-loading { color: #9aa3b2; }
+  }

@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "../styles/BusinessProfilePage.css";
 import api from "../services/api";
 import { toast } from "react-toastify";
 
 const BusinessProfilePage = () => {
+  const [loading, setLoading] = useState(true); // ⬅️ NEW state
   const user = JSON.parse(localStorage.getItem("user"));
   const businessId = user.businessId;
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
-const [currentPassword, setCurrentPassword] = useState("");
-const [newPassword, setNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [dashboardLang , setDashbaordLang] = useState("");
   const [form, setForm] = useState({
     nameEnglish: "",
@@ -22,8 +23,10 @@ const [newPassword, setNewPassword] = useState("");
   });
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [qrUrl, setQrUrl] = useState("");
-  const fetchProfile = async () => {
+
+  const fetchProfile = useCallback (async () => {
     try {
+      setLoading(true);
       const res = await api.get(`/businesses/${businessId}`);
       setForm({
         nameEnglish: res.data.nameEnglish,
@@ -34,19 +37,21 @@ const [newPassword, setNewPassword] = useState("");
         username: res.data.username,
         password: res.data.password,
       });
-
+  
       setWhatsappNumber(res.data.whatsappNumber);
       setQrUrl(`https://wa.me/${res.data.whatsappNumber}`);
-      const storedLang =localStorage.getItem("lang") || "en";
+      const storedLang = localStorage.getItem("lang") || "en";
       setDashbaordLang(storedLang);
     } catch (err) {
       toast.error("❌ Failed to load profile");
+    } finally {
+      setLoading(false);
     }
-  };
-
+  } ,[businessId]);
+  
   useEffect(() => {
     fetchProfile();
-  }, );
+  }, [fetchProfile]); // ✅ include businessId in deps
   
 
   const handleChange = (e) => {
@@ -103,10 +108,14 @@ const [newPassword, setNewPassword] = useState("");
       toast.error("❌ Failed to update password: " + err.response?.data?.message || "");
     }
   };
-  
 
   return (
     <div className="profile-page">
+      {loading ? (
+      <div className="loading-container">
+        <p>⏳ Loading profile...</p>
+      </div>
+    ) : (
       <form onSubmit={handleSubmit} className="profile-form">
         <div className="form-section">
           <h2 className="section-title-profile">Business Details</h2>
@@ -206,28 +215,36 @@ const [newPassword, setNewPassword] = useState("");
         </div>
 
         <div className="form-section">
-            <h2 className="section-title-profile">WhatsApp Details</h2>
 
+          <h2 className="section-title-profile">WhatsApp Details</h2>
           <label>WhatsApp Number</label>
           <input value={whatsappNumber} readOnly disabled />
 
           <label>Chatbot Link</label>
+
           <a href={qrUrl} target="_blank" rel="noopener noreferrer">
             {qrUrl}
           </a>
 
+          {qrUrl && (
           <img
+            className="qr-image"
             src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
               qrUrl
             )}&size=150x150`}
             alt="QR Code"
           />
+        )}
+
+
         </div>
 
         <button type="submit">💾 Save Changes</button>
       </form>
+    )}
     </div>
-  );
+        );
+  
 };
 
 export default BusinessProfilePage;

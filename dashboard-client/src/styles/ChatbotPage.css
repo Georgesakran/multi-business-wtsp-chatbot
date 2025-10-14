@@ -1,3 +1,6 @@
+.chatbot-page{
+   padding: 0 20px;
+}
 .chatbot-page.rtl{
     direction: rtl;
   }
@@ -15,4 +18,7 @@
         flex-direction: column;
         gap:0px;
     }
+    .chatbot-page{
+      padding: 0 ;
+   }
  }
