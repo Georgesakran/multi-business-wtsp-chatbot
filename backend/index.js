@@ -2,8 +2,6 @@ const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
 const connectToMongo = require('./db');
-const Business = require('./models/Business');
-const ConversationState = require('./models/ConversationState');
 const { sendMessage,
         sendMainMenu, 
         sendServiceMenuTemplate, 
