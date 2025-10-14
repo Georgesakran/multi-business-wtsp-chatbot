@@ -2,12 +2,8 @@ const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
 const connectToMongo = require('./db');
-const { sendMessage,
-        sendMainMenu, 
-        sendServiceMenuTemplate, 
-        sendDayPickerTemplate} = require('./utils/sendMessage');
-const { getReply } = require('./utils/getReply');
-const handleBookingFlow = require('./bookingFlow/handleBookingFlow');
+const Message = require('./models/Message');
+const Business = require('./models/Business');
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -26,11 +22,8 @@ const availabilityRoutes = require('./routes/availabilityRoutes');
 
 const verifyTwilioSignature = require("./utils/verifyTwilioSignature");
 const { sendWhatsApp } = require("./utils/sendTwilio");
-const Message = require('./models/Message');
-const Business = require('./models/Business');
 const ConversationState = require('./models/ConversationState');
 
-//const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
 
 const app = express();
 
@@ -121,7 +114,7 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
     if (/menu|start|ابدأ|help/i.test(body)) reply = business.config?.welcomeMessage || "Welcome!";
     if (/book|احجز|הזמן/i.test(body)) reply = "Sure! Which service would you like to book?";
 
-    await sendWhatsApp(from, reply);
+    await sendWhatsApp(from, reply, business.whatsappNumber);
 
     await Message.create({
       businessId: business._id,
@@ -136,11 +129,6 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-
-
-
-
 
 
 
