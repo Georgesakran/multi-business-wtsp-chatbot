@@ -131,7 +131,7 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
       content: reply
     });
 
-    res.sendStatus(200);
+    // res.sendStatus(200);
   } catch (err) {
     console.error("Webhook error:", err);
     res.sendStatus(500);
