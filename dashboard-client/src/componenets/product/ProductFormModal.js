@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import api from "../../services/api";
+import axios from "../../services/api";
 import { toast } from "react-toastify";
 
 const ProductFormModal = ({
@@ -132,7 +132,7 @@ const ProductFormModal = ({
       const form = new FormData();
       form.append("image", file);
 
-      const { data } = await api.post("/upload", form, {
+      const { data } = await axios.post("/upload", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -228,10 +228,10 @@ const ProductFormModal = ({
 
     try {
       if (existingProduct?._id) {
-        await api.put(`/products/${existingProduct._id}`, payload);
+        await axios.put(`/products/${existingProduct._id}`, payload);
         toast.success("✅ Product updated");
       } else {
-        await api.post("/products", payload);
+        await axios.post("/products", payload);
         toast.success("✅ Product created");
       }
       onProductSaved?.();

@@ -19,6 +19,13 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const overviewRoutes = require("./routes/overviewRoutes");
 const conversationRoutes = require("./routes/conversationsRoutes");
 const clientsRoutes = require("./routes/clientsRoutes");
+const courseRoutes = require("./routes/courseRoutes");
+const productRoutes = require("./routes/productsRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const uploadRoutes = require("./routes/upload");
+const verifyMetaSignature = require('./utils/verifyMetaSignature');
+const availabilityRoutes = require('./routes/availabilityRoutes');
+
 //const handleChatbotEntryPoint = require('./chatbot/handleChatbotEntryPoint');
 
 const app = express();
@@ -49,6 +56,16 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/overview", overviewRoutes);
   app.use("/api/conversations", conversationRoutes);
   app.use("/api/clients", clientsRoutes);
+  app.use("/api/courses", courseRoutes);
+  app.use("/api/products", productRoutes);
+  app.use("/api/upload", uploadRoutes);
+  app.use("/api/orders", orderRoutes);
+  app.use("/api/availability", availabilityRoutes);
+
+  
+
+
+
 
 
 app.get('/webhook', async (req, res) => {
@@ -63,15 +80,20 @@ app.get('/webhook', async (req, res) => {
   return res.sendStatus(403);
 });
 
+app.post('/webhook', verifyMetaSignature, async (req, res) => {
+  try {
+    // 1) Determine business by phone_number_id or recipient
+    // 2) Persist WebhookEvent (direction: "in")
+    // 3) Route to: handleBookingFlow(...) or getReply(...) based on ConversationState.mode/step
+    // 4) Send response (200)
+    res.sendStatus(200);
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(500);
+  }
+});
 
 
-
-// app.post("/webhook", async (req, res) => {
-
-//   // inside your webhook POST logic:
-//   await handleChatbotEntryPoint(text, business);
-
-// });
 
 
 

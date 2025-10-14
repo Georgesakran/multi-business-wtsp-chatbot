@@ -1,7 +1,7 @@
 // src/pages/OrderDetailsPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../../services/api"; // adjust the path if your api service is elsewhere
+import axios from "../../services/api"; // adjust the path if your api service is elsewhere
 import "./OrderDetailsPage.css";    // optional, or reuse your modal CSS
 
 const currency = new Intl.NumberFormat("he-IL", {
@@ -38,7 +38,7 @@ export default function OrderDetailsPage() {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await api.get(`/orders/${id}`);
+        const { data } = await axios.get(`/orders/${id}`);
         if (!cancelled) {
           setOrder(data);
           setItems(Array.isArray(data?.items) ? data.items : []);
@@ -78,7 +78,7 @@ export default function OrderDetailsPage() {
       const idTargets = targets.filter(t => t.row.productId);
       if (idTargets.length) {
         const results = await Promise.allSettled(
-          idTargets.map(t => api.get(`/products/${t.row.productId}`, { params: { businessId } }))
+          idTargets.map(t => axios.get(`/products/${t.row.productId}`, { params: { businessId } }))
         );
         results.forEach((res, idx) => {
           if (res.status === "fulfilled") {
@@ -102,7 +102,7 @@ export default function OrderDetailsPage() {
 
       if (skuTargets.length) {
         const results = await Promise.allSettled(
-          skuTargets.map(t => api.get("/products", { params: { businessId, sku: t.row.sku, limit: 1 } }))
+          skuTargets.map(t => axios.get("/products", { params: { businessId, sku: t.row.sku, limit: 1 } }))
         );
         results.forEach((res, idx) => {
           if (res.status === "fulfilled") {
@@ -127,7 +127,7 @@ export default function OrderDetailsPage() {
 
       if (nameTargets.length) {
         const results = await Promise.allSettled(
-          nameTargets.map(t => api.get("/products", { params: { businessId, q: t.row.name, limit: 1, sortBy: "name_asc" } }))
+          nameTargets.map(t => axios.get("/products", { params: { businessId, q: t.row.name, limit: 1, sortBy: "name_asc" } }))
         );
         results.forEach((res, idx) => {
           if (res.status === "fulfilled") {

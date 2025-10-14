@@ -3,67 +3,58 @@ const express = require("express");
 const router = express.Router();
 const Business = require("../models/Business");
 const Booking = require("../models/Booking");
-// const Order = require("../models/Order");
 const { protect } = require("../middleware/authMiddleware");
 
-// 📌 Get all clients for a business
+/* ============================
+   Get all clients for a business
+   ============================ */
 router.get("/:businessId", protect, async (req, res) => {
   try {
     const { businessId } = req.params;
     const { startDate, endDate, search } = req.query;
 
-    const business = await Business.findById(businessId);
-    if (!business) {
-      return res.status(404).json({ error: "Business not found" });
-    }
+    const business = await Business.findById(businessId).lean();
+    if (!business) return res.status(404).json({ error: "Business not found" });
 
-    let clientsMap = new Map();
+    const clientsMap = new Map();
 
-    // ✅ Fetch Booking Clients
     if (["booking", "mixed"].includes(business.businessType)) {
-      const bookings = await Booking.find({ businessId });
+      const bookings = await Booking.find({ businessId })
+        .select("customerName phoneNumber date createdAt")
+        .lean();
 
-      bookings.forEach(b => {
+      for (const b of bookings) {
         const phoneNumber = b.phoneNumber || "";
-        if (!phoneNumber) return;
+        if (!phoneNumber) continue;
 
         const bookingDate = new Date(b.date || b.createdAt);
 
-        // ✅ Filter by date range
-        if (startDate && bookingDate < new Date(startDate)) return;
-        if (endDate && bookingDate > new Date(endDate)) return;
+        if (startDate && bookingDate < new Date(startDate)) continue;
+        if (endDate && bookingDate > new Date(endDate)) continue;
 
-        // ✅ Filter by search query
         if (search) {
-          const lowerSearch = search.toLowerCase();
-          if (
-            !(b.customerName || "").toLowerCase().includes(lowerSearch) &&
-            !(phoneNumber || "").toLowerCase().includes(lowerSearch)
-          ) {
-            return;
-          }
+          const q = String(search).toLowerCase();
+          const n = String(b.customerName || "").toLowerCase();
+          const p = String(phoneNumber || "").toLowerCase();
+          if (!n.includes(q) && !p.includes(q)) continue;
         }
 
-        if (!clientsMap.has(phoneNumber)) {
+        const cur = clientsMap.get(phoneNumber);
+        if (!cur) {
           clientsMap.set(phoneNumber, {
             name: b.customerName || "Unknown",
             phoneNumber,
             lastActivity: b.date || b.createdAt,
             visits: 1,
-            notes: ""
+            notes: "",
           });
         } else {
-          const client = clientsMap.get(phoneNumber);
-          client.visits += 1;
-
-          const currentActivityDate = new Date(client.lastActivity);
-          if (bookingDate > currentActivityDate) {
-            client.lastActivity = b.date || b.createdAt;
-          }
-
-          clientsMap.set(phoneNumber, client);
+          cur.visits += 1;
+          const curDate = new Date(cur.lastActivity);
+          if (bookingDate > curDate) cur.lastActivity = b.date || b.createdAt;
+          clientsMap.set(phoneNumber, cur);
         }
-      });
+      }
     }
 
     const clients = Array.from(clientsMap.values()).sort(
@@ -77,55 +68,36 @@ router.get("/:businessId", protect, async (req, res) => {
   }
 });
 
-
-// 📌 Get full history for a specific client by phone number
+/* ===========================================
+   Get full history for a specific client (phone)
+   =========================================== */
 router.get("/:businessId/:phoneNumber", protect, async (req, res) => {
   try {
     const { businessId, phoneNumber } = req.params;
 
-    const business = await Business.findById(businessId);
-    if (!business) {
-      return res.status(404).json({ error: "Business not found" });
-    }
+    const business = await Business.findById(businessId).lean();
+    if (!business) return res.status(404).json({ error: "Business not found" });
 
-    let history = {
-      bookings: [],
-      orders: [] // For future use
-    };
+    const history = { bookings: [], orders: [] };
 
-    // ✅ Booking History
     if (["booking", "mixed"].includes(business.businessType)) {
-      const bookings = await Booking.find({
-        businessId,
-        phoneNumber
-      }).sort({ date: -1 });
+      const bookings = await Booking.find({ businessId, phoneNumber })
+        .select("date time status notes serviceId serviceSnapshot createdAt")
+        .sort({ date: -1, time: -1 })
+        .lean();
 
-      history.bookings = bookings.map(b => ({
+      history.bookings = bookings.map((b) => ({
         id: b._id,
-        date: b.date || b.createdAt,
-        service: b.service?.en || "N/A",
+        date: b.date || (b.createdAt ? b.createdAt.toISOString().slice(0, 10) : ""),
+        time: b.time || "",
         status: b.status || "N/A",
-        notes: b.notes || ""
+        notes: b.notes || "",
+        serviceId: b.serviceId || null,
+        serviceSnapshot: b.serviceSnapshot || null, // 👈 keep structured
       }));
     }
 
-    /*
-    // ✅ Product Order History (future use)
-    if (["product", "mixed"].includes(business.businessType)) {
-      const orders = await Order.find({
-        businessId,
-        customerPhone: phoneNumber
-      }).sort({ createdAt: -1 });
-
-      history.orders = orders.map(o => ({
-        id: o._id,
-        date: o.createdAt,
-        items: o.items || [],
-        total: o.total || 0,
-        status: o.status || "N/A"
-      }));
-    }
-    */
+    // (Orders section reserved for future)
 
     res.json(history);
   } catch (err) {
