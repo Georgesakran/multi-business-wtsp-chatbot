@@ -79,6 +79,7 @@ app.get('/webhook', async (req, res) => {
 
 app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
   try {
+    console.log("Inbound WA : ", req.body);
     const fromRaw = req.body.From;   // "whatsapp:+9725..."
     const toRaw = req.body.To;       // "whatsapp:+1415..."
     const body = (req.body.Body || "").trim();
@@ -87,7 +88,10 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
     const to = toRaw?.replace("whatsapp:", "");
 
     const business = await Business.findOne({ whatsappNumber: to, isActive: true });
-    if (!business) return res.sendStatus(200);
+    if (!business){
+      console.log("No business matched To : ", to);
+      return res.sendStatus(200);
+    } 
 
     // log inbound
     await Message.create({
@@ -114,8 +118,12 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
     if (/menu|start|ابدأ|help/i.test(body)) reply = business.config?.welcomeMessage || "Welcome!";
     if (/book|احجز|הזמן/i.test(body)) reply = "Sure! Which service would you like to book?";
 
-    await sendWhatsApp(from, reply, business.whatsappNumber);
-
+    await sendWhatsApp({
+      from: business.whatsappNumber, // your Twilio WA sender for that business
+      to: from,                      // the customer's number
+      body: reply
+    });
+    
     await Message.create({
       businessId: business._id,
       customerId: from,
