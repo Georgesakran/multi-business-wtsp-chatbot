@@ -7,5 +7,4 @@ async function sendWhatsApp({ from, to, body }) {
   const _to   = to.startsWith("whatsapp:") ? to   : `whatsapp:${to}`;
   return client.messages.create({ from: _from, to: _to, body });
 }
-
 module.exports = { sendWhatsApp };

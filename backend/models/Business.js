@@ -86,7 +86,7 @@ const businessSchema = new mongoose.Schema({
   wa: {
     number: { type: String, default: "" },               // E.164, e.g. +972525561686 (Twilio WA sender)
     messagingServiceSid: { type: String, default: "" },  // Twilio Messaging Service SID (recommended)
-    locale: { type: String, enum: ["en","ar","he"], default: "en" },
+    locale: { type: String, enum: ["en","ar","he"], default: "ar" },
     useFlows: { type: Boolean, default: true },
 
     flows: {

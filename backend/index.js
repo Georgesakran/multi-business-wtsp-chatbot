@@ -20,6 +20,8 @@ const uploadRoutes = require("./routes/upload");
 const verifyMetaSignature = require('./utils/verifyMetaSignature');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 
+const waFlowsRoutes = require("./routes/waFlowsRoutes");
+const { handleFlowIncoming } = require("./utils/waFlow");
 const verifyTwilioSignature = require("./utils/verifyTwilioSignature");
 const { sendWhatsApp } = require("./utils/sendTwilio");
 const ConversationState = require('./models/ConversationState');
@@ -58,6 +60,7 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/upload", uploadRoutes);
   app.use("/api/orders", orderRoutes);
   app.use("/api/availability", availabilityRoutes);
+  app.use("/api/wa", waFlowsRoutes);
 
   
 
@@ -79,19 +82,18 @@ app.get('/webhook', async (req, res) => {
 
 app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
   try {
-    console.log("Inbound WA : ", req.body);
-    const fromRaw = req.body.From;   // "whatsapp:+9725..."
-    const toRaw = req.body.To;       // "whatsapp:+1415..."
-    const body = (req.body.Body || "").trim();
+    const fromRaw = req.body.From;  // "whatsapp:+9725..."
+    const toRaw   = req.body.To;    // "whatsapp:+972..."
+    const body    = (req.body.Body || "").trim();
 
     const from = fromRaw?.replace("whatsapp:", "");
-    const to = toRaw?.replace("whatsapp:", "");
+    const to   = toRaw?.replace("whatsapp:", "");
 
-    const business = await Business.findOne({ whatsappNumber: to, isActive: true });
-    if (!business){
-      console.log("No business matched To : ", to);
+    const business = await Business.findOne({ "wa.number": to, isActive: true });
+    if (!business) {
+      console.log("No business matched To:", to);
       return res.sendStatus(200);
-    } 
+    }
 
     // log inbound
     await Message.create({
@@ -101,29 +103,17 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
       content: body
     });
 
-    // find/create conversation
-    let state = await ConversationState.findOne({ businessId: business._id, phoneNumber: from });
-    if (!state) {
-      state = await ConversationState.create({
-        businessId: business._id,
-        phoneNumber: from,
-        mode: business.config?.chatbotEnabled ? "gpt" : "flow",
-        step: "menu",
-        data: {}
-      });
-    }
+    // run flow logic
+    const reply = await handleFlowIncoming({ business, from, text: body });
 
-    // basic reply
-    let reply = business.config?.fallbackMessage || "Hello 👋";
-    if (/menu|start|ابدأ|help/i.test(body)) reply = business.config?.welcomeMessage || "Welcome!";
-    if (/book|احجز|הזמן/i.test(body)) reply = "Sure! Which service would you like to book?";
-
+    // send reply
     await sendWhatsApp({
-      from: business.whatsappNumber, // your Twilio WA sender for that business
-      to: from,                      // the customer's number
+      from: business.wa?.number || process.env.TWILIO_WHATSAPP_FROM,
+      to: from,
       body: reply
     });
-    
+
+    // log outbound
     await Message.create({
       businessId: business._id,
       customerId: from,
@@ -131,7 +121,7 @@ app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
       content: reply
     });
 
-    // res.sendStatus(200);
+    res.sendStatus(200);
   } catch (err) {
     console.error("Webhook error:", err);
     res.sendStatus(500);
