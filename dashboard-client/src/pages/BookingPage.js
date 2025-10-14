@@ -65,6 +65,7 @@ const BookingsPage = () => {
   }, [businessId]);
 
   const fetchBookings = useCallback(async () => {
+    if (!businessId) return;
     setLoading(true);
     try {
       const res = await axios.get(`/bookings/${businessId}`);

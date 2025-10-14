@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import api from "../services/api";
+import axios from "../services/api";
 import ProductsTable from "../componenets/product/ProductsTable";
 import ProductsFilters from "../componenets/product/ProductsFilters";
 import ProductFormModal from "../componenets/product/ProductFormModal";
@@ -167,7 +167,7 @@ const ProductsPage = () => {
     if (!businessId) return;
     setLoading(true);
     try {
-      const { data } = await api.get("/products", { params });
+      const { data } = await axios.get("/products", { params });
       setItems(data.items || []);
       setTotal(data.total || 0);
     } catch {
@@ -185,7 +185,7 @@ const ProductsPage = () => {
     if (!businessId) return toast.error("❌ Missing business ID");
     if (!window.confirm("Delete this product?")) return;
     try {
-      await api.delete(`/products/${id}`, { params: { businessId } });
+      await axios.delete(`/products/${id}`, { params: { businessId } });
       toast.success("✅ Product deleted");
       fetchProducts();
     } catch {
