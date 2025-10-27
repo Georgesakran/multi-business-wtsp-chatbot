@@ -20,7 +20,12 @@ router.get("/booking/health", (req, res) => {
 // main data endpoint for Twilio Flow
 router.post("/booking", async (req, res) => {
   try {
-    console.log("📩 /api/wa/flows/booking incoming:", req.body);
+
+    
+    // console.log("📩 /api/wa/flows/booking incoming:", req.body);
+    console.log("🔥 FLOW HIT 🔥");
+    console.log(JSON.stringify(req.body, null, 2));
+
 
     // Identify which business this request belongs to
     // "from" = the business WhatsApp number (the sender number in Twilio)
