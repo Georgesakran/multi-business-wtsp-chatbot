@@ -1,4 +1,3 @@
-// models/Booking.js
 const mongoose = require("mongoose");
 
 const ServiceSnapshotSchema = new mongoose.Schema(
@@ -26,13 +25,14 @@ const bookingSchema = new mongoose.Schema(
     customerName: { type: String, trim: true },
     phoneNumber: { type: String, trim: true },
 
-    // Optional: link to embedded service in Business.services
-    serviceId: { type: mongoose.Schema.Types.ObjectId }, // (ref is Business.services[*]._id)
-
-    // Required for display/reporting even if service later changes in catalog
+    // Main service
+    serviceId: { type: mongoose.Schema.Types.ObjectId },
     serviceSnapshot: { type: ServiceSnapshotSchema, default: () => ({}) },
 
-    // Optional: if you add staff later
+    // NEW: optional additional services (array of ServiceSnapshot)
+    addonServices: { type: [ServiceSnapshotSchema], default: [] },
+
+    // Optional: staff (for later)
     staffId: { type: mongoose.Schema.Types.ObjectId, ref: "Staff" },
 
     // Scheduling
@@ -61,7 +61,6 @@ const bookingSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-/* ---- Indexes for fast lookups ---- */
 bookingSchema.index({ businessId: 1, date: 1, time: 1 });
 bookingSchema.index({ businessId: 1, status: 1, date: 1 });
 
