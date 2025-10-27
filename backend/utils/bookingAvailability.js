@@ -34,123 +34,87 @@ function buildServiceOptions(business) {
     });
 }
 
-/**
- * Return N upcoming working days (not closedDates),
- * using business.config.booking.workingDays and closedDates.
- *
- * Output format required by flow:
- *   [{ id: "2025-10-16", title: "Thu 16/10" }, ...]
- */
-function buildDateOptions(business, daysAhead = 10) {
-  const results = [];
-
-  if (!business?.config?.booking) return results;
-  const { workingDays } = business.config.booking || {};
-  if (!Array.isArray(workingDays) || workingDays.length === 0) return results;
-
-  const closed = new Set(business.closedDates || []);
-
-  // start from "today"
-  let cursor = moment();
-
-  while (results.length < daysAhead) {
-    const dayName = cursor.format("dddd"); // e.g. "Monday"
-    const yyyyMmDd = cursor.format("YYYY-MM-DD");
-
-    const isWorking = workingDays.includes(dayName);
-    const isClosed = closed.has(yyyyMmDd);
-
-    if (isWorking && !isClosed) {
-      results.push({
-        id: yyyyMmDd,
-        title: cursor.format("ddd DD/MM"), // "Thu 16/10"
+function buildDateOptions(business, serviceId) {
+    const workingDays = business?.config?.booking?.workingDays || [];
+    const closedDates = business?.closedDates || [];
+    const dates = [];
+  
+    for (let i = 0; i < 10; i++) {
+      const d = moment().add(i, "days");
+      const dayName = d.format("dddd");
+      const dateStr = d.format("YYYY-MM-DD");
+  
+      // must be a working day
+      if (workingDays.length && !workingDays.includes(dayName)) continue;
+      // skip closed dates
+      if (closedDates.includes(dateStr)) continue;
+  
+      dates.push({
+        id: dateStr,
+        title: `${dayName} ${d.format("DD/MM")}`,
       });
     }
-
-    cursor.add(1, "day");
+  
+    return dates;
   }
-
-  return results;
-}
-
-/**
- * For a given date + service duration,
- * build available time slots (HH:mm)
- *
- * We'll:
- * 1. Get opening/closing from business.config.booking
- * 2. Walk in slotGapMinutes increments
- * 3. Check no existing booking blocks that exact slot
- *
- * Flow format:
- *  [{ id: "09:00", title: "09:00" }, ...]
- */
-async function buildTimeOptions(business, dateStr, mainServiceDuration, addonServicesDurationArr = []) {
-  const out = [];
-
-  if (!business?.config?.booking) return out;
-
-  const {
-    openingTime,
-    closingTime,
-    slotGapMinutes = 15
-  } = business.config.booking || {};
-
-  if (!openingTime || !closingTime) return out;
-
-  // total duration = main + sum(addons)
-  const totalDuration =
-    (parseInt(mainServiceDuration || 0, 10) || 0) +
-    addonServicesDurationArr.reduce((sum, d) => sum + (parseInt(d || 0, 10) || 0), 0);
-
-  // build timeline for that date
-  const startMoment = moment(`${dateStr}T${openingTime}`, "YYYY-MM-DDTHH:mm");
-  const endMoment   = moment(`${dateStr}T${closingTime}`, "YYYY-MM-DDTHH:mm");
-
-  // get all bookings that day
-  const bookingsThatDay = await Booking.find({
-    businessId: business._id,
-    date: dateStr,
-    status: { $ne: "cancelled" },
-  });
-
-  // helper: does [slotStart, slotEnd) collide with existing bookings?
-  function isTaken(slotStart, slotEnd) {
-    return bookingsThatDay.some(b => {
-      const bStart = moment(`${b.date}T${b.time}`, "YYYY-MM-DDTHH:mm");
-      const bEnd = moment(bStart).add(b.serviceSnapshot?.duration || 30, "minutes"); // fallback 30m
-
-      // overlap check
-      return slotStart.isBefore(bEnd) && bStart.isBefore(slotEnd);
+  
+  /**
+   * Build available times for a given date/service.
+   */
+  async function buildTimeOptions({ business, serviceId, date }) {
+    const service = business.services.find(
+      (s) => String(s._id) === String(serviceId)
+    );
+    if (!service) return [];
+  
+    const duration = service.duration || 30;
+    const gap = business?.config?.booking?.slotGapMinutes || 15;
+    const opening = business?.config?.booking?.openingTime || "09:00";
+    const closing = business?.config?.booking?.closingTime || "18:00";
+  
+    const start = moment(`${date} ${opening}`, "YYYY-MM-DD HH:mm");
+    const end = moment(`${date} ${closing}`, "YYYY-MM-DD HH:mm");
+  
+    // fetch bookings for that date
+    const existing = await Booking.find({
+      businessId: business._id,
+      date,
+      status: { $ne: "cancelled" },
     });
-  }
-
-  let cursor = startMoment.clone();
-  while (cursor.isBefore(endMoment)) {
-    const slotStart = cursor.clone();
-    const slotEnd = cursor.clone().add(totalDuration || 30, "minutes");
-
-    // time must end before closing
-    if (slotEnd.isAfter(endMoment)) break;
-
-    if (!isTaken(slotStart, slotEnd)) {
-      const label = slotStart.format("HH:mm");
-      out.push({
-        id: label,
-        title: label
+  
+    const takenSlots = existing.map((b) => {
+      const t1 = moment(`${b.date} ${b.time}`, "YYYY-MM-DD HH:mm");
+      const dur = b.serviceSnapshot?.duration || 30;
+      const t2 = t1.clone().add(dur, "minutes");
+      return [t1, t2];
+    });
+  
+    const times = [];
+    let current = start.clone();
+  
+    while (current.isBefore(end)) {
+      const slotStart = current.clone();
+      const slotEnd = current.clone().add(duration, "minutes");
+  
+      if (slotEnd.isAfter(end)) break;
+  
+      const overlap = takenSlots.some(([bStart, bEnd]) => {
+        return slotStart.isBefore(bEnd) && slotEnd.isAfter(bStart);
       });
+  
+      if (!overlap) {
+        times.push({
+          id: slotStart.format("HH:mm"),
+          title: slotStart.format("HH:mm"),
+        });
+      }
+  
+      current.add(gap, "minutes");
     }
-
-    cursor.add(slotGapMinutes, "minutes");
+  
+    return times;
   }
-
-  return out;
-}
-
-/**
- * Create a booking in DB after customer confirmed.
- * We pass in all final answers gathered from Flow.
- */
+  
 async function createBookingFromFlow({
   business,
   customerPhone,
