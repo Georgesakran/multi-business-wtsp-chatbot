@@ -180,6 +180,7 @@ async function createBookingFromFlow({
 
   return bookingDoc;
 }
+console.log(2);
 
 module.exports = {
   buildServiceOptions,
