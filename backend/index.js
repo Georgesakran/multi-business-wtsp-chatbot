@@ -62,6 +62,7 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/orders", orderRoutes);
   app.use("/api/availability", availabilityRoutes);
   app.use("/api/wa/flows", waFlowsRoutes);
+  
   app.use("/webhook/twilio", twilioWebhook);
   
 
@@ -82,54 +83,6 @@ app.get('/webhook', async (req, res) => {
 });
 
 
-
-// app.post("/webhook/twilio", verifyTwilioSignature, async (req, res) => {
-//   try {
-//     const fromRaw = req.body.From;  // "whatsapp:+9725..."
-//     const toRaw   = req.body.To;    // "whatsapp:+972..."
-//     const body    = (req.body.Body || "").trim();
-
-//     const from = fromRaw?.replace("whatsapp:", "");
-//     const to   = toRaw?.replace("whatsapp:", "");
-
-//     const business = await Business.findOne({ "wa.number": to, isActive: true });
-//     if (!business) {
-//       console.log("No business matched To:", to);
-//       return res.sendStatus(200);
-//     }
-
-//     // log inbound
-//     await Message.create({
-//       businessId: business._id,
-//       customerId: from,
-//       role: "user",
-//       content: body
-//     });
-
-//     // run flow logic
-//     const reply = await handleFlowIncoming({ business, from, text: body });
-
-//     // send reply
-//     await sendWhatsApp({
-//       from: business.wa?.number || process.env.TWILIO_WHATSAPP_FROM,
-//       to: from,
-//       body: reply
-//     });
-
-//     // log outbound
-//     await Message.create({
-//       businessId: business._id,
-//       customerId: from,
-//       role: "assistant",
-//       content: reply
-//     });
-
-//     // res.sendStatus(200);
-//   } catch (err) {
-//     console.error("Webhook error:", err);
-//     res.sendStatus(500);
-//   }
-// });
 
 
 

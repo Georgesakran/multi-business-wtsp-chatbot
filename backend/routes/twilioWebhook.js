@@ -6,28 +6,26 @@ const Business = require("../models/Business");
 const TWILIO_BASE_URL = "https://api.twilio.com/2010-04-01";
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FLOW_TEMPLATE_SID } = process.env;
 
-// Send message through Twilio WhatsApp
+/**
+ * Send WhatsApp message via Twilio
+ * Can send either plain text (body) or interactive Flow (contentSid)
+ */
 async function sendTwilioMessage({ from, to, body, contentSid }) {
-  const auth = {
-    username: TWILIO_ACCOUNT_SID,
-    password: TWILIO_AUTH_TOKEN,
-  };
+  try {
+    const auth = {
+      username: TWILIO_ACCOUNT_SID,
+      password: TWILIO_AUTH_TOKEN,
+    };
 
-  const payload = {
-    From: from,
-    To: to,
-  };
+    const payload = { From: from, To: to };
+    if (contentSid) payload.ContentSid = contentSid;
+    else payload.Body = body;
 
-  if (contentSid) {
-    // Send Flow template (interactive HSM)
-    payload.ContentSid = contentSid;
-  } else {
-    // Normal text
-    payload.Body = body;
+    const url = `${TWILIO_BASE_URL}/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+    await axios.post(url, new URLSearchParams(payload), { auth });
+  } catch (err) {
+    console.error("❌ Failed to send Twilio message:", err.message);
   }
-
-  const url = `${TWILIO_BASE_URL}/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-  await axios.post(url, new URLSearchParams(payload), { auth });
 }
 
 // ----------------------------
@@ -40,33 +38,34 @@ router.post("/", async (req, res) => {
     const to = incoming.To?.replace("whatsapp:", "") || "";
     const text = incoming.Body?.trim().toLowerCase() || "";
 
-    // Match which business this number belongs to
+    // Match business by number
     const business =
       (await Business.findOne({ "wa.number": to })) ||
       (await Business.findOne({ whatsappNumber: to }));
 
     if (!business) {
-      console.log("❌ Business not found for number", to);
-      return res.sendStatus(200);
+      console.log("❌ Business not found for number:", to);
+      return res.sendStatus(200); // 200 so Twilio won't retry
     }
 
-    // Detect if user wants to start a booking flow
+    // Detect booking keywords
     const bookingKeywords = ["book", "احجز", "הזמנה", "حجز", "appointment", "reserve"];
-    const wantsBooking = bookingKeywords.some((k) => text.includes(k));
+    const wantsBooking = bookingKeywords.some(k => text.includes(k));
 
-    if (wantsBooking && business.businessType === "booking" || business.businessType === "mixed") {
+    if (wantsBooking && (business.businessType === "booking" || business.businessType === "mixed")) {
       console.log(`🚀 Launching booking flow for ${business.nameEnglish}`);
 
       await sendTwilioMessage({
         from: `whatsapp:${business.wa.number}`,
         to: `whatsapp:${from}`,
-        contentSid: TWILIO_FLOW_TEMPLATE_SID,
+        contentSid: TWILIO_FLOW_TEMPLATE_SID || "HX044f74b9faf4141339dafb54d847b88b", // fallback
       });
 
       return res.status(200).json({ success: true, message: "Flow launched" });
     }
 
-    // fallback: simple text reply
+    // Fallback simple text
+    console.log(`💬 Sending fallback text to ${from}`);
     await sendTwilioMessage({
       from: `whatsapp:${business.wa.number}`,
       to: `whatsapp:${from}`,
@@ -75,7 +74,7 @@ router.post("/", async (req, res) => {
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("Twilio webhook error:", err.message);
+    console.error("❌ Twilio webhook error:", err.message);
     res.sendStatus(500);
   }
 });

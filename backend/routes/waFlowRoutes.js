@@ -21,11 +21,9 @@ router.get("/booking/health", (req, res) => {
 router.post("/booking", async (req, res) => {
   try {
 
-    
     // console.log("📩 /api/wa/flows/booking incoming:", req.body);
     console.log("🔥 FLOW HIT 🔥");
     console.log(JSON.stringify(req.body, null, 2));
-
 
     // Identify which business this request belongs to
     // "from" = the business WhatsApp number (the sender number in Twilio)
@@ -39,7 +37,7 @@ router.post("/booking", async (req, res) => {
       "wa.number": businessNumber,
       isActive: true,
     });
-
+    
     if (!business) {
       console.log("❌ No business for number:", businessNumber);
       return res.status(404).json({ error: "Business not found" });
