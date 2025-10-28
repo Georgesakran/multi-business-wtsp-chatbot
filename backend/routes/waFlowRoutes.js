@@ -111,7 +111,7 @@ router.post("/booking", async (req, res) => {
   } catch (err) {
     console.error("🔥 booking flow error:", err);
     // IMPORTANT: Twilio Flow expects 200 always.
-    // Don't 500 here, just send empty so UI doesn't explode.
+    // Don't 500 here, just send empty so UI doesn't explod
     return res.status(200).json({
       error: "server_error",
       details: err.message,
