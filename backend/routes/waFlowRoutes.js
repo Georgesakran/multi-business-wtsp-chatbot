@@ -50,6 +50,16 @@ router.post("/booking", async (req, res) => {
 
     // we will respond differently depending on stage
     switch (stage) {
+      case "user_reply": {
+        const { text, customerNumber } = action;
+      
+        console.log(`🔥 FLOW HIT from customer ${customerNumber} with text:`, text);
+      
+        // You can implement logic here: e.g., show next services, dates, or times
+        const services = buildServiceOptions(business);
+        return res.json({ services, message: "user_reply_handled" });
+      }
+      
       case "get_services": {
         // return list of bookable services
         const services = buildServiceOptions(business);
