@@ -63,9 +63,10 @@ router.post("/", async (req, res) => {
     };
 
     await axios.post(
-      `${process.env.BASE_URL}/api/wa/flows/booking`,
-      flowPayload
-    );
+        `${process.env.PUBLIC_WEBHOOK_URL}/api/wa/flows/booking`,
+        flowPayload
+      );
+      
 
     res.sendStatus(200);
   } catch (err) {
