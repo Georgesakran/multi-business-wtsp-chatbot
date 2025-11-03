@@ -54,7 +54,6 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/products", productRoutes);
   app.use("/api/upload", uploadRoutes);
   app.use("/api/orders", orderRoutes);
-  app.use("/api/availability", availabilityRoutes);
 
   app.use("/webhook/twilio", twilioWebhook);
   
