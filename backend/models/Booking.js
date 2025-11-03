@@ -61,7 +61,7 @@ const bookingSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-bookingSchema.index({ businessId: 1, date: 1, time: 1 });
+bookingSchema.index({ businessId: 1, date: 1, time: 1 }, { unique: true });
 bookingSchema.index({ businessId: 1, status: 1, date: 1 });
 
 module.exports = mongoose.model("Booking", bookingSchema);
