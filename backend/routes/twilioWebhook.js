@@ -163,10 +163,11 @@ async function finalize({biz, to, from, state}) {
 
   await setState(state, { step: "DONE", data: {} });
   
+  const serviceName = svc?.name?.en || svc?.name?.ar || svc?.name?.he;
   await sendWhatsApp({
     from: biz.wa.number,
     to,
-    body: `✅ Booked! #${String(booking._id).slice(-6)}\nSee you on ${date} at ${time}.`
+    body: `✅ Booked! #${String(booking._id).slice(-6)}\n${serviceName}\n${date} at ${time}\n*${biz.nameEnglish}* thanks you! 💅`
   });
 }
 
