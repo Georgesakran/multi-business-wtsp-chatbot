@@ -17,15 +17,9 @@ const courseRoutes = require("./routes/courseRoutes");
 const productRoutes = require("./routes/productsRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const uploadRoutes = require("./routes/upload");
-const availabilityRoutes = require('./routes/availabilityRoutes');
 
-const waFlowsRoutes = require("./routes/waFlowRoutes");
-const { handleFlowIncoming } = require("./utils/waFlow");
-const verifyMetaSignature = require('./utils/verifyMetaSignature');
-const verifyTwilioSignature = require("./utils/verifyTwilioSignature");
-const { sendWhatsApp } = require("./utils/sendTwilio");
-const ConversationState = require('./models/ConversationState');
 const twilioWebhook = require("./routes/twilioWebhook");
+
 
 
 const app = express();
@@ -61,8 +55,7 @@ app.use(express.urlencoded({ extended: true }));
   app.use("/api/upload", uploadRoutes);
   app.use("/api/orders", orderRoutes);
   app.use("/api/availability", availabilityRoutes);
-  
-  app.use("/api/wa/flows", waFlowsRoutes);
+
   app.use("/webhook/twilio", twilioWebhook);
   
 
