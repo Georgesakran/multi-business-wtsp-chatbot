@@ -38,27 +38,27 @@ async function upsertCustomer(biz, phone) {
   const now = new Date();
   const doc = await Customer.findOneAndUpdate(
     { businessId: biz._id, phone },
-    {
-      $setOnInsert: { businessId: biz._id, phone },
-      $set: { "stats.lastSeenAt": now }
-    },
+    { $setOnInsert: { businessId: biz._id, phone }, $set: { "stats.lastSeenAt": now } },
     { new: true, upsert: true }
   );
   return doc;
+}
+
+// figure which field is missing (first-booking flow)
+function nextMissingField(cust) {
+  if (!cust?.name) return { key: "name", prompt: "Your full name?" };
+  if (!cust?.city) return { key: "city", prompt: "Which city do you live in?" };
+  if (!cust?.age)  return { key: "age",  prompt: "Your age? (numbers only)" };
+  return null;
 }
 
 // ----- view steps ----- //
 async function showServices({ biz, to, state }) {
   const opts = serviceOptions(biz);
   if (opts.length === 0) {
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to:   to,
-      body: "No services available right now."
-    });
+    await sendWhatsApp({ from: biz.wa.number, to, body: "No services available right now." });
     return;
   }
-
   await setState(state, { step: "SELECT_SERVICE", data: { services: opts } });
 
   const body = lines(
@@ -67,50 +67,24 @@ async function showServices({ biz, to, state }) {
     "",
     `${CANCEL}) Cancel`
   );
-
-  await sendWhatsApp({
-    from: biz.wa.number,
-    to:   to,
-    body
-  });
+  await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
 async function showDates({ biz, to, state }) {
   const { serviceId } = state.data;
   const dates = await getDateOptions(biz, serviceId, 14); // next 14 days
-
   await setState(state, { step: "SELECT_DATE", data: { ...state.data, dates } });
 
-  const body = lines(
-    `Choose a date:`,
-    numbered(dates),
-    "",
-    `${BACK}) Back   •   ${CANCEL}) Cancel`
-  );
-
-  await sendWhatsApp({
-    from: biz.wa.number,
-    to:   to,
-    body
-  });
+  const body = lines(`Choose a date:`, numbered(dates), "", `${BACK}) Back   •   ${CANCEL}) Cancel`);
+  await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
 async function showPeriods({ biz, to, state }) {
   const periods = periodBuckets();
   await setState(state, { step: "SELECT_PERIOD", data: { ...state.data, periods } });
 
-  const body = lines(
-    `Choose time period:`,
-    numbered(periods),
-    "",
-    `${BACK}) Back   •   ${CANCEL}) Cancel`
-  );
-
-  await sendWhatsApp({
-    from: biz.wa.number,
-    to:   to,
-    body
-  });
+  const body = lines(`Choose time period:`, numbered(periods), "", `${BACK}) Back   •   ${CANCEL}) Cancel`);
+  await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
 async function showTimes({ biz, to, state }) {
@@ -125,47 +99,51 @@ async function showTimes({ biz, to, state }) {
   });
 
   if (times.length === 0) {
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to:   to,
-      body: "No free slots in that period. Pick another period."
-    });
+    await sendWhatsApp({ from: biz.wa.number, to, body: "No free slots in that period. Pick another period." });
     return showPeriods({ biz, to, state });
   }
 
   await setState(state, { step: "SELECT_TIME", data: { ...state.data, times } });
 
-  const body = lines(
-    `Available times on ${state.data.date}:`,
-    numbered(times),
-    "",
-    `${BACK}) Back   •   ${CANCEL}) Cancel`
-  );
+  const body = lines(`Available times on ${state.data.date}:`, numbered(times), "", `${BACK}) Back   •   ${CANCEL}) Cancel`);
+  await sendWhatsApp({ from: biz.wa.number, to, body });
+}
 
+async function collectName({ biz, to, state }) {
+  await setState(state, { step: "COLLECT_NAME" });
   await sendWhatsApp({
-    from: biz.wa.number,
-    to:   to,
-    body
+    from: biz.wa.number, to,
+    body: lines("Your full name?", "", `${BACK}) Back   •   ${CANCEL}) Cancel`)
   });
 }
 
-async function collectDetails({ biz, to, state }) {
-  await setState(state, { step: "COLLECT_NAME", data: { ...state.data } });
-
+async function collectCity({ biz, to, state }) {
+  await setState(state, { step: "COLLECT_CITY" });
   await sendWhatsApp({
-    from: biz.wa.number,
-    to:   to,
-    body: lines(
-      `Your full name?`,
-      "",
-      `${BACK}) Back   •   ${CANCEL}) Cancel`
-    )
+    from: biz.wa.number, to,
+    body: lines("Which city do you live in?", "", `${BACK}) Back   •   ${CANCEL}) Cancel`)
+  });
+}
+
+async function collectAge({ biz, to, state }) {
+  await setState(state, { step: "COLLECT_AGE" });
+  await sendWhatsApp({
+    from: biz.wa.number, to,
+    body: lines("Your age? (numbers only)", "", `${BACK}) Back   •   ${CANCEL}) Cancel`)
+  });
+}
+
+async function collectNotes({ biz, to, state }) {
+  await setState(state, { step: "COLLECT_NOTES" });
+  await sendWhatsApp({
+    from: biz.wa.number, to,
+    body: lines("Any notes or special requests? (or type '-' for none)", "", `${BACK}) Back   •   ${CANCEL}) Cancel`)
   });
 }
 
 async function review({ biz, to, state }) {
   const services = state.data.services || serviceOptions(biz);
-  const svc = services.find(s => s.id === state.data.serviceId)?.raw;
+  const svc      = services.find(s => s.id === state.data.serviceId)?.raw;
 
   const summary = lines(
     `*Review your booking:*`,
@@ -173,23 +151,15 @@ async function review({ biz, to, state }) {
     `Date: ${state.data.date}`,
     `Time: ${state.data.time}`,
     `Name: ${state.data.name}`,
+    state.data.city ? `City: ${state.data.city}` : "",
+    state.data.age  ? `Age: ${state.data.age}`   : "",
     state.data.notes ? `Notes: ${state.data.notes}` : ""
   );
 
   await setState(state, { step: "REVIEW", data: { ...state.data } });
 
-  const body = lines(
-    summary,
-    "",
-    `1) Confirm`,
-    `${BACK}) Back   •   ${CANCEL}) Cancel`
-  );
-
-  await sendWhatsApp({
-    from: biz.wa.number,
-    to:   to,
-    body
-  });
+  const body = lines(summary, "", `1) Confirm`, `${BACK}) Back   •   ${CANCEL}) Cancel`);
+  await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
 async function finalize({ biz, to, from, state }) {
@@ -198,17 +168,9 @@ async function finalize({ biz, to, from, state }) {
   const serviceName = svc?.name?.en || svc?.name?.ar || svc?.name?.he;
 
   // guard against race: the slot might have been taken
-  const slotTaken = await Booking.findOne({
-    businessId: biz._id,
-    date: state.data.date,
-    time: state.data.time
-  });
+  const slotTaken = await Booking.findOne({ businessId: biz._id, date: state.data.date, time: state.data.time });
   if (slotTaken) {
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to:   to,
-      body: "Sorry, that time was just taken. Please choose another slot."
-    });
+    await sendWhatsApp({ from: biz.wa.number, to, body: "Sorry, that time was just taken. Please choose another slot." });
     await setState(state, { step: "SELECT_TIME" });
     return showTimes({ biz, to, state });
   }
@@ -218,11 +180,7 @@ async function finalize({ biz, to, from, state }) {
     customerName: state.data.name,
     phoneNumber: from,
     serviceId: svc?._id,
-    serviceSnapshot: {
-      name: svc?.name || {},
-      price: svc?.price || 0,
-      duration: svc?.duration || 30
-    },
+    serviceSnapshot: { name: svc?.name || {}, price: svc?.price || 0, duration: svc?.duration || 30 },
     addonServices: [],
     date: state.data.date,
     time: state.data.time,
@@ -238,7 +196,7 @@ async function finalize({ biz, to, from, state }) {
   // customer receipt
   await sendWhatsApp({
     from: biz.wa.number,
-    to:   to,
+    to,
     body: `✅ Booked! #${String(booking._id).slice(-6)}\n${serviceName}\n${date} at ${time}\n*${biz.nameEnglish}* thanks you! 💅`
   });
 
@@ -246,13 +204,15 @@ async function finalize({ biz, to, from, state }) {
   if (biz.ownerPhone) {
     await sendWhatsApp({
       from: biz.wa.number,
-      to:   biz.ownerPhone,
+      to: biz.ownerPhone,
       body:
 `🆕 New booking
 Service: ${serviceName}
 Date: ${date}
 Time: ${time}
 Name: ${state.data.name}
+City: ${state.data.city || "-"}
+Age: ${state.data.age || "-"}
 Phone: ${from}`
     });
   }
@@ -271,7 +231,7 @@ router.post("/", async (req, res) => {
     if (!biz) return res.sendStatus(200);
 
     // ensure a Customer doc exists + update last seen
-    await upsertCustomer(biz, from);
+    const customer = await upsertCustomer(biz, from);
 
     // state
     let state = await getState({ businessId: biz._id, phone: from });
@@ -294,11 +254,7 @@ router.post("/", async (req, res) => {
 
     if (txt === CANCEL || txt === "cancel") {
       await setState(state, { step: "SERVICE", data: {} });
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to:   from,
-        body: "❌ Cancelled. Type *book* to start again."
-      });
+      await sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Cancelled. Type *book* to start again." });
       return res.sendStatus(200);
     }
 
@@ -325,10 +281,8 @@ router.post("/", async (req, res) => {
 
       case "SELECT_DATE": {
         if (body.Body === BACK) return showServices({ biz, to: from, state });
-
         const picked = pickByIndex(state.data.dates || [], body.Body || "");
         if (!picked) return showDates({ biz, to: from, state });
-
         await setState(state, { data: { ...state.data, date: picked.id } });
         await showPeriods({ biz, to: from, state });
         break;
@@ -336,10 +290,8 @@ router.post("/", async (req, res) => {
 
       case "SELECT_PERIOD": {
         if (body.Body === BACK) return showDates({ biz, to: from, state });
-
         const picked = pickByIndex(state.data.periods || [], body.Body || "");
         if (!picked) return showPeriods({ biz, to: from, state });
-
         await setState(state, { data: { ...state.data, period: picked.id } });
         await showTimes({ biz, to: from, state });
         break;
@@ -347,22 +299,26 @@ router.post("/", async (req, res) => {
 
       case "SELECT_TIME": {
         if (body.Body === BACK) return showPeriods({ biz, to: from, state });
-
         const picked = pickByIndex(state.data.times || [], body.Body || "");
         if (!picked) return showTimes({ biz, to: from, state });
-
         await setState(state, { data: { ...state.data, time: picked.id } });
 
-        // if known customer, skip details
-        const existing = await Customer.findOne({ businessId: biz._id, phone: from });
-        if (existing && existing.name) {
-          state.data.name = existing.name;
+        // if any profile field missing -> collect progressively
+        const missing = nextMissingField(customer);
+        if (!missing) {
+          // we have name/city/age in DB
+          state.data.name = customer.name;
+          state.data.city = customer.city;
+          state.data.age  = customer.age;
           await setState(state, { step: "REVIEW", data: state.data });
           await review({ biz, to: from, state });
           return res.sendStatus(200);
         }
 
-        await collectDetails({ biz, to: from, state });
+        // start the collection at the first missing field
+        if (missing.key === "name") return collectName({ biz, to: from, state });
+        if (missing.key === "city") return collectCity({ biz, to: from, state });
+        if (missing.key === "age")  return collectAge({ biz, to: from, state });
         break;
       }
 
@@ -371,44 +327,64 @@ router.post("/", async (req, res) => {
 
         const name = (body.Body || "").trim();
         if (!name) {
-          await sendWhatsApp({
-            from: biz.wa.number,
-            to:   from,
-            body: "Please type your full name."
-          });
+          await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please type your full name." });
           return res.sendStatus(200);
         }
 
-        // save to DB
-        await Customer.updateOne(
-          { businessId: biz._id, phone: from },
-          { $set: { name, language: biz.language || "english" } },
-          { upsert: true }
-        );
+        await Customer.updateOne({ businessId: biz._id, phone: from }, { $set: { name } });
+        state.data.name = name;
 
-        await setState(state, { step: "COLLECT_NOTES", data: { ...state.data, name } });
+        // next missing
+        const fresh = await Customer.findOne({ businessId: biz._id, phone: from });
+        const missing = nextMissingField(fresh);
+        if (!missing) return collectNotes({ biz, to: from, state });
+        if (missing.key === "city") return collectCity({ biz, to: from, state });
+        if (missing.key === "age")  return collectAge({ biz, to: from, state });
+        break;
+      }
 
-        await sendWhatsApp({
-          from: biz.wa.number,
-          to:   from,
-          body: lines(
-            "Any notes or special requests? (or type '-' for none)",
-            "",
-            `${BACK}) Back   •   ${CANCEL}) Cancel`
-          )
-        });
+      case "COLLECT_CITY": {
+        if (body.Body === BACK) return collectName({ biz, to: from, state });
+
+        const city = (body.Body || "").trim();
+        if (!city) {
+          await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please type your city." });
+          return res.sendStatus(200);
+        }
+
+        await Customer.updateOne({ businessId: biz._id, phone: from }, { $set: { city } });
+        state.data.city = city;
+
+        const fresh = await Customer.findOne({ businessId: biz._id, phone: from });
+        const missing = nextMissingField(fresh);
+        if (!missing) return collectNotes({ biz, to: from, state });
+        if (missing.key === "age")  return collectAge({ biz, to: from, state });
+        break;
+      }
+
+      case "COLLECT_AGE": {
+        if (body.Body === BACK) return collectCity({ biz, to: from, state });
+
+        const age = parseInt((body.Body || "").trim(), 10);
+        if (!Number.isFinite(age) || age < 1 || age > 120) {
+          await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please enter a valid age (1–120)." });
+          return res.sendStatus(200);
+        }
+
+        await Customer.updateOne({ businessId: biz._id, phone: from }, { $set: { age } });
+        state.data.age = age;
+
+        // move to notes
+        await collectNotes({ biz, to: from, state });
         break;
       }
 
       case "COLLECT_NOTES": {
         if (body.Body === BACK) {
-          await setState(state, { step: "COLLECT_NAME" });
-          await sendWhatsApp({
-            from: biz.wa.number,
-            to:   from,
-            body: lines("Your full name?", "", `${BACK}) Back   •   ${CANCEL}) Cancel`)
-          });
-          break;
+          // go back in collection order: age -> city -> name
+          if (!state.data.age)  return collectAge({ biz, to: from, state });
+          if (!state.data.city) return collectCity({ biz, to: from, state });
+          return collectName({ biz, to: from, state });
         }
 
         const notes = (body.Body || "") === "-" ? "" : (body.Body || "");
@@ -418,10 +394,7 @@ router.post("/", async (req, res) => {
       }
 
       case "REVIEW": {
-        if (body.Body === BACK) {
-          await collectDetails({ biz, to: from, state });
-          break;
-        }
+        if (body.Body === BACK) return collectNotes({ biz, to: from, state });
 
         const choice = parseInt(body.Body || "", 10);
         if (choice === 1) await finalize({ biz, to: from, from, state });
