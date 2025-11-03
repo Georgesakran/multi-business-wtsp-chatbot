@@ -52,8 +52,8 @@ async function showServices({ biz, to, state }) {
   const opts = serviceOptions(biz);
   if (opts.length === 0) {
     await sendWhatsApp({
-      from: `whatsapp:${biz.wa.number}`,
-      to:   `whatsapp:${to}`,
+      from: biz.wa.number,
+      to:   to,
       body: "No services available right now."
     });
     return;
@@ -69,8 +69,8 @@ async function showServices({ biz, to, state }) {
   );
 
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body
   });
 }
@@ -89,8 +89,8 @@ async function showDates({ biz, to, state }) {
   );
 
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body
   });
 }
@@ -107,8 +107,8 @@ async function showPeriods({ biz, to, state }) {
   );
 
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body
   });
 }
@@ -126,8 +126,8 @@ async function showTimes({ biz, to, state }) {
 
   if (times.length === 0) {
     await sendWhatsApp({
-      from: `whatsapp:${biz.wa.number}`,
-      to:   `whatsapp:${to}`,
+      from: biz.wa.number,
+      to:   to,
       body: "No free slots in that period. Pick another period."
     });
     return showPeriods({ biz, to, state });
@@ -143,8 +143,8 @@ async function showTimes({ biz, to, state }) {
   );
 
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body
   });
 }
@@ -153,8 +153,8 @@ async function collectDetails({ biz, to, state }) {
   await setState(state, { step: "COLLECT_NAME", data: { ...state.data } });
 
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body: lines(
       `Your full name?`,
       "",
@@ -186,8 +186,8 @@ async function review({ biz, to, state }) {
   );
 
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body
   });
 }
@@ -205,8 +205,8 @@ async function finalize({ biz, to, from, state }) {
   });
   if (slotTaken) {
     await sendWhatsApp({
-      from: `whatsapp:${biz.wa.number}`,
-      to:   `whatsapp:${to}`,
+      from: biz.wa.number,
+      to:   to,
       body: "Sorry, that time was just taken. Please choose another slot."
     });
     await setState(state, { step: "SELECT_TIME" });
@@ -237,16 +237,16 @@ async function finalize({ biz, to, from, state }) {
 
   // customer receipt
   await sendWhatsApp({
-    from: `whatsapp:${biz.wa.number}`,
-    to:   `whatsapp:${to}`,
+    from: biz.wa.number,
+    to:   to,
     body: `✅ Booked! #${String(booking._id).slice(-6)}\n${serviceName}\n${date} at ${time}\n*${biz.nameEnglish}* thanks you! 💅`
   });
 
   // optional owner alert
   if (biz.ownerPhone) {
     await sendWhatsApp({
-      from: `whatsapp:${biz.wa.number}`,
-      to:   `whatsapp:${biz.ownerPhone}`,
+      from: biz.wa.number,
+      to:   biz.ownerPhone,
       body:
 `🆕 New booking
 Service: ${serviceName}
@@ -295,8 +295,8 @@ router.post("/", async (req, res) => {
     if (txt === CANCEL || txt === "cancel") {
       await setState(state, { step: "SERVICE", data: {} });
       await sendWhatsApp({
-        from: `whatsapp:${biz.wa.number}`,
-        to:   `whatsapp:${from}`,
+        from: biz.wa.number,
+        to:   from,
         body: "❌ Cancelled. Type *book* to start again."
       });
       return res.sendStatus(200);
@@ -372,8 +372,8 @@ router.post("/", async (req, res) => {
         const name = (body.Body || "").trim();
         if (!name) {
           await sendWhatsApp({
-            from: `whatsapp:${biz.wa.number}`,
-            to:   `whatsapp:${from}`,
+            from: biz.wa.number,
+            to:   from,
             body: "Please type your full name."
           });
           return res.sendStatus(200);
@@ -389,8 +389,8 @@ router.post("/", async (req, res) => {
         await setState(state, { step: "COLLECT_NOTES", data: { ...state.data, name } });
 
         await sendWhatsApp({
-          from: `whatsapp:${biz.wa.number}`,
-          to:   `whatsapp:${from}`,
+          from: biz.wa.number,
+          to:   from,
           body: lines(
             "Any notes or special requests? (or type '-' for none)",
             "",
@@ -404,8 +404,8 @@ router.post("/", async (req, res) => {
         if (body.Body === BACK) {
           await setState(state, { step: "COLLECT_NAME" });
           await sendWhatsApp({
-            from: `whatsapp:${biz.wa.number}`,
-            to:   `whatsapp:${from}`,
+            from: biz.wa.number,
+            to:   from,
             body: lines("Your full name?", "", `${BACK}) Back   •   ${CANCEL}) Cancel`)
           });
           break;
