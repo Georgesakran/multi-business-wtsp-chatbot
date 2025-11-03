@@ -159,11 +159,14 @@ async function finalize({biz, to, from, state}) {
     source: "whatsapp"
   });
 
+  const { date, time } = state.data;  // ✅ keep before clearing
+
   await setState(state, { step: "DONE", data: {} });
+  
   await sendWhatsApp({
     from: biz.wa.number,
     to,
-    body: `✅ Booked! #${String(booking._id).slice(-6)}\nSee you on ${state.data.date} at ${state.data.time}.`
+    body: `✅ Booked! #${String(booking._id).slice(-6)}\nSee you on ${date} at ${time}.`
   });
 }
 
