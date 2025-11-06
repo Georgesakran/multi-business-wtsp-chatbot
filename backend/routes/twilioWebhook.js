@@ -244,6 +244,7 @@ router.post("/", async (req, res) => {
     if (isExpired(state.updatedAt, 1000 * 60 * 30)) {
       state = await setState(state, { step: "SERVICE", data: {} });
       await showServices({ biz, to: from, state });
+      return res.sendStatus(200);
     }
 
     // global commands
@@ -252,26 +253,29 @@ router.post("/", async (req, res) => {
     if (["restart", "menu"].includes(txt)) {
       await setState(state, { step: "SERVICE", data: {} });
       await showServices({ biz, to: from, state });
+      return res.sendStatus(200);
     }
 
     if (txt === CANCEL || txt === "cancel") {
       await setState(state, { step: "SERVICE", data: {} });
       await sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Cancelled. Type *book* to start again." });
+      return res.sendStatus(200);
     }
 
     // entry point
     if (["book", "احجز", "حجز", "הזמנה"].includes(txt)) {
       await showServices({ biz, to: from, state });
+      return res.sendStatus(200);
     }
 
     function nextMissingField(cust) {
         const has = (v) => typeof v === "number" ? Number.isFinite(v) : !!String(v || "").trim();
-      
+
         if (!has(cust?.name)) return { key: "name", prompt: "Your full name?" };
         if (!has(cust?.city)) return { key: "city", prompt: "Which city do you live in?" };
         if (!has(cust?.age))  return { key: "age",  prompt: "Your age? (numbers only)" };
         return null;
-      }
+    }
     // step router
     switch (state.step) {
       case "SERVICE":
@@ -280,6 +284,7 @@ router.post("/", async (req, res) => {
         const picked = pickByIndex(opts, body.Body || "");
         if (!picked) {
           await showServices({ biz, to: from, state });
+          return res.sendStatus(200);
         }
         await setState(state, { data: { ...state.data, serviceId: picked.id } });
         await showDates({ biz, to: from, state });
@@ -324,6 +329,7 @@ router.post("/", async (req, res) => {
         if (!missing) {
           await setState(state, { step: "REVIEW", data: state.data });
           await review({ biz, to: from, state });
+          return res.sendStatus(200);
         }
         if (missing.key === "name") return collectName({ biz, to: from, state });
         if (missing.key === "city") return collectCity({ biz, to: from, state });
@@ -332,9 +338,11 @@ router.post("/", async (req, res) => {
       }
       case "COLLECT_NAME": {
         if (body.Body === BACK) return showTimes({ biz, to: from, state });
+
         const name = (body.Body || "").trim();
         if (!name) {
           await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please type your full name." });
+          return res.sendStatus(200);
         }
 
         await Customer.updateOne({ businessId: biz._id, phone: from }, { $set: { name } });
@@ -355,6 +363,7 @@ router.post("/", async (req, res) => {
         const city = (body.Body || "").trim();
         if (!city) {
           await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please type your city." });
+          return res.sendStatus(200);
         }
 
         await Customer.updateOne({ businessId: biz._id, phone: from }, { $set: { city } });
@@ -373,6 +382,7 @@ router.post("/", async (req, res) => {
         const age = parseInt((body.Body || "").trim(), 10);
         if (!Number.isFinite(age) || age < 1 || age > 120) {
           await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please enter a valid age (1–120)." });
+          return res.sendStatus(200);
         }
 
         await Customer.updateOne({ businessId: biz._id, phone: from }, { $set: { age } });
@@ -414,6 +424,7 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error("Twilio webhook error:", err);
     // Always 200 so Twilio doesn’t retry
+    res.sendStatus(200);
   }
 });
 
