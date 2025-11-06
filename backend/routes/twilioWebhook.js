@@ -407,7 +407,6 @@ router.post("/", async (req, res) => {
       }
     }
 
-    res.sendStatus(200);
   } catch (err) {
     console.error("Twilio webhook error:", err);
     // Always 200 so Twilio doesn’t retry
