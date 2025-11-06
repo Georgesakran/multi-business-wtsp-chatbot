@@ -1,33 +1,35 @@
-const axios = require("axios");
+// utils/sendTwilio.js
+const twilio = require("twilio");
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-const { TWILIO_SID, TWILIO_AUTH, TWILIO_WA_FROM } = process.env; // you already have these
+// Simple WhatsApp text
+async function sendWhatsApp({ from, to, body, messagingServiceSid }) {
+  const payload = {
+    to: `whatsapp:${to}`,
+    body,
+  };
+  if (messagingServiceSid) payload.messagingServiceSid = messagingServiceSid;
+  else payload.from = `whatsapp:${from}`;
 
-const twilio = axios.create({
-  baseURL: "https://api.twilio.com/2010-04-01",
-  auth: { username: TWILIO_SID, password: TWILIO_AUTH },
-  headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" }
-});
-
-function toForm(params) {
-  return new URLSearchParams(params).toString();
+  return client.messages.create(payload);
 }
 
-/**
- * Supports:
- *  - Plain text: { from, to, body }
- *  - Content template: { from, to, contentSid, variables }  // variables is a JS object
- */
-async function sendWhatsApp({ from, to, body, contentSid, variables }) {
-  const payload = { From: `whatsapp:${from}`, To: `whatsapp:${to}` };
+// Twilio Content Template (Content SID)
+async function sendTemplate({ from, to, contentSid, variables = {}, messagingServiceSid }) {
+  const contentVars = Object.entries(variables).map(([k, v]) => ({ key: k, value: String(v) }));
 
-  if (contentSid) {
-    payload.ContentSid = contentSid;
-    if (variables) payload.ContentVariables = JSON.stringify(variables);
-  } else {
-    payload.Body = body;
-  }
+  const payload = {
+    to: `whatsapp:${to}`,
+    contentSid,
+    contentVariables: JSON.stringify(contentVars.reduce((acc, x) => ({ ...acc, [x.key]: x.value }), {})),
+  };
 
-  await twilio.post(`/Accounts/${TWILIO_SID}/Messages.json`, toForm(payload));
+  if (messagingServiceSid) payload.messagingServiceSid = messagingServiceSid;
+  else payload.from = `whatsapp:${from}`;
+
+  // Twilio API for Content Templates:
+  // https://www.twilio.com/docs/content-api/send
+  return client.messages.create(payload);
 }
 
-module.exports = { sendWhatsApp };
+module.exports = { sendWhatsApp, sendTemplate };
