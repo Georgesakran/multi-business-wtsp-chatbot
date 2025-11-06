@@ -15,6 +15,39 @@ const { isExpired } = require("../utils/session");
 const BACK   = "0";
 const CANCEL = "9";
 
+// i18n-lite (optional later). For now we keep EN strings.
+const tzOf = (biz) => biz.timezone || "Asia/Jerusalem"; // set per business if you have it
+const prettyDate = (iso, tz) => new Date(iso+"T00:00:00").toLocaleDateString("en-GB", { weekday:"short", day:"2-digit", month:"short", timeZone: tz });
+const prettyTime = (t) => t; // you already format HH:MM; keep as-is for now
+
+// Normalizers
+const rawText = (req) => (req.body.Body || "").trim();
+const lower   = (txt) => txt.toLowerCase();
+const isBackCmd   = (txt) => txt === BACK || lower(txt) === "back";
+const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
+
+// Safer numeric pick (accepts "2", "02", " 2 ")
+function pickByIndexSafe(list, text) {
+  const m = String(text).trim().match(/^\d+$/);
+  if (!m) return null;
+  const n = parseInt(m[0], 10);
+  return list[n - 1] || null;
+}
+
+// Send + always return 200 (so we don’t forget to return)
+async function replyAndEnd(res, { from, to, body }) {
+  await sendWhatsApp({ from, to, body });
+  return res.sendStatus(200);
+}
+
+// A tiny “tip” line we can reuse
+const tipLine = `${BACK}) Back   •   ${CANCEL}) Cancel`;
+
+// Acknowledge selection helper
+async function ack(res, biz, to, text) {
+  await sendWhatsApp({ from: biz.wa.number, to, body: `👌 ${text}` });
+}
+
 const lines    = (...xs) => xs.filter(Boolean).join("\n");
 const numbered = (arr) => arr.map((x, i) => `${i + 1}) ${x.title}`).join("\n");
 
@@ -44,6 +77,14 @@ async function upsertCustomer(biz, phone) {
   return doc;
 }
 
+function paginate(arr, page = 1, per = 9) {
+    const p = Math.max(1, page);
+    const start = (p - 1) * per;
+    const slice = arr.slice(start, start + per);
+    const totalPages = Math.max(1, Math.ceil(arr.length / per));
+    return { slice, page: p, totalPages };
+  }
+
 // figure which field is missing (first-booking flow)
 function nextMissingField(cust) {
   if (!cust?.name) return { key: "name", prompt: "Your full name?" };
@@ -70,14 +111,33 @@ async function showServices({ biz, to, state }) {
   await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
-async function showDates({ biz, to, state }) {
-  const { serviceId } = state.data;
-  const dates = await getDateOptions(biz, serviceId, 14); // next 14 days
-  await setState(state, { step: "SELECT_DATE", data: { ...state.data, dates } });
-
-  const body = lines(`Choose a date:`, numbered(dates), "", `${BACK}) Back   •   ${CANCEL}) Cancel`);
-  await sendWhatsApp({ from: biz.wa.number, to, body });
-}
+async function showDates({ biz, to, state, page = 1 }) {
+    const { serviceId } = state.data;
+    if (!state.data.dates) {
+      const dates = await getDateOptions(biz, serviceId, 21); // up to 3 weeks
+      await setState(state, { data: { ...state.data, dates } });
+    }
+    const { dates } = state.data;
+  
+    const { slice, totalPages } = paginate(dates, page, 9);
+    await setState(state, { step: "SELECT_DATE", data: { ...state.data, page } });
+  
+    const tz = tzOf(biz);
+    const linesList = slice.map((d, i) => `${i + 1}) ${prettyDate(d.id, tz).replace(",", "")}`);
+    const nav = [
+      page > 1 ? "P) Prev" : null,
+      page < totalPages ? "N) Next" : null,
+    ].filter(Boolean).join("   •   ");
+  
+    const body = [
+      `Choose a date:`,
+      linesList.join("\n"),
+      "",
+      [nav, tipLine].filter(Boolean).join("\n")
+    ].join("\n");
+  
+    await sendWhatsApp({ from: biz.wa.number, to, body });
+  }
 
 async function showPeriods({ biz, to, state }) {
   const periods = periodBuckets();
@@ -88,26 +148,34 @@ async function showPeriods({ biz, to, state }) {
 }
 
 async function showTimes({ biz, to, state }) {
-  const services = state.data.services || serviceOptions(biz);
-  const service  = services.find(s => s.id === state.data.serviceId)?.raw;
-
-  const times = await getTimeOptions({
-    business: biz,
-    service,
-    date: state.data.date,
-    period: state.data.period
-  });
-
-  if (times.length === 0) {
-    await sendWhatsApp({ from: biz.wa.number, to, body: "No free slots in that period. Pick another period." });
-    return showPeriods({ biz, to, state });
+    const services = state.data.services || serviceOptions(biz);
+    const service  = services.find(s => s.id === state.data.serviceId)?.raw;
+  
+    const times = await getTimeOptions({
+      business: biz,
+      service,
+      date: state.data.date,
+      period: state.data.period
+    });
+  
+    if (times.length === 0) {
+      await sendWhatsApp({ from: biz.wa.number, to, body: "No free slots in that period. Pick another period." });
+      return showPeriods({ biz, to, state });
+    }
+  
+    await setState(state, { step: "SELECT_TIME", data: { ...state.data, times } });
+  
+    const tz = tzOf(biz);
+    const header = `Available times on *${prettyDate(state.data.date, tz)}*:`;
+    const body = [
+      header,
+      times.map((t, i) => `${i + 1}) ${prettyTime(t.title)}`).join("\n"),
+      "",
+      tipLine
+    ].join("\n");
+  
+    await sendWhatsApp({ from: biz.wa.number, to, body });
   }
-
-  await setState(state, { step: "SELECT_TIME", data: { ...state.data, times } });
-
-  const body = lines(`Available times on ${state.data.date}:`, numbered(times), "", `${BACK}) Back   •   ${CANCEL}) Cancel`);
-  await sendWhatsApp({ from: biz.wa.number, to, body });
-}
 
 async function collectName({ biz, to, state }) {
   await setState(state, { step: "COLLECT_NAME" });
@@ -143,28 +211,26 @@ async function collectNotes({ biz, to, state }) {
 
 async function review({ biz, to, state }) {
     const services = state.data.services || serviceOptions(biz);
-    const svc = services.find(s => s.id === state.data.serviceId)?.raw;
+    const svc      = services.find(s => s.id === state.data.serviceId)?.raw;
   
-    const name = state.data.name || (await Customer.findOne(
-      { businessId: biz._id, phone: to.replace("whatsapp:","") }
-    ))?.name || "-";
+    const tz = tzOf(biz);
+    const name = state.data.name || "-";
   
     const summary = lines(
       `*Review your booking:*`,
       `Service: ${svc?.name?.en || svc?.name?.ar || svc?.name?.he}`,
-      `Date: ${state.data.date}`,
-      `Time: ${state.data.time}`,
+      `Date: ${prettyDate(state.data.date, tz)}`,
+      `Time: ${prettyTime(state.data.time)}`,
       `Name: ${name}`,
       state.data.city ? `City: ${state.data.city}` : "",
       Number.isFinite(state.data.age) ? `Age: ${state.data.age}` : "",
       state.data.notes ? `Notes: ${state.data.notes}` : ""
     );
-
-  await setState(state, { step: "REVIEW", data: { ...state.data } });
-
-  const body = lines(summary, "", `1) Confirm`, `${BACK}) Back   •   ${CANCEL}) Cancel`);
-  await sendWhatsApp({ from: biz.wa.number, to, body });
-}
+  
+    await setState(state, { step: "REVIEW", data: { ...state.data } });
+    const body = lines(summary, "", `1) Confirm`, tipLine);
+    await sendWhatsApp({ from: biz.wa.number, to, body });
+  }
 
 async function finalize({ biz, to, from, state }) {
   const services   = state.data.services || serviceOptions(biz);
@@ -201,7 +267,13 @@ async function finalize({ biz, to, from, state }) {
   await sendWhatsApp({
     from: biz.wa.number,
     to,
-    body: `✅ Booked! #${String(booking._id).slice(-6)}\n${serviceName}\n${date} at ${time}\n*${biz.nameEnglish}* thanks you! 💅`
+    body:[ `✅ Booked! #${String(booking._id).slice(-6)}`,
+    `${serviceName}`,
+    `${prettyDate(date , tzOf(biz))} at ${prettyTime(time)}`,
+   `*${biz.nameEnglish}* thanks you! 😊`,
+    "",
+    "Reply *menu* any time to start a new booking."
+  ].join("\n")
   });
 
   // optional owner alert
@@ -248,18 +320,27 @@ router.post("/", async (req, res) => {
     }
 
     // global commands
-    const txt = (body.Body || "").trim().toLowerCase();
-
-    if (["restart", "menu"].includes(txt)) {
-      await setState(state, { step: "SERVICE", data: {} });
-      await showServices({ biz, to: from, state });
-      return res.sendStatus(200);
+    const txt = lower(rawText(req));
+    if (["help", "?", "instructions"].includes(txt)) {
+    return replyAndEnd(res, {
+        from: biz.wa.number,
+        to:   from,
+        body: [
+        "ℹ️ *How to use*",
+        "• Reply with the *number* of your choice (1, 2, 3...).",
+        `• *${BACK}* or *back* to go one step back.`,
+        `• *${CANCEL}* or *cancel* to quit and start over.`,
+        ].join("\n")
+    });
     }
-
-    if (txt === CANCEL || txt === "cancel") {
-      await setState(state, { step: "SERVICE", data: {} });
-      await sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Cancelled. Type *book* to start again." });
-      return res.sendStatus(200);
+    if (["restart", "menu"].includes(txt)) {
+    state = await setState(state, { step: "SERVICE", data: {} });
+    return replyAndEnd(res, { from: biz.wa.number, to: from, body: `🔁 Starting again…` })
+        .then(() => showServices({ biz, to: from, state }));
+    }
+    if (isCancelCmd(txt)) {
+    await setState(state, { step: "SERVICE", data: {} });
+    return replyAndEnd(res, { from: biz.wa.number, to: from, body: "❌ Cancelled. Type *book* to start again." });
     }
 
     // entry point
@@ -270,72 +351,93 @@ router.post("/", async (req, res) => {
 
     function nextMissingField(cust) {
         const has = (v) => typeof v === "number" ? Number.isFinite(v) : !!String(v || "").trim();
-
         if (!has(cust?.name)) return { key: "name", prompt: "Your full name?" };
         if (!has(cust?.city)) return { key: "city", prompt: "Which city do you live in?" };
         if (!has(cust?.age))  return { key: "age",  prompt: "Your age? (numbers only)" };
         return null;
     }
+
+
+
     // step router
     switch (state.step) {
       case "SERVICE":
-      case "SELECT_SERVICE": {
-        const opts   = state.data.services || serviceOptions(biz);
-        const picked = pickByIndex(opts, body.Body || "");
-        if (!picked) {
-          await showServices({ biz, to: from, state });
-          return res.sendStatus(200);
-        }
-        await setState(state, { data: { ...state.data, serviceId: picked.id } });
-        await showDates({ biz, to: from, state });
-        break;
-      }
-
-      case "SELECT_DATE": {
-        if (body.Body === BACK) return showServices({ biz, to: from, state });
-        const picked = pickByIndex(state.data.dates || [], body.Body || "");
-        if (!picked) return showDates({ biz, to: from, state });
-        await setState(state, { data: { ...state.data, date: picked.id } });
-        await showPeriods({ biz, to: from, state });
-        break;
-      }
-
-      case "SELECT_PERIOD": {
-        if (body.Body === BACK) return showDates({ biz, to: from, state });
-        const picked = pickByIndex(state.data.periods || [], body.Body || "");
-        if (!picked) return showPeriods({ biz, to: from, state });
-        await setState(state, { data: { ...state.data, period: picked.id } });
-        await showTimes({ biz, to: from, state });
-        break;
-      }
-
-      case "SELECT_TIME": {
-        if (body.Body === BACK) return showPeriods({ biz, to: from, state });
-      
-        const picked = pickByIndex(state.data.times || [], body.Body || "");
-        if (!picked) return showTimes({ biz, to: from, state });
-      
-        // save chosen time
-        await setState(state, { data: { ...state.data, time: picked.id } });
-      
-        // 🔹 Always hydrate state with known customer profile
-        const freshCustomer = await Customer.findOne({ businessId: biz._id, phone: from }).lean();
-        state.data.name = freshCustomer?.name || state.data.name;
-        state.data.city = freshCustomer?.city || state.data.city;
-        state.data.age  = freshCustomer?.age  ?? state.data.age;
-      
-        // decide what to collect next
-        const missing = nextMissingField(freshCustomer);
-        if (!missing) {
-          await setState(state, { step: "REVIEW", data: state.data });
-          await review({ biz, to: from, state });
-          return res.sendStatus(200);
-        }
-        if (missing.key === "name") return collectName({ biz, to: from, state });
-        if (missing.key === "city") return collectCity({ biz, to: from, state });
-        if (missing.key === "age")  return collectAge({ biz, to: from, state });
-        break;
-      }
+        case "SELECT_SERVICE": {
+            const opts   = state.data.services || serviceOptions(biz);
+            const picked = pickByIndexSafe(opts, body.Body);
+            if (!picked) {
+              return replyAndEnd(res, { from: biz.wa.number, to: from, body: "Please reply with a number from the list." })
+                .then(() => showServices({ biz, to: from, state }));
+            }
+            await ack(res, biz, from, `Service: *${picked.raw?.name?.en || picked.title}*`);
+            await setState(state, { data: { ...state.data, serviceId: picked.id } });
+            return showDates({ biz, to: from, state, page: 1 });
+          }
+          
+          case "SELECT_DATE": {
+            const raw = rawText(req);
+            if (isBackCmd(raw)) return showServices({ biz, to: from, state });
+          
+            // pagination
+            if (lower(raw) === "n") return showDates({ biz, to: from, state, page: (state.data.page || 1) + 1 });
+            if (lower(raw) === "p") return showDates({ biz, to: from, state, page: Math.max(1, (state.data.page || 1) - 1) });
+          
+            const page = state.data.page || 1;
+            const { slice } = paginate(state.data.dates || [], page, 9);
+            const picked = pickByIndexSafe(slice, raw);
+            if (!picked) {
+              return replyAndEnd(res, { from: biz.wa.number, to: from, body: "Please choose a number from the list (or N/P for more dates)." })
+                .then(() => showDates({ biz, to: from, state, page }));
+            }
+            const tz = tzOf(biz);
+            await ack(res, biz, from, `Date: *${prettyDate(picked.id, tz)}*`);
+            await setState(state, { data: { ...state.data, date: picked.id } });
+            return showPeriods({ biz, to: from, state });
+          }
+          
+          case "SELECT_PERIOD": {
+            const raw = rawText(req);
+            if (isBackCmd(raw)) return showDates({ biz, to: from, state, page: state.data.page || 1 });
+          
+            const picked = pickByIndexSafe(state.data.periods || [], raw);
+            if (!picked) {
+              return replyAndEnd(res, { from: biz.wa.number, to: from, body: "Please reply with 1, 2 or 3 for Morning / Afternoon / Evening." })
+                .then(() => showPeriods({ biz, to: from, state }));
+            }
+            await ack(res, biz, from, `Period: *${picked.title}*`);
+            await setState(state, { data: { ...state.data, period: picked.id } });
+            return showTimes({ biz, to: from, state });
+          }
+          
+          case "SELECT_TIME": {
+            const raw = rawText(req);
+            if (isBackCmd(raw)) return showPeriods({ biz, to: from, state });
+          
+            const picked = pickByIndexSafe(state.data.times || [], raw);
+            if (!picked) {
+              return replyAndEnd(res, { from: biz.wa.number, to: from, body: "Please choose a time number from the list." })
+                .then(() => showTimes({ biz, to: from, state }));
+            }
+            await ack(res, biz, from, `Time: *${picked.title}*`);
+            await setState(state, { data: { ...state.data, time: picked.id } });
+          
+            // hydrate customer & decide what to collect next (your existing logic)
+            const freshCustomer = await Customer.findOne({ businessId: biz._id, phone: from }).lean();
+            state.data.name = freshCustomer?.name || state.data.name;
+            state.data.city = freshCustomer?.city || state.data.city;
+            state.data.age  = freshCustomer?.age  ?? state.data.age;
+          
+            const missing = nextMissingField(freshCustomer);
+            if (!missing) {
+              await setState(state, { step: "REVIEW", data: state.data });
+              await review({ biz, to: from, state });
+              return res.sendStatus(200);
+            }
+            if (missing.key === "name") return collectName({ biz, to: from, state });
+            if (missing.key === "city") return collectCity({ biz, to: from, state });
+            if (missing.key === "age")  return collectAge({ biz, to: from, state });
+            break;
+          }
       case "COLLECT_NAME": {
         if (body.Body === BACK) return showTimes({ biz, to: from, state });
 
