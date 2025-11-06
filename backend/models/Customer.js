@@ -1,4 +1,3 @@
-// models/Customer.js
 const mongoose = require("mongoose");
 
 const CustomerSchema = new mongoose.Schema({
@@ -6,7 +5,7 @@ const CustomerSchema = new mongoose.Schema({
   phone: { type: String, index: true, required: true },   // canonical E.164
   waPhone: { type: String, index: true },                 // if different (wa proxy)
 
-  // 👇 personal profile
+  // personal profile
   name: { type: String, default: "" },
   city: { type: String, default: "" },
   age:  { type: Number, min: 1, max: 120 },

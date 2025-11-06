@@ -7,8 +7,8 @@ const bcrypt = require("bcryptjs");
 const serviceSchema = new mongoose.Schema({
   name: {
     en: { type: String, required: true },
-    ar: { type: String, default: "" },
-    he: { type: String, default: "" }
+  ar: { type: String, default: "" },
+  he: { type: String, default: "" }
   },
   description: {
     en: { type: String, default: "" },
@@ -77,21 +77,21 @@ const businessSchema = new mongoose.Schema({
   password: { type: String, required: true },
 
   // (LEGACY) WhatsApp integration (kept for backward compatibility)
-  whatsappNumber: { type: String, default: "" }, // old field you already have
+  whatsappNumber: { type: String, default: "" }, // old field you already had
   phoneNumberId: String,
   verifyToken: String,
   accessToken: String,
 
   // NEW WhatsApp/Twilio + Flows configuration (per business)
   wa: {
-    number: { type: String, default: "" },               // E.164, e.g. +972525561686 (Twilio WA sender)
-    messagingServiceSid: { type: String, default: "" },  // Twilio Messaging Service SID (recommended)
+    number: { type: String, default: "" },               // E.164, e.g. +9725...
+    messagingServiceSid: { type: String, default: "" },  // optional but recommended
     locale: { type: String, enum: ["en","ar","he"], default: "ar" },
     useFlows: { type: Boolean, default: true },
 
     flows: {
       booking: {
-        id: { type: String, default: "" },      // Meta Flow ID (Booking)
+        id: { type: String, default: "" },      // Meta Flow ID (Booking) if you use Meta flows
         version: { type: String, default: "" }
       },
       order: {
@@ -100,38 +100,53 @@ const businessSchema = new mongoose.Schema({
       }
     },
 
+    // Twilio Content Template SIDs per business
     templates: {
-      bookingLaunch: { type: String, default: "" }, // Twilio Content Template SID to launch Booking Flow
-      orderLaunch:   { type: String, default: "" }, // Twilio Content Template SID to launch Order Flow
-      bookingConfirm:{ type: String, default: "" }, // (optional) confirmation template SID
-      orderConfirm:  { type: String, default: "" }  // (optional)
+      // 1) Language selector (Quick Reply template with 3 buttons)
+      languageSelectSid: { type: String, default: "" },
+
+      // 2) Main menu (List Picker / Quick Reply) per language
+      menu: {
+        ar: { type: String, default: "" },
+        en: { type: String, default: "" },
+        he: { type: String, default: "" }
+      },
+
+      // 3) Booking flow templates (optional; fill as you create them)
+      booking: {
+        askServiceSid:   { type: String, default: "" },
+        askDateSid:      { type: String, default: "" },
+        askPeriodSid:    { type: String, default: "" },
+        askTimeSid:      { type: String, default: "" },
+        askNameSid:      { type: String, default: "" },
+        askCitySid:      { type: String, default: "" },
+        askAgeSid:       { type: String, default: "" },
+        askNotesSid:     { type: String, default: "" },
+        reviewSid:       { type: String, default: "" },
+        confirmSid:      { type: String, default: "" }
+      }
     }
   },
 
-  // Language preference
+  // Language preference (fallback)
   language: {
     type: String,
     enum: ["arabic", "hebrew", "english"],
     default: "arabic"
   },
 
-  // Type of business (determines chatbot logic)
+  // Type of business
   businessType: {
     type: String,
     enum: ["booking", "product", "info", "mixed", "event", "delivery"],
     required: true
   },
 
-  // Which chatbot features to enable
-  enabledServices: [String], // ["bookingFlow", "productCatalog", etc.]
+  enabledServices: [String], // e.g. ["bookingFlow", "productCatalog"]
 
-  // Services array
   services: [serviceSchema],
-
-  // Custom fields for bookings (optional)
   customFields: [customFieldSchema],
 
-  // Business working schedule and configs
   closedDates: {
     type: [String], // YYYY-MM-DD
     default: []
@@ -168,11 +183,11 @@ const businessSchema = new mongoose.Schema({
     }
   },
 
-  // Meta or Twilio
+  // Provider toggle
   whatsappType: {
     type: String,
     enum: ["meta", "twilio"],
-    default: "meta"
+    default: "twilio"
   },
 
   // Business owner info (optional)
@@ -190,21 +205,26 @@ const businessSchema = new mongoose.Schema({
     lng: Number
   },
 
-  // Admin log (optional)
+  // Simple i18n for language buttons (if you ever render fallback text)
+  i18n: {
+    langButtons: {
+      ar: { text: { type: String, default: "العربية" }, payload: { type: String, default: "LANG_AR" } },
+      en: { text: { type: String, default: "English"  }, payload: { type: String, default: "LANG_EN" } },
+      he: { text: { type: String, default: "עברית"    }, payload: { type: String, default: "LANG_HE" } }
+    }
+  },
+
+  timezone: { type: String, default: "Asia/Jerusalem" },
+
   logs: [logSchema],
-
-  // Status flag
   isActive: { type: Boolean, default: true }
-
 }, { timestamps: true });
 
 // Helpful indexes for fast routing by number
-businessSchema.index({ "wa.number": 1 });
+businessSchema.index({ "wa.number": 1 }, { sparse: true });
 businessSchema.index({ whatsappNumber: 1 }); // legacy
 
-// ==========================
 // Password Hash Middleware
-// ==========================
 businessSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);

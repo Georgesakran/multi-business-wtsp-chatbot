@@ -1,33 +1,33 @@
-// utils/sendTwilio.js
 const axios = require("axios");
 
-const TWILIO_BASE_URL = "https://api.twilio.com/2010-04-01";
-const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
+const { TWILIO_SID, TWILIO_AUTH, TWILIO_WA_FROM } = process.env; // you already have these
 
-function asWa(num) {
-  if (!num) return num;
-  return num.startsWith("whatsapp:") ? num : `whatsapp:${num}`;
+const twilio = axios.create({
+  baseURL: "https://api.twilio.com/2010-04-01",
+  auth: { username: TWILIO_SID, password: TWILIO_AUTH },
+  headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" }
+});
+
+function toForm(params) {
+  return new URLSearchParams(params).toString();
 }
 
-exports.sendWhatsApp = async ({ from, to, body, contentSid, mediaUrl }) => {
-  const auth = {
-    username: TWILIO_ACCOUNT_SID,
-    password: TWILIO_AUTH_TOKEN,
-  };
+/**
+ * Supports:
+ *  - Plain text: { from, to, body }
+ *  - Content template: { from, to, contentSid, variables }  // variables is a JS object
+ */
+async function sendWhatsApp({ from, to, body, contentSid, variables }) {
+  const payload = { From: `whatsapp:${from}`, To: `whatsapp:${to}` };
 
-  const payload = {
-    From: asWa(from),   // <-- normalize here
-    To: asWa(to),       // <-- normalize here
-  };
+  if (contentSid) {
+    payload.ContentSid = contentSid;
+    if (variables) payload.ContentVariables = JSON.stringify(variables);
+  } else {
+    payload.Body = body;
+  }
 
-  if (contentSid) payload.ContentSid = contentSid;
-  if (body)       payload.Body = body;
-  if (mediaUrl)   payload.MediaUrl = mediaUrl;
+  await twilio.post(`/Accounts/${TWILIO_SID}/Messages.json`, toForm(payload));
+}
 
-  const url = `${TWILIO_BASE_URL}/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-
-  // Optional debug
-  // console.log("Twilio payload", payload);
-
-  await axios.post(url, new URLSearchParams(payload), { auth });
-};
+module.exports = { sendWhatsApp };
