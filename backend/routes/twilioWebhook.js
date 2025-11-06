@@ -142,19 +142,23 @@ async function collectNotes({ biz, to, state }) {
 }
 
 async function review({ biz, to, state }) {
-  const services = state.data.services || serviceOptions(biz);
-  const svc      = services.find(s => s.id === state.data.serviceId)?.raw;
-
-  const summary = lines(
-    `*Review your booking:*`,
-    `Service: ${svc?.name?.en || svc?.name?.ar || svc?.name?.he}`,
-    `Date: ${state.data.date}`,
-    `Time: ${state.data.time}`,
-    `Name: ${state.data.name}`,
-    state.data.city ? `City: ${state.data.city}` : "",
-    state.data.age  ? `Age: ${state.data.age}`   : "",
-    state.data.notes ? `Notes: ${state.data.notes}` : ""
-  );
+    const services = state.data.services || serviceOptions(biz);
+    const svc = services.find(s => s.id === state.data.serviceId)?.raw;
+  
+    const name = state.data.name || (await Customer.findOne(
+      { businessId: biz._id, phone: to.replace("whatsapp:","") }
+    ))?.name || "-";
+  
+    const summary = lines(
+      `*Review your booking:*`,
+      `Service: ${svc?.name?.en || svc?.name?.ar || svc?.name?.he}`,
+      `Date: ${state.data.date}`,
+      `Time: ${state.data.time}`,
+      `Name: ${name}`,
+      state.data.city ? `City: ${state.data.city}` : "",
+      Number.isFinite(state.data.age) ? `Age: ${state.data.age}` : "",
+      state.data.notes ? `Notes: ${state.data.notes}` : ""
+    );
 
   await setState(state, { step: "REVIEW", data: { ...state.data } });
 
@@ -264,6 +268,14 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
 
+    function nextMissingField(cust) {
+        const has = (v) => typeof v === "number" ? Number.isFinite(v) : !!String(v || "").trim();
+      
+        if (!has(cust?.name)) return { key: "name", prompt: "Your full name?" };
+        if (!has(cust?.city)) return { key: "city", prompt: "Which city do you live in?" };
+        if (!has(cust?.age))  return { key: "age",  prompt: "Your age? (numbers only)" };
+        return null;
+      }
     // step router
     switch (state.step) {
       case "SERVICE":
@@ -299,29 +311,31 @@ router.post("/", async (req, res) => {
 
       case "SELECT_TIME": {
         if (body.Body === BACK) return showPeriods({ biz, to: from, state });
+      
         const picked = pickByIndex(state.data.times || [], body.Body || "");
         if (!picked) return showTimes({ biz, to: from, state });
+      
+        // save chosen time
         await setState(state, { data: { ...state.data, time: picked.id } });
-
-        // if any profile field missing -> collect progressively
-        const missing = nextMissingField(customer);
+      
+        // 🔹 Always hydrate state with known customer profile
+        const freshCustomer = await Customer.findOne({ businessId: biz._id, phone: from }).lean();
+        state.data.name = freshCustomer?.name || state.data.name;
+        state.data.city = freshCustomer?.city || state.data.city;
+        state.data.age  = freshCustomer?.age  ?? state.data.age;
+      
+        // decide what to collect next
+        const missing = nextMissingField(freshCustomer);
         if (!missing) {
-          // we have name/city/age in DB
-          state.data.name = customer.name;
-          state.data.city = customer.city;
-          state.data.age  = customer.age;
           await setState(state, { step: "REVIEW", data: state.data });
           await review({ biz, to: from, state });
           return res.sendStatus(200);
         }
-
-        // start the collection at the first missing field
         if (missing.key === "name") return collectName({ biz, to: from, state });
         if (missing.key === "city") return collectCity({ biz, to: from, state });
         if (missing.key === "age")  return collectAge({ biz, to: from, state });
         break;
       }
-
       case "COLLECT_NAME": {
         if (body.Body === BACK) return showTimes({ biz, to: from, state });
 
