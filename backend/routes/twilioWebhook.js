@@ -211,23 +211,34 @@ async function collectNotes({ biz, to, state }) {
 
 async function review({ biz, to, state }) {
     const services = state.data.services || serviceOptions(biz);
-    const svc      = services.find(s => s.id === state.data.serviceId)?.raw;
-  
+    const svc = services.find(s => s.id === state.data.serviceId)?.raw;
     const tz = tzOf(biz);
-    const name = state.data.name || "-";
   
+    // ✅ Make sure we always fetch latest customer data (name, city, age)
+    const customer = await Customer.findOne({ businessId: biz._id, phone: to }).lean();
+    const name = customer?.name || state.data.name || "-";
+    const city = customer?.city || state.data.city || "";
+    const age = customer?.age || state.data.age || "";
+    const notes = state.data.notes || "";
+  
+    // build summary
     const summary = lines(
       `*Review your booking:*`,
       `Service: ${svc?.name?.en || svc?.name?.ar || svc?.name?.he}`,
       `Date: ${prettyDate(state.data.date, tz)}`,
       `Time: ${prettyTime(state.data.time)}`,
       `Name: ${name}`,
-      state.data.city ? `City: ${state.data.city}` : "",
-      Number.isFinite(state.data.age) ? `Age: ${state.data.age}` : "",
-      state.data.notes ? `Notes: ${state.data.notes}` : ""
+      city ? `City: ${city}` : "",
+      Number.isFinite(age) ? `Age: ${age}` : "",
+      notes ? `Notes: ${notes}` : ""
     );
   
-    await setState(state, { step: "REVIEW", data: { ...state.data } });
+    // update state (include name, city, age for finalization)
+    await setState(state, {
+      step: "REVIEW",
+      data: { ...state.data, name, city, age, notes }
+    });
+  
     const body = lines(summary, "", `1) Confirm`, tipLine);
     await sendWhatsApp({ from: biz.wa.number, to, body });
   }
