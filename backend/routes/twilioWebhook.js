@@ -332,7 +332,6 @@ router.post("/", async (req, res) => {
       }
       case "COLLECT_NAME": {
         if (body.Body === BACK) return showTimes({ biz, to: from, state });
-
         const name = (body.Body || "").trim();
         if (!name) {
           await sendWhatsApp({ from: biz.wa.number, to: from, body: "Please type your full name." });
