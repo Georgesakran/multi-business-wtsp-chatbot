@@ -282,6 +282,7 @@ function MenuList({ items, loading, highlight, setHighlight, onPick }) {
           key={p._id || i}
           className={`psel-item ${highlight === i ? "is-active" : ""}`}
           role="option"
+          aria-selected={highlight === i}   // 👈 add this line
           onMouseEnter={() => setHighlight(i)}
           onClick={() => onPick(p)}
         >
