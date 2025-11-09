@@ -2,7 +2,9 @@
 const twilio = require("twilio");
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-// Simple WhatsApp text
+/**
+ * Plain text WhatsApp
+ */
 async function sendWhatsApp({ from, to, body, messagingServiceSid }) {
   const payload = {
     to: `whatsapp:${to}`,
@@ -14,21 +16,20 @@ async function sendWhatsApp({ from, to, body, messagingServiceSid }) {
   return client.messages.create(payload);
 }
 
-// Twilio Content Template (Content SID)
+/**
+ * Twilio Content Template (approved “Content SID”)
+ * variables: { "{{name}}" : "Dina" }  OR  { name: "Dina" } – both accepted
+ */
 async function sendTemplate({ from, to, contentSid, variables = {}, messagingServiceSid }) {
-  const contentVars = Object.entries(variables).map(([k, v]) => ({ key: k, value: String(v) }));
-
+  // Twilio allows variables either as flat map or as contentVariables JSON string
   const payload = {
     to: `whatsapp:${to}`,
     contentSid,
-    contentVariables: JSON.stringify(contentVars.reduce((acc, x) => ({ ...acc, [x.key]: x.value }), {})),
+    contentVariables: JSON.stringify(variables || {}),
   };
-
   if (messagingServiceSid) payload.messagingServiceSid = messagingServiceSid;
   else payload.from = `whatsapp:${from}`;
 
-  // Twilio API for Content Templates:
-  // https://www.twilio.com/docs/content-api/send
   return client.messages.create(payload);
 }
 

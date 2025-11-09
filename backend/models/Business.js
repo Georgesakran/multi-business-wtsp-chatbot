@@ -156,28 +156,61 @@ const businessSchema = new mongoose.Schema({
 
   config: {
     chatbotEnabled: { type: Boolean, default: false },
+  
+    // Default business language (fallback if customer has none)
     language: { type: String, enum: ["arabic", "hebrew", "english"], default: "arabic" },
+  
     systemPrompt: { type: String, default: "" },
+  
+    // OLD single-language fields (keep for backward compatibility)
     welcomeMessage: { type: String, default: "" },
     fallbackMessage: { type: String, default: "" },
+  
+    // NEW multi-language chatbot messages
+    // 4 keys per language: welcome_first, welcome_returning, fallback, main_menu
+    messages: {
+      ar: {
+        welcome_first:     { type: String, default: "" },
+        welcome_returning: { type: String, default: "" },
+        fallback:          { type: String, default: "" },
+        main_menu:         { type: String, default: "" },
+      },
+      en: {
+        welcome_first:     { type: String, default: "" },
+        welcome_returning: { type: String, default: "" },
+        fallback:          { type: String, default: "" },
+        main_menu:         { type: String, default: "" },
+      },
+      he: {
+        welcome_first:     { type: String, default: "" },
+        welcome_returning: { type: String, default: "" },
+        fallback:          { type: String, default: "" },
+        main_menu:         { type: String, default: "" },
+      },
+    },
+  
     features: {
-      autoBooking: { type: Boolean, default: false },
-      productReplies: { type: Boolean, default: false },
-      faqSupport: { type: Boolean, default: false }
+      autoBooking:   { type: Boolean, default: false },
+      productReplies:{ type: Boolean, default: false },
+      faqSupport:    { type: Boolean, default: false }
     },
+  
     booking: {
-      workingDays: [String],
-      openingTime: String,
-      closingTime: String,
-      allowNotes: Boolean,
-      slotGapMinutes: Number
+      workingDays:   [String],
+      openingTime:   String,
+      closingTime:   String,
+      allowNotes:    Boolean,
+      slotGapMinutes:Number
     },
+  
     product: {
       allowPriceInquiry: { type: Boolean, default: true }
     },
+  
     delivery: {
       requireAddress: { type: Boolean, default: false }
     },
+  
     event: {
       eventList: [String]
     }
