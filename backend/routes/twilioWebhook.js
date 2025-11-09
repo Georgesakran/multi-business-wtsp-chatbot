@@ -4,9 +4,9 @@ const router = express.Router();
 
 const Business = require("../models/Business");
 const Customer = require("../models/Customer");
-const ConversationState = require("../models/ConversationState"); // if you used a different name, adjust here
+const ConversationState = require("../models/ConversationState");
 
-// Twilio send helpers (must exist in your project)
+// Twilio send helpers
 const { sendWhatsApp, sendTemplate } = require("../utils/sendTwilio");
 
 // -------------------- constants & helpers --------------------
@@ -22,11 +22,16 @@ const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
 // normalize E.164 without "whatsapp:"
 const toE164 = (x) => String(x || "").replace(/^whatsapp:/, "");
 
-// Light state accessors (scoped to business + phone)
+// ---------- state helpers ----------
 async function getState({ businessId, phoneNumber }) {
   let doc = await ConversationState.findOne({ businessId, phoneNumber });
   if (!doc) {
-    doc = await ConversationState.create({ businessId, phoneNumber, step: "LANGUAGE_SELECT", data: {} });
+    doc = await ConversationState.create({
+      businessId,
+      phoneNumber,
+      step: "LANGUAGE_SELECT",
+      data: {},
+    });
   }
   return doc;
 }
@@ -39,7 +44,7 @@ async function setState(stateDoc, patch) {
   return stateDoc;
 }
 
-// map UI label/number → internal code
+// ---------- language parsing / mapping ----------
 function parseLanguageChoice(txt) {
   const t = lower(txt);
   // numbers
@@ -55,7 +60,7 @@ function parseLanguageChoice(txt) {
   return null;
 }
 
-// localize tiny messages
+// tiny i18n for helper texts (help, cancel, etc.)
 function t(lang, key, vars = {}) {
   const L = {
     choose_language: {
@@ -102,18 +107,68 @@ function t(lang, key, vars = {}) {
   return s;
 }
 
+// full word language used in Customer + biz.config
 function langFromCustomer(cust, biz) {
-  // preference order: customer.language → biz.config.language → biz.language → biz.wa.locale → english
   return (
     cust?.language ||
     biz?.config?.language ||
     biz?.language ||
-    (biz?.wa?.locale === "ar" ? "arabic" : biz?.wa?.locale === "he" ? "hebrew" : "english") ||
+    (biz?.wa?.locale === "ar"
+      ? "arabic"
+      : biz?.wa?.locale === "he"
+      ? "hebrew"
+      : "english") ||
     "english"
   );
 }
 
-// send language picker template (Twilio Content SID)
+// ---------- NEW: helpers to read config.messages ----------
+function langKeyFromCustomer(customer, biz) {
+  // customer.language is "arabic" | "english" | "hebrew"
+  if (customer?.language === "arabic") return "ar";
+  if (customer?.language === "english") return "en";
+  if (customer?.language === "hebrew") return "he";
+
+  // business config language (same enum)
+  if (biz?.config?.language === "arabic") return "ar";
+  if (biz?.config?.language === "english") return "en";
+  if (biz?.config?.language === "hebrew") return "he";
+
+  // wa.locale is "ar" | "en" | "he"
+  if (biz?.wa?.locale === "ar") return "ar";
+  if (biz?.wa?.locale === "he") return "he";
+  if (biz?.wa?.locale === "en") return "en";
+
+  return "en";
+}
+
+function langKeyFromChoice(choice) {
+  if (choice === "arabic") return "ar";
+  if (choice === "english") return "en";
+  if (choice === "hebrew") return "he";
+  return "en";
+}
+
+function businessNameFor(biz, langKey) {
+  if (!biz) return "";
+  if (langKey === "ar") return biz.nameArabic || biz.nameEnglish || "";
+  if (langKey === "he") return biz.nameHebrew || biz.nameEnglish || "";
+  return biz.nameEnglish || biz.nameArabic || biz.nameHebrew || "";
+}
+
+// type: "welcome_first" | "welcome_returning" | "fallback" | "main_menu"
+function getConfigMessage(biz, langKey, type, fallbackText = "") {
+  const msg =
+    biz?.config?.messages?.[langKey]?.[type] ||
+    biz?.config?.messages?.en?.[type] ||
+    fallbackText ||
+    "";
+
+  const name = businessNameFor(biz, langKey);
+  return msg.replaceAll("{{business_name}}", name);
+}
+
+// ---------- template helpers ----------
 async function sendLanguageTemplate(biz, to) {
   const contentSid = biz?.wa?.templates?.languageSelectSid;
   if (!contentSid) return false;
@@ -122,14 +177,13 @@ async function sendLanguageTemplate(biz, to) {
     from: biz.wa.number,
     to,
     contentSid,
-    variables: {}, // not needed for quick replies
+    variables: {},
     messagingServiceSid: biz?.wa?.messagingServiceSid || undefined,
   });
 
   return true;
 }
 
-// fallback plain text language prompt (if no template)
 async function sendLanguageFallback(biz, to) {
   const body =
     "Please choose language:\n" +
@@ -139,51 +193,53 @@ async function sendLanguageFallback(biz, to) {
   await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
-// after language saved → greet + hint
-async function sendWelcomeAfterLanguage(biz, to, lang) {
-  const body = [t(lang, "got_language"), "", t(lang, "welcome"), t(lang, "hint_menu")].join("\n");
-  await sendWhatsApp({ from: biz.wa.number, to, body });
-}
-
 // -------------------- webhook --------------------
 router.post("/", async (req, res) => {
   try {
-    const from = toE164(req.body?.From); // customer's WA number E.164
-    const to = toE164(req.body?.To); // business WA number E.164
+    const from = toE164(req.body?.From); // customer WA number
+    const to = toE164(req.body?.To); // business WA number
     const txt = rawText(req);
 
-    // 1) Find business by recipient number
+    // 1) Find business by WA number
     const biz = await Business.findOne({ "wa.number": to, isActive: true });
     if (!biz) return res.sendStatus(200);
 
-    // 2) Fetch state + customer
+    // 2) Load state + customer
     let state = await getState({ businessId: biz._id, phoneNumber: from });
     let customer = await Customer.findOne({ businessId: biz._id, phone: from });
 
     // 3) Global commands
     if (isHelpCmd(txt)) {
       const lang = langFromCustomer(customer, biz);
-      await sendWhatsApp({ from: biz.wa.number, to: from, body: t(lang, "help") });
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "help"),
+      });
       return res.sendStatus(200);
     }
+
     if (isRestartCmd(txt)) {
       state = await setState(state, { step: "LANGUAGE_SELECT", data: {} });
       const sent = await sendLanguageTemplate(biz, from);
       if (!sent) await sendLanguageFallback(biz, from);
-      // no welcome here; user must pick language again
-      return res.sendStatus(200);
-    }
-    if (isCancelCmd(txt)) {
-      const lang = langFromCustomer(customer, biz);
-      // reset step to language for a fresh start next message
-      await setState(state, { step: "LANGUAGE_SELECT", data: {} });
-      await sendWhatsApp({ from: biz.wa.number, to: from, body: t(lang, "cancelled") });
       return res.sendStatus(200);
     }
 
-    // 4) If no customer or no language set → force language selection
+    if (isCancelCmd(txt)) {
+      const lang = langFromCustomer(customer, biz);
+      await setState(state, { step: "LANGUAGE_SELECT", data: {} });
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "cancelled"),
+      });
+      return res.sendStatus(200);
+    }
+
+    // 4) Language selection flow
     if (!customer || !customer.language) {
-      // If the current step is not LANGUAGE_SELECT, send the template & move to LANGUAGE_SELECT
+      // not yet choosing → send template
       if (state.step !== "LANGUAGE_SELECT") {
         await setState(state, { step: "LANGUAGE_SELECT" });
         const sent = await sendLanguageTemplate(biz, from);
@@ -191,16 +247,17 @@ router.post("/", async (req, res) => {
         return res.sendStatus(200);
       }
 
-      // If we are already in LANGUAGE_SELECT, try to parse the user choice
+      // already in LANGUAGE_SELECT → parse choice
       const choice = parseLanguageChoice(txt);
       if (!choice) {
-        // re-send prompt to guide the user
         const sent = await sendLanguageTemplate(biz, from);
         if (!sent) await sendLanguageFallback(biz, from);
         return res.sendStatus(200);
       }
 
-      // Save customer (upsert) with chosen language
+      const wasFirstTime = !customer;
+
+      // upsert customer with language
       customer = await Customer.findOneAndUpdate(
         { businessId: biz._id, phone: from },
         {
@@ -210,55 +267,58 @@ router.post("/", async (req, res) => {
         { new: true, upsert: true }
       );
 
-      // Advance step to MENU (or any initial screen you want)
       await setState(state, { step: "MENU", data: { language: choice } });
 
-      // Welcome & hint
-      await sendWelcomeAfterLanguage(biz, from, choice);
+      const langKey = langKeyFromChoice(choice);
+      const msgType = wasFirstTime ? "welcome_first" : "welcome_returning";
 
-      // If you have Twilio menu templates per language (biz.wa.templates.menu[lang]),
-      // you can send them here instead of the text hint.
-      // Example when you add SIDs:
-      // const menuSid = biz?.wa?.templates?.menu?.[choice === "arabic" ? "ar" : choice === "hebrew" ? "he" : "en"];
-      // if (menuSid) await sendTemplate({ from: biz.wa.number, to: from, contentSid: menuSid });
+      const welcomeText = getConfigMessage(
+        biz,
+        langKey,
+        msgType,
+        // fallback if config empty
+        t(choice, "welcome")
+      );
+
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: welcomeText,
+      });
 
       return res.sendStatus(200);
     }
 
-    // 5) We have a language → route simple commands (you can expand from here)
+    // 5) We have a known customer + language
     const lang = langFromCustomer(customer, biz);
+    const langKey = langKeyFromCustomer(customer, biz);
 
-    // Minimal MENU demo (text). Later you’ll replace with a Twilio Content Template SID per language.
+    // ---- MENU command ----
     if (lower(txt) === "menu") {
-      const bodyByLang = {
-        arabic:
-          "*القائمة*\n" +
-          "1) حجز موعد 💅\n" +
-          "2) الأسئلة الشائعة ❓\n" +
-          "3) تواصل مع المالك 📞\n" +
-          `\nأرسل رقم الخيار. أو أرسل *${CANCEL}* للإلغاء.`,
-        english:
-          "*Menu*\n" +
-          "1) Book an appointment 💅\n" +
-          "2) FAQs ❓\n" +
-          "3) Contact owner 📞\n" +
-          `\nReply with a number. Or send *${CANCEL}* to cancel.`,
-        hebrew:
-          "*תפריט*\n" +
-          "1) קבע/י תור 💅\n" +
-          "2) שאלות נפוצות ❓\n" +
-          "3) יצירת קשר 📞\n" +
-          `\nשלח/י מספר. או *${CANCEL}* לביטול.`,
-      };
-      await sendWhatsApp({ from: biz.wa.number, to: from, body: bodyByLang[lang] || bodyByLang.english });
+      const menuText = getConfigMessage(
+        biz,
+        langKey,
+        "main_menu",
+        // fallback main menu text
+        lang === "arabic"
+          ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
+          : lang === "hebrew"
+          ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
+          : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
+      );
+
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: menuText,
+      });
       await setState(state, { step: "MENU" });
       return res.sendStatus(200);
     }
 
-    // Example: basic menu selection handling (1/2/3). You can wire these to your booking flow or FAQ flow.
+    // ---- MENU selection logic ----
     if (state.step === "MENU") {
       if (["1", "١"].includes(txt)) {
-        // Start booking flow here (template-driven later)
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
@@ -272,9 +332,8 @@ router.post("/", async (req, res) => {
         await setState(state, { step: "BOOKING_START", data: {} });
         return res.sendStatus(200);
       }
+
       if (["2", "٢"].includes(txt)) {
-        // Show FAQs (text for now)
-        // You have biz.faqs multilingual — you can localize here.
         const faqs = biz.faqs || [];
         const qKey = lang === "arabic" ? "ar" : lang === "hebrew" ? "he" : "en";
         const lines = faqs.slice(0, 5).map((f, i) => {
@@ -282,13 +341,21 @@ router.post("/", async (req, res) => {
           const A = f.answer?.[qKey] || f.answer?.en || "";
           return `${i + 1}) ${Q}\n${A}`;
         });
+
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
-          body: lines.length ? lines.join("\n\n") : (lang === "arabic" ? "لا يوجد أسئلة شائعة بعد." : lang === "hebrew" ? "אין שאלות נפוצות עדיין." : "No FAQs yet."),
+          body: lines.length
+            ? lines.join("\n\n")
+            : lang === "arabic"
+            ? "لا يوجد أسئلة شائعة بعد."
+            : lang === "hebrew"
+            ? "אין שאלות נפוצות עדיין."
+            : "No FAQs yet.",
         });
         return res.sendStatus(200);
       }
+
       if (["3", "٣"].includes(txt)) {
         const owner = biz.owner || {};
         const body =
@@ -297,10 +364,12 @@ router.post("/", async (req, res) => {
             : lang === "hebrew"
             ? `יצירת קשר עם בעל/ת העסק:\nטלפון: ${owner.phone || "-"}\nאימייל: ${owner.email || "-"}`
             : `Contact owner:\nPhone: ${owner.phone || "-"}\nEmail: ${owner.email || "-"}`;
+
         await sendWhatsApp({ from: biz.wa.number, to: from, body });
         return res.sendStatus(200);
       }
-      // If unknown input in MENU:
+
+      // unknown input while in MENU
       await sendWhatsApp({
         from: biz.wa.number,
         to: from,
@@ -314,12 +383,20 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // Default fallback when no state handler caught it
+    // ---- Default fallback ----
+    const fallbackText = getConfigMessage(
+      biz,
+      langKey,
+      "fallback",
+      t(lang, "hint_menu")
+    );
+
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
-      body: t(lang, "hint_menu"),
+      body: fallbackText,
     });
+
     return res.sendStatus(200);
   } catch (err) {
     console.error("Twilio webhook error:", err);
