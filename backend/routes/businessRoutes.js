@@ -128,12 +128,42 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
     const business = await Business.findById(req.params.id);
     if (!business) return res.status(404).json({ error: "Business not found" });
 
-    // Ensure default config structure
+    // Ensure config object
     if (!business.config) business.config = {};
-    if (!business.config.chatbotEnabled) business.config.chatbotEnabled = false;
+
+    // Basic defaults
+    if (typeof business.config.chatbotEnabled !== "boolean") {
+      business.config.chatbotEnabled = false;
+    }
     if (!business.config.features) business.config.features = {};
     if (!business.config.systemPrompt) business.config.systemPrompt = "";
-    if (!business.config.language) business.config.language = "en";
+    if (!business.config.language) business.config.language = "arabic"; // must match enum
+
+    // ✅ Ensure messages structure exists
+    if (!business.config.messages) {
+      business.config.messages = {};
+    }
+
+    const emptyLang = {
+      welcome_first: "",
+      welcome_returning: "",
+      fallback: "",
+      main_menu: "",
+    };
+
+    const ensureLang = (code) => {
+      business.config.messages[code] = {
+        ...emptyLang,
+        ...(business.config.messages[code] || {}),
+      };
+    };
+
+    ensureLang("ar");
+    ensureLang("en");
+    ensureLang("he");
+
+    // (optional) persist defaults if you want them saved
+    await business.save();
 
     // ✅ Send both config and _id
     res.status(200).json({
@@ -147,40 +177,59 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
 });
 
 
-// ✅ Update chatbotEnabled toggle
+// ✅ Update chatbot config (toggles + messages)
 router.put("/:id/update-chatbot", protect, async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
     if (!business) return res.status(404).json({ message: "Business not found" });
 
-    // Only update the allowed chatbot config fields
-    if (req.body.hasOwnProperty("chatbotEnabled")) {
-      business.config.chatbotEnabled = req.body.chatbotEnabled;
+    const {
+      chatbotEnabled,
+      features,
+      systemPrompt,
+      language,
+      welcomeMessage,
+      fallbackMessage,
+      messages,
+    } = req.body;
+
+    // 1) old fields (for backward compatibility)
+    if (typeof chatbotEnabled === "boolean") {
+      business.config.chatbotEnabled = chatbotEnabled;
     }
 
-    if (req.body.hasOwnProperty("features")) {
+    if (features && typeof features === "object") {
       business.config.features = {
         ...business.config.features,
-        ...req.body.features,
+        ...features,
       };
     }
 
-    if (req.body.hasOwnProperty("systemPrompt")) {
-      business.config.systemPrompt = req.body.systemPrompt;
+    if (typeof systemPrompt === "string") {
+      business.config.systemPrompt = systemPrompt;
     }
 
-    if (req.body.hasOwnProperty("language")) {
-      business.config.language = req.body.language;
+    if (typeof language === "string") {
+      business.config.language = language;
     }
-    if (req.body.hasOwnProperty("welcomeMessage")) {
-      business.config.welcomeMessage = req.body.welcomeMessage;
+
+    if (typeof welcomeMessage === "string") {
+      business.config.welcomeMessage = welcomeMessage;
     }
-    
-    if (req.body.hasOwnProperty("fallbackMessage")) {
-      business.config.fallbackMessage = req.body.fallbackMessage;
+
+    if (typeof fallbackMessage === "string") {
+      business.config.fallbackMessage = fallbackMessage;
     }
-    
-  
+
+    // 2) NEW multi-language messages
+    // expects: { ar: {...}, en: {...}, he: {...} }
+    if (messages && typeof messages === "object") {
+      business.config.messages = {
+        ...(business.config.messages || {}),
+        ...messages, // we assume frontend sends full object for each lang
+      };
+    }
+
     await business.save();
     res.status(200).json(business.config);
   } catch (err) {
@@ -188,7 +237,6 @@ router.put("/:id/update-chatbot", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // GET /api/businesses/:id/chatbot-usage
 router.get("/:id/chatbot-usage", protect, async (req, res) => {
