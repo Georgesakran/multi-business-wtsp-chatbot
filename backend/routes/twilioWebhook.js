@@ -16,7 +16,8 @@ const CANCEL = "9";
 const rawText = (req) => (req.body?.Body || "").trim();
 const lower = (s) => String(s || "").toLowerCase();
 const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
-const isRestartCmd = (txt) => ["restart", "menu"].includes(lower(txt));
+const isRestartCmd = (txt) =>
+    ["restart", "/restart", "start"].includes(lower(txt));
 const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
 
 // normalize E.164 without "whatsapp:"
@@ -276,16 +277,35 @@ router.post("/", async (req, res) => {
         biz,
         langKey,
         msgType,
-        // fallback if config empty
         t(choice, "welcome")
       );
-
+      
+      const menuText = getConfigMessage(
+        biz,
+        langKey,
+        "main_menu",
+        // fallback if main_menu empty
+        choice === "arabic"
+          ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
+          : choice === "hebrew"
+          ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
+          : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
+      );
+      
+      // send welcome
       await sendWhatsApp({
         from: biz.wa.number,
         to: from,
         body: welcomeText,
       });
-
+      
+      // send menu right after
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: menuText,
+      });
+      
       return res.sendStatus(200);
     }
 
