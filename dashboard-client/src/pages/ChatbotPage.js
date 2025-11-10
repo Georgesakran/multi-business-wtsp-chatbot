@@ -4,6 +4,7 @@ import { LanguageContext } from "../context/LanguageContext";
 import ChatbotToggleSection from "../componenets/chatbot/ChatbotToggleSection";
 import ChatbotLanguageSelector from "../componenets/chatbot/ChatbotLanguageSelector";
 import ChatbotMessagesEditor from "../componenets/chatbot/ChatbotMessagesEditor";
+import ChatbotMenuEditor from "../componenets/chatbot/ChatbotMenuEditor";
 import SystemPromptEditor from "../componenets/chatbot/SystemPromptEditor";
 import FeatureToggles from "../componenets/chatbot/FeatureToggles";
 import UsageStats from "../componenets/chatbot/UsageStats";
@@ -46,6 +47,7 @@ const ChatbotPage = () => {
       </div>
       
       <ChatbotMessagesEditor config={config} setConfig={setConfig} />
+      <ChatbotMenuEditor config={config} setConfig={setConfig} />
       <SystemPromptEditor config={config} setConfig={setConfig} />
       <FeatureToggles config={config} setConfig={setConfig} />
       <UsageStats stats={stats} />

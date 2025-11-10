@@ -138,6 +138,7 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
     if (!business.config.features) business.config.features = {};
     if (!business.config.systemPrompt) business.config.systemPrompt = "";
     if (!business.config.language) business.config.language = "arabic"; // must match enum
+    
 
     // ✅ Ensure messages structure exists
     if (!business.config.messages) {
@@ -161,6 +162,13 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
     ensureLang("ar");
     ensureLang("en");
     ensureLang("he");
+
+    // ✅ Ensure menuItems exists (array)
+    if (!Array.isArray(business.config.menuItems)) {
+      business.config.menuItems = [];
+    }
+    
+
 
     // (optional) persist defaults if you want them saved
     await business.save();
@@ -191,6 +199,7 @@ router.put("/:id/update-chatbot", protect, async (req, res) => {
       welcomeMessage,
       fallbackMessage,
       messages,
+      menuItems, // 👈 NEW
     } = req.body;
 
     // 1) old fields (for backward compatibility)
@@ -229,6 +238,10 @@ router.put("/:id/update-chatbot", protect, async (req, res) => {
         ...messages, // we assume frontend sends full object for each lang
       };
     }
+        // 3) NEW: menuItems array
+        if (Array.isArray(menuItems)) {
+          business.config.menuItems = menuItems;
+        }
 
     await business.save();
     res.status(200).json(business.config);

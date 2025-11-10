@@ -16,8 +16,9 @@ const CANCEL = "9";
 const rawText = (req) => (req.body?.Body || "").trim();
 const lower = (s) => String(s || "").toLowerCase();
 const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
+// restart means: reset language + state
 const isRestartCmd = (txt) =>
-    ["restart", "/restart", "start"].includes(lower(txt));
+  ["restart", "/restart", "start"].includes(lower(txt));
 const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
 
 // normalize E.164 without "whatsapp:"
@@ -123,7 +124,7 @@ function langFromCustomer(cust, biz) {
   );
 }
 
-// ---------- NEW: helpers to read config.messages ----------
+// ---------- helpers to read config.messages ----------
 function langKeyFromCustomer(customer, biz) {
   // customer.language is "arabic" | "english" | "hebrew"
   if (customer?.language === "arabic") return "ar";
@@ -167,6 +168,98 @@ function getConfigMessage(biz, langKey, type, fallbackText = "") {
 
   const name = businessNameFor(biz, langKey);
   return msg.replaceAll("{{business_name}}", name);
+}
+
+// ---------- NEW: menuItems helpers ----------
+
+// get enabled items, sorted by order then key
+function getVisibleMenuItemsSorted(biz) {
+  const arr = (biz?.config?.menuItems || []).filter(
+    (item) => item && item.enabled !== false
+  );
+  arr.sort((a, b) => {
+    const ao = typeof a.order === "number" ? a.order : 0;
+    const bo = typeof b.order === "number" ? b.order : 0;
+    if (ao !== bo) return ao - bo;
+    return (a.key || "").localeCompare(b.key || "");
+  });
+  return arr;
+}
+
+// build the full menu text from config.messages.main_menu + config.menuItems
+function buildMenuText(biz, langKey, langFull) {
+  const items = getVisibleMenuItemsSorted(biz);
+
+  // If no structured menuItems, fallback to old behavior (full text in main_menu)
+  if (!items.length) {
+    return getConfigMessage(
+      biz,
+      langKey,
+      "main_menu",
+      // hard fallback if main_menu is empty
+      langFull === "arabic"
+        ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
+        : langFull === "hebrew"
+        ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
+        : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
+    );
+  }
+
+  // header from config.messages.main_menu (can be just title, without list)
+  const header = getConfigMessage(
+    biz,
+    langKey,
+    "main_menu",
+    langFull === "arabic"
+      ? "✨ *القائمة الرئيسية* ✨"
+      : langFull === "hebrew"
+      ? "✨ *תפריט ראשי* ✨"
+      : "✨ *Main Menu* ✨"
+  ).trim();
+
+  const lines = items.map((item, idx) => {
+    const n = idx + 1;
+    const label =
+      item.labels?.[langKey] || item.labels?.en || item.labels?.ar || item.key;
+    return `${n}) ${label}`;
+  });
+
+  const footer =
+    langFull === "arabic"
+      ? "\n💬 أرسل رقم الخيار (1–10) أو اكتب *menu* لعرض هذه القائمة مرة أخرى."
+      : langFull === "hebrew"
+      ? "\n💬 שלח/י את מספר האפשרות (1–10) או הקלד/י *menu* להצגת התפריט שוב."
+      : "\n💬 Send the option number (1–10) or type *menu* anytime to see this list again.";
+
+  return [header, lines.join("\n"), footer].filter(Boolean).join("\n\n");
+}
+
+// parse user input number (support Arabic digits)
+function parseMenuIndexFromText(txt) {
+  if (!txt) return null;
+  // normalize Arabic-Indic digits to Western
+  const arabicZero = "٠".charCodeAt(0);
+  const arabicExtZero = "۰".charCodeAt(0);
+
+  let normalized = "";
+  for (const ch of txt.trim()) {
+    const code = ch.charCodeAt(0);
+    // Arabic-Indic ٠١٢٣٤٥٦٧٨٩
+    if (code >= arabicZero && code <= arabicZero + 9) {
+      normalized += String(code - arabicZero);
+    }
+    // Eastern-Arabic ۰۱۲۳۴۵۶۷۸۹
+    else if (code >= arabicExtZero && code <= arabicExtZero + 9) {
+      normalized += String(code - arabicExtZero);
+    } else if (/[0-9]/.test(ch)) {
+      normalized += ch;
+    }
+  }
+
+  if (!normalized) return null;
+  const n = parseInt(normalized, 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n - 1; // index
 }
 
 // ---------- template helpers ----------
@@ -279,33 +372,23 @@ router.post("/", async (req, res) => {
         msgType,
         t(choice, "welcome")
       );
-      
-      const menuText = getConfigMessage(
-        biz,
-        langKey,
-        "main_menu",
-        // fallback if main_menu empty
-        choice === "arabic"
-          ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
-          : choice === "hebrew"
-          ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
-          : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
-      );
-      
+
+      const menuText = buildMenuText(biz, langKey, choice);
+
       // send welcome
       await sendWhatsApp({
         from: biz.wa.number,
         to: from,
         body: welcomeText,
       });
-      
+
       // send menu right after
       await sendWhatsApp({
         from: biz.wa.number,
         to: from,
         body: menuText,
       });
-      
+
       return res.sendStatus(200);
     }
 
@@ -315,17 +398,7 @@ router.post("/", async (req, res) => {
 
     // ---- MENU command ----
     if (lower(txt) === "menu") {
-      const menuText = getConfigMessage(
-        biz,
-        langKey,
-        "main_menu",
-        // fallback main menu text
-        lang === "arabic"
-          ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
-          : lang === "hebrew"
-          ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
-          : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
-      );
+      const menuText = buildMenuText(biz, langKey, lang);
 
       await sendWhatsApp({
         from: biz.wa.number,
@@ -338,58 +411,156 @@ router.post("/", async (req, res) => {
 
     // ---- MENU selection logic ----
     if (state.step === "MENU") {
-      if (["1", "١"].includes(txt)) {
-        await sendWhatsApp({
-          from: biz.wa.number,
-          to: from,
-          body:
-            lang === "arabic"
-              ? "تمام! سنبدأ الحجز بخطوات بسيطة. (لاحقًا سنحولها لقوالب أزرار)"
-              : lang === "hebrew"
-              ? "מעולה! מתחילים הזמנה בכמה שלבים פשוטים. (בהמשך נעבור לתבניות עם כפתורים)"
-              : "Great! Let’s start booking in a few simple steps. (We’ll switch to template buttons next)",
-        });
-        await setState(state, { step: "BOOKING_START", data: {} });
-        return res.sendStatus(200);
+      const structuredItems = getVisibleMenuItemsSorted(biz);
+
+      // If we have structured menu items → use dynamic mapping
+      if (structuredItems.length) {
+        const index = parseMenuIndexFromText(txt);
+        if (index == null || index < 0 || index >= structuredItems.length) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "من فضلك اختر رقم من القائمة أو أرسل *menu* لعرضها مرة أخرى."
+                : lang === "hebrew"
+                ? "בחר/י מספר מהתפריט או שלח/י *menu* להצגה מחדש."
+                : "Please choose a number from the menu, or send *menu* again.",
+          });
+          return res.sendStatus(200);
+        }
+
+        const item = structuredItems[index];
+        const key = item.key || "";
+
+        // map key → behavior
+        switch (key) {
+          case "BOOK_APPOINTMENT": {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "تمام! سنبدأ الحجز بخطوات بسيطة. (لاحقًا سنحولها لقوالب أزرار)"
+                  : lang === "hebrew"
+                  ? "מעולה! מתחילים הזמנה בכמה שלבים פשוטים. (בהמשך נעבור לתבניות עם כפתורים)"
+                  : "Great! Let’s start booking in a few simple steps. (We’ll switch to template buttons next)",
+            });
+            await setState(state, { step: "BOOKING_START", data: {} });
+            return res.sendStatus(200);
+          }
+
+          case "FAQ": {
+            const faqs = biz.faqs || [];
+            const qKey = lang === "arabic" ? "ar" : lang === "hebrew" ? "he" : "en";
+            const lines = faqs.slice(0, 5).map((f, i) => {
+              const Q = f.question?.[qKey] || f.question?.en || "";
+              const A = f.answer?.[qKey] || f.answer?.en || "";
+              return `${i + 1}) ${Q}\n${A}`;
+            });
+
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body: lines.length
+                ? lines.join("\n\n")
+                : lang === "arabic"
+                ? "لا يوجد أسئلة شائعة بعد."
+                : lang === "hebrew"
+                ? "אין שאלות נפוצות עדיין."
+                : "No FAQs yet.",
+            });
+            return res.sendStatus(200);
+          }
+
+          case "CONTACT_OWNER": {
+            const owner = biz.owner || {};
+            const body =
+              lang === "arabic"
+                ? `تواصل مع المالك:\nهاتف: ${owner.phone || "-"}\nبريد: ${owner.email || "-"}`
+                : lang === "hebrew"
+                ? `יצירת קשר עם בעל/ת העסק:\nטלפון: ${owner.phone || "-"}\nאימייל: ${owner.email || "-"}`
+                : `Contact owner:\nPhone: ${owner.phone || "-"}\nEmail: ${owner.email || "-"}`;
+
+            await sendWhatsApp({ from: biz.wa.number, to: from, body });
+            return res.sendStatus(200);
+          }
+
+          // You can keep adding keys:
+          // case "VIEW_SERVICES": { ... }
+          // case "PRODUCTS": { ... }
+          // case "COURSES": { ... }
+          // etc.
+
+          default: {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "هذا الخيار غير مفعّل بعد. جرّب خيارًا آخر من القائمة أو أرسل *menu*."
+                  : lang === "hebrew"
+                  ? "האפשרות הזו עדיין לא זמינה. נסה/י אפשרות אחרת בתפריט או שלח/י *menu*."
+                  : "This option is not wired yet. Please choose another option or send *menu*.",
+            });
+            return res.sendStatus(200);
+          }
+        }
       }
 
-      if (["2", "٢"].includes(txt)) {
-        const faqs = biz.faqs || [];
-        const qKey = lang === "arabic" ? "ar" : lang === "hebrew" ? "he" : "en";
-        const lines = faqs.slice(0, 5).map((f, i) => {
-          const Q = f.question?.[qKey] || f.question?.en || "";
-          const A = f.answer?.[qKey] || f.answer?.en || "";
-          return `${i + 1}) ${Q}\n${A}`;
-        });
+    //   // ---- LEGACY mode: no structured menuItems → old 1/2/3 behavior ----
+    //   if (["1", "١"].includes(txt)) {
+    //     await sendWhatsApp({
+    //       from: biz.wa.number,
+    //       to: from,
+    //       body:
+    //         lang === "arabic"
+    //           ? "تمام! سنبدأ الحجز بخطوات بسيطة. (لاحقًا سنحولها لقوالب أزرار)"
+    //           : lang === "hebrew"
+    //           ? "מעולה! מתחילים הזמנה בכמה שלבים פשוטים. (בהמשך נעבור לתבניות עם כפתורים)"
+    //           : "Great! Let’s start booking in a few simple steps. (We’ll switch to template buttons next)",
+    //     });
+    //     await setState(state, { step: "BOOKING_START", data: {} });
+    //     return res.sendStatus(200);
+    //   }
 
-        await sendWhatsApp({
-          from: biz.wa.number,
-          to: from,
-          body: lines.length
-            ? lines.join("\n\n")
-            : lang === "arabic"
-            ? "لا يوجد أسئلة شائعة بعد."
-            : lang === "hebrew"
-            ? "אין שאלות נפוצות עדיין."
-            : "No FAQs yet.",
-        });
-        return res.sendStatus(200);
-      }
+    //   if (["2", "٢"].includes(txt)) {
+    //     const faqs = biz.faqs || [];
+    //     const qKey = lang === "arabic" ? "ar" : lang === "hebrew" ? "he" : "en";
+    //     const lines = faqs.slice(0, 5).map((f, i) => {
+    //       const Q = f.question?.[qKey] || f.question?.en || "";
+    //       const A = f.answer?.[qKey] || f.answer?.en || "";
+    //       return `${i + 1}) ${Q}\n${A}`;
+    //     });
 
-      if (["3", "٣"].includes(txt)) {
-        const owner = biz.owner || {};
-        const body =
-          lang === "arabic"
-            ? `تواصل مع المالك:\nهاتف: ${owner.phone || "-"}\nبريد: ${owner.email || "-"}`
-            : lang === "hebrew"
-            ? `יצירת קשר עם בעל/ת העסק:\nטלפון: ${owner.phone || "-"}\nאימייל: ${owner.email || "-"}`
-            : `Contact owner:\nPhone: ${owner.phone || "-"}\nEmail: ${owner.email || "-"}`;
+    //     await sendWhatsApp({
+    //       from: biz.wa.number,
+    //       to: from,
+    //       body: lines.length
+    //         ? lines.join("\n\n")
+    //         : lang === "arabic"
+    //         ? "لا يوجد أسئلة شائعة بعد."
+    //         : lang === "hebrew"
+    //         ? "אין שאלות נפוצות עדיין."
+    //         : "No FAQs yet.",
+    //     });
+    //     return res.sendStatus(200);
+    //   }
 
-        await sendWhatsApp({ from: biz.wa.number, to: from, body });
-        return res.sendStatus(200);
-      }
+    //   if (["3", "٣"].includes(txt)) {
+    //     const owner = biz.owner || {};
+    //     const body =
+    //       lang === "arabic"
+    //         ? `تواصل مع المالك:\nهاتف: ${owner.phone || "-"}\nبريد: ${owner.email || "-"}`
+    //         : lang === "hebrew"
+    //         ? `יצירת קשר עם בעל/ת העסק:\nטלפון: ${owner.phone || "-"}\nאימייל: ${owner.email || "-"}`
+    //         : `Contact owner:\nPhone: ${owner.phone || "-"}\nEmail: ${owner.email || "-"}`;
 
-      // unknown input while in MENU
+    //     await sendWhatsApp({ from: biz.wa.number, to: from, body });
+    //     return res.sendStatus(200);
+    //   }
+
+      // unknown input while in MENU (legacy)
       await sendWhatsApp({
         from: biz.wa.number,
         to: from,
