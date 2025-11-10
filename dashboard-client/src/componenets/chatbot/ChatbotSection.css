@@ -95,3 +95,66 @@
     font-size: small;
   }
 }
+
+/* --- Universal chatbot input styling --- */
+.chatbot-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  color: #222;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background-color: #fdfdfd;
+  transition: 
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+/* Focused state */
+.chatbot-input:focus {
+  outline: none;
+  border-color: #4facfe;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+}
+
+/* Placeholder */
+.chatbot-input::placeholder {
+  color: #999;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Disabled */
+.chatbot-input:disabled {
+  background-color: #f3f3f3;
+  border-color: #e0e0e0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Error state */
+.chatbot-input.error {
+  border-color: #e55353;
+  background-color: #fff6f6;
+}
+
+.chatbot-input.error:focus {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.2);
+}
+
+/* Small variant */
+.chatbot-input.small {
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+/* Textarea variant */
+.chatbot-input.textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
