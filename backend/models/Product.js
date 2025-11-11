@@ -23,8 +23,12 @@ const ProductSchema = new mongoose.Schema({
   stock: { type: Number, min: 0, default: 0, index: true },
   reorderLevel: { type: Number, min: 0, default: 0 },
 
-  description: { type: String, trim: true, default: "" },
-
+  description: {
+    en: { type: String, default: "", trim: true },
+    ar: { type: String, default: "", trim: true },
+    he: { type: String, default: "", trim: true },
+  },
+  
   image: ImageSchema,   // <-- add this
 }, { timestamps: true, versionKey: false });
 
