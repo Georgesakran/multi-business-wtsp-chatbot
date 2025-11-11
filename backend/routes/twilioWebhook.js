@@ -318,6 +318,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
                 ? "עדיין לא הוגדרו שירותים."
                 : "No services defined yet.",
           });
+          return res.sendStatus(200);
         }
       
         const key = langKey; // 'ar' | 'en' | 'he'
@@ -365,76 +366,79 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
           body: [header, lines.join("\n\n"), footer].join("\n\n"),
         });
       
+        return res.sendStatus(200);
       }
   
-      case "view_products": {
-        // adjust the query to match your Product schema
-        const products = await Product.find({
-          businessId: biz._id,
-          isActive: true,
-          stock: { $gt: 0 },
-        })
-          .sort({ createdAt: -1 })
-          .limit(8); // don’t spam too many
-      
-        if (!products.length) {
-          await sendWhatsApp({
-            from: biz.wa.number,
-            to: from,
-            body:
-              lang === "arabic"
-                ? "لا توجد منتجات متاحة حاليًا."
-                : lang === "hebrew"
-                ? "אין מוצרים זמינים כרגע."
-                : "There are no available products right now.",
-          });
-        }
-      
-        const key = langKey; // 'ar' | 'en' | 'he'
-      
-        const header =
-          lang === "arabic"
-            ? "🛍️ *منتجات مختارة لك*"
-            : lang === "hebrew"
-            ? "🛍️ *מוצרים נבחרים בשבילך*"
-            : "🛍️ *Featured products for you*";
-      
-        const lines = products.map((p, i) => {
-          const name = p.name?.[key] || p.name?.en || "";
-          const desc = p.description?.[key] || p.description?.en || "";
-          const category = p.category || "";
-          const sku = p.sku || "";
-          const price =
-            typeof p.price === "number" && p.price > 0 ? `${p.price}₪` : "";
-          const stock =
-            typeof p.stock === "number" ? p.stock : null;
-      
-          let line =
-            `${i + 1}) ✨ *${name}*` +
-            (price ? ` — ${price}` : "");
-      
-          if (category) line += `\n   📂 ${category}`;
-          if (sku) line += `\n   🆔 SKU: ${sku}`;
-          if (stock != null) line += `\n   📦 ${stock} in stock`;
-          if (desc) line += `\n   📝 ${desc}`;
-      
-          return line;
-        });
-      
-        const footer =
-          lang === "arabic"
-            ? "\n💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة."
-            : lang === "hebrew"
-            ? "\n💬 כתבי את מספר המוצר שמעניין אותך או שאלי שאלה על כל מוצר, ותמיד אפשר להקליד *menu* כדי לחזור לתפריט."
-            : "\n💬 Reply with the product number you like, or ask about any product. You can always type *menu* to go back.";
-      
-        await sendWhatsApp({
-          from: biz.wa.number,
-          to: from,
-          body: [header, lines.join("\n\n"), footer].join("\n\n"),
-        });
-      
-      }
+case "view_products": {
+  // adjust the query to match your Product schema
+  const products = await Product.find({
+    businessId: biz._id,
+    isActive: true,
+    stock: { $gt: 0 },
+  })
+    .sort({ createdAt: -1 })
+    .limit(8); // don’t spam too many
+
+  if (!products.length) {
+    await sendWhatsApp({
+      from: biz.wa.number,
+      to: from,
+      body:
+        lang === "arabic"
+          ? "لا توجد منتجات متاحة حاليًا."
+          : lang === "hebrew"
+          ? "אין מוצרים זמינים כרגע."
+          : "There are no available products right now.",
+    });
+    return res.sendStatus(200);
+  }
+
+  const key = langKey; // 'ar' | 'en' | 'he'
+
+  const header =
+    lang === "arabic"
+      ? "🛍️ *منتجات مختارة لك*"
+      : lang === "hebrew"
+      ? "🛍️ *מוצרים נבחרים בשבילך*"
+      : "🛍️ *Featured products for you*";
+
+  const lines = products.map((p, i) => {
+    const name = p.name?.[key] || p.name?.en || "";
+    const desc = p.description?.[key] || p.description?.en || "";
+    const category = p.category || "";
+    const sku = p.sku || "";
+    const price =
+      typeof p.price === "number" && p.price > 0 ? `${p.price}₪` : "";
+    const stock =
+      typeof p.stock === "number" ? p.stock : null;
+
+    let line =
+      `${i + 1}) ✨ *${name}*` +
+      (price ? ` — ${price}` : "");
+
+    if (category) line += `\n   📂 ${category}`;
+    if (sku) line += `\n   🆔 SKU: ${sku}`;
+    if (stock != null) line += `\n   📦 ${stock} in stock`;
+    if (desc) line += `\n   📝 ${desc}`;
+
+    return line;
+  });
+
+  const footer =
+    lang === "arabic"
+      ? "\n💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة."
+      : lang === "hebrew"
+      ? "\n💬 כתבי את מספר המוצר שמעניין אותך או שאלי שאלה על כל מוצר, ותמיד אפשר להקליד *menu* כדי לחזור לתפריט."
+      : "\n💬 Reply with the product number you like, or ask about any product. You can always type *menu* to go back.";
+
+  await sendWhatsApp({
+    from: biz.wa.number,
+    to: from,
+    body: [header, lines.join("\n\n"), footer].join("\n\n"),
+  });
+
+  return res.sendStatus(200);
+}
   
       case "view_courses": {
         await sendWhatsApp({
@@ -583,12 +587,14 @@ router.post("/", async (req, res) => {
         to: from,
         body: t(lang, "help"),
       });
+      return res.sendStatus(200);
     }
 
     if (isRestartCmd(txt)) {
       state = await setState(state, { step: "LANGUAGE_SELECT", data: {} });
       const sent = await sendLanguageTemplate(biz, from);
       if (!sent) await sendLanguageFallback(biz, from);
+      return res.sendStatus(200);
     }
 
     if (isCancelCmd(txt)) {
@@ -599,6 +605,7 @@ router.post("/", async (req, res) => {
         to: from,
         body: t(lang, "cancelled"),
       });
+      return res.sendStatus(200);
     }
 
     // 4) Language selection flow
@@ -608,6 +615,7 @@ router.post("/", async (req, res) => {
         await setState(state, { step: "LANGUAGE_SELECT" });
         const sent = await sendLanguageTemplate(biz, from);
         if (!sent) await sendLanguageFallback(biz, from);
+        return res.sendStatus(200);
       }
 
       // already in LANGUAGE_SELECT → parse choice
@@ -615,6 +623,7 @@ router.post("/", async (req, res) => {
       if (!choice) {
         const sent = await sendLanguageTemplate(biz, from);
         if (!sent) await sendLanguageFallback(biz, from);
+        return res.sendStatus(200);
       }
 
       const wasFirstTime = !customer;
@@ -657,6 +666,7 @@ router.post("/", async (req, res) => {
         body: menuText,
       });
 
+      return res.sendStatus(200);
     }
 
     // 5) We have a known customer + language
@@ -673,6 +683,7 @@ router.post("/", async (req, res) => {
         body: menuText,
       });
       await setState(state, { step: "MENU" });
+      return res.sendStatus(200);
     }
 
     // ---- MENU selection logic ----
@@ -693,6 +704,7 @@ router.post("/", async (req, res) => {
                 ? "בחר/י מספר מהתפריט או שלח/י *menu* להצגה מחדש."
                 : "Please choose a number from the menu, or send *menu* again.",
           });
+          return res.sendStatus(200);
         }
 
         const item = structuredItems[index];
@@ -700,6 +712,7 @@ router.post("/", async (req, res) => {
         const payload = item.payload || "";
 
         await handleMenuAction({ action, payload, lang, langKey, biz, state, from });
+        return res.sendStatus(200);
       }
 
       // if somehow no structured items while in MENU
@@ -713,6 +726,7 @@ router.post("/", async (req, res) => {
             ? "התפריט עדיין לא הוגדר. שלחי *menu* שוב מאוחר יותר או כתבי לנו חופשי."
             : "The menu is not configured yet. Try *menu* later or just ask your question.",
       });
+      return res.sendStatus(200);
     }
 
     // ---- Default fallback ----
@@ -729,8 +743,11 @@ router.post("/", async (req, res) => {
       body: fallbackText,
     });
 
+    return res.sendStatus(200);
   } catch (err) {
     console.error("Twilio webhook error:", err);
+    // Always 200 so Twilio doesn’t retry
+    return res.sendStatus(200);
   }
 });
 
