@@ -182,10 +182,22 @@
 
 /* --- Menu items list --- */
 .chatbot-menu-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* up to 3 */
+  gap: 12px;
   margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .chatbot-menu-items {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 2 per row */
+  }
+}
+
+@media (max-width: 600px) {
+  .chatbot-menu-items {
+    grid-template-columns: 1fr; /* 1 per row */
+  }
 }
 
 .chatbot-empty-state {
