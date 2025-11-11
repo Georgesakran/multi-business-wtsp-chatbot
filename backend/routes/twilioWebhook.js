@@ -318,7 +318,6 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
                 ? "עדיין לא הוגדרו שירותים."
                 : "No services defined yet.",
           });
-          return res.sendStatus(200);
         }
       
         const key = langKey; // 'ar' | 'en' | 'he'
@@ -366,7 +365,6 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
           body: [header, lines.join("\n\n"), footer].join("\n\n"),
         });
       
-        return res.sendStatus(200);
       }
   
       case "view_products": {
@@ -390,7 +388,6 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
                 ? "אין מוצרים זמינים כרגע."
                 : "There are no available products right now.",
           });
-          return res.sendStatus(200);
         }
       
         const key = langKey; // 'ar' | 'en' | 'he'
@@ -437,7 +434,6 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
           body: [header, lines.join("\n\n"), footer].join("\n\n"),
         });
       
-        return res.sendStatus(200);
       }
   
       case "view_courses": {
@@ -587,14 +583,12 @@ router.post("/", async (req, res) => {
         to: from,
         body: t(lang, "help"),
       });
-      return res.sendStatus(200);
     }
 
     if (isRestartCmd(txt)) {
       state = await setState(state, { step: "LANGUAGE_SELECT", data: {} });
       const sent = await sendLanguageTemplate(biz, from);
       if (!sent) await sendLanguageFallback(biz, from);
-      return res.sendStatus(200);
     }
 
     if (isCancelCmd(txt)) {
@@ -605,7 +599,6 @@ router.post("/", async (req, res) => {
         to: from,
         body: t(lang, "cancelled"),
       });
-      return res.sendStatus(200);
     }
 
     // 4) Language selection flow
@@ -615,7 +608,6 @@ router.post("/", async (req, res) => {
         await setState(state, { step: "LANGUAGE_SELECT" });
         const sent = await sendLanguageTemplate(biz, from);
         if (!sent) await sendLanguageFallback(biz, from);
-        return res.sendStatus(200);
       }
 
       // already in LANGUAGE_SELECT → parse choice
@@ -623,7 +615,6 @@ router.post("/", async (req, res) => {
       if (!choice) {
         const sent = await sendLanguageTemplate(biz, from);
         if (!sent) await sendLanguageFallback(biz, from);
-        return res.sendStatus(200);
       }
 
       const wasFirstTime = !customer;
@@ -666,7 +657,6 @@ router.post("/", async (req, res) => {
         body: menuText,
       });
 
-      return res.sendStatus(200);
     }
 
     // 5) We have a known customer + language
@@ -683,7 +673,6 @@ router.post("/", async (req, res) => {
         body: menuText,
       });
       await setState(state, { step: "MENU" });
-      return res.sendStatus(200);
     }
 
     // ---- MENU selection logic ----
@@ -704,7 +693,6 @@ router.post("/", async (req, res) => {
                 ? "בחר/י מספר מהתפריט או שלח/י *menu* להצגה מחדש."
                 : "Please choose a number from the menu, or send *menu* again.",
           });
-          return res.sendStatus(200);
         }
 
         const item = structuredItems[index];
@@ -712,7 +700,6 @@ router.post("/", async (req, res) => {
         const payload = item.payload || "";
 
         await handleMenuAction({ action, payload, lang, langKey, biz, state, from });
-        return res.sendStatus(200);
       }
 
       // if somehow no structured items while in MENU
@@ -726,7 +713,6 @@ router.post("/", async (req, res) => {
             ? "התפריט עדיין לא הוגדר. שלחי *menu* שוב מאוחר יותר או כתבי לנו חופשי."
             : "The menu is not configured yet. Try *menu* later or just ask your question.",
       });
-      return res.sendStatus(200);
     }
 
     // ---- Default fallback ----
@@ -743,11 +729,8 @@ router.post("/", async (req, res) => {
       body: fallbackText,
     });
 
-    return res.sendStatus(200);
   } catch (err) {
     console.error("Twilio webhook error:", err);
-    // Always 200 so Twilio doesn’t retry
-    return res.sendStatus(200);
   }
 });
 
