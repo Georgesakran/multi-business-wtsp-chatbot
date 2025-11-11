@@ -4,6 +4,7 @@ const router = express.Router();
 
 const Business = require("../models/Business");
 const Customer = require("../models/Customer");
+const Product = require("../models/Product");
 const ConversationState = require("../models/ConversationState");
 
 // Twilio send helpers
@@ -284,6 +285,285 @@ async function sendLanguageFallback(biz, to) {
   await sendWhatsApp({ from: biz.wa.number, to, body });
 }
 
+async function handleMenuAction({ action, payload, lang, langKey, biz, state, from }) {
+    switch (action) {
+      case "book_appointment": {
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body:
+            lang === "arabic"
+              ? "تمام! سنبدأ الحجز بخطوات بسيطة. (لاحقًا سنحولها لقوالب أزرار)"
+              : lang === "hebrew"
+              ? "מעולה! מתחילים הזמנה בכמה שלבים פשוטים. (בהמשך נעבור לתבניות עם כפתורים)"
+              : "Great! Let’s start booking in a few simple steps. (We’ll switch to template buttons next)",
+        });
+        await setState(state, { step: "BOOKING_START", data: {} });
+        return;
+      }
+  
+      case "view_services": {
+        const services = (biz.services || []).filter(
+          (s) => s && s.isActive !== false
+        );
+      
+        if (!services.length) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "لا توجد خدمات مضافة بعد."
+                : lang === "hebrew"
+                ? "עדיין לא הוגדרו שירותים."
+                : "No services defined yet.",
+          });
+          return res.sendStatus(200);
+        }
+      
+        const key = langKey; // 'ar' | 'en' | 'he'
+      
+        const header =
+          lang === "arabic"
+            ? "✨ *خدماتنا الرئيسية*"
+            : lang === "hebrew"
+            ? "✨ *השירותים שלנו*"
+            : "✨ *Our main services*";
+      
+        const lines = services.slice(0, 8).map((s, i) => {
+          const name = s.name?.[key] || s.name?.en || "";
+          const desc = s.description?.[key] || s.description?.en || "";
+          const price =
+            typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
+          const duration =
+            typeof s.duration === "number" && s.duration > 0
+              ? lang === "arabic"
+                ? `${s.duration} دقيقة`
+                : lang === "hebrew"
+                ? `${s.duration} דק׳`
+                : `${s.duration} min`
+              : "";
+      
+          // nice compact card per service
+          return (
+            `${i + 1}) 💅 *${name}*` +
+            (price ? ` — ${price}` : "") +
+            (duration ? ` • ${duration}` : "") +
+            (desc ? `\n   ${desc}` : "")
+          );
+        });
+      
+        const footer =
+          lang === "arabic"
+            ? "\n💬 أرسلي رقم الخدمة التي تهمك، أو اكتبي *menu* للعودة إلى القائمة."
+            : lang === "hebrew"
+            ? "\n💬 כתבי את מספר השירות שמעניין אותך, או הקלידי *menu* כדי לחזור לתפריט."
+            : "\n💬 Reply with the service number you like, or type *menu* to go back to the main menu.";
+      
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body: [header, lines.join("\n\n"), footer].join("\n\n"),
+        });
+      
+        return res.sendStatus(200);
+      }
+  
+      case "view_products": {
+        // adjust the query to match your Product schema
+        const products = await Product.find({
+          businessId: biz._id,
+          isActive: true,
+          stock: { $gt: 0 },
+        })
+          .sort({ createdAt: -1 })
+          .limit(8); // don’t spam too many
+      
+        if (!products.length) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "لا توجد منتجات متاحة حاليًا."
+                : lang === "hebrew"
+                ? "אין מוצרים זמינים כרגע."
+                : "There are no available products right now.",
+          });
+          return res.sendStatus(200);
+        }
+      
+        const key = langKey; // 'ar' | 'en' | 'he'
+      
+        const header =
+          lang === "arabic"
+            ? "🛍️ *منتجات مختارة لك*"
+            : lang === "hebrew"
+            ? "🛍️ *מוצרים נבחרים בשבילך*"
+            : "🛍️ *Featured products for you*";
+      
+        const lines = products.map((p, i) => {
+          const name = p.name?.[key] || p.name?.en || "";
+          const desc = p.description?.[key] || p.description?.en || "";
+          const category = p.category || "";
+          const sku = p.sku || "";
+          const price =
+            typeof p.price === "number" && p.price > 0 ? `${p.price}₪` : "";
+          const stock =
+            typeof p.stock === "number" ? p.stock : null;
+      
+          let line =
+            `${i + 1}) ✨ *${name}*` +
+            (price ? ` — ${price}` : "");
+      
+          if (category) line += `\n   📂 ${category}`;
+          if (sku) line += `\n   🆔 SKU: ${sku}`;
+          if (stock != null) line += `\n   📦 ${stock} in stock`;
+          if (desc) line += `\n   📝 ${desc}`;
+      
+          return line;
+        });
+      
+        const footer =
+          lang === "arabic"
+            ? "\n💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة."
+            : lang === "hebrew"
+            ? "\n💬 כתבי את מספר המוצר שמעניין אותך או שאלי שאלה על כל מוצר, ותמיד אפשר להקליד *menu* כדי לחזור לתפריט."
+            : "\n💬 Reply with the product number you like, or ask about any product. You can always type *menu* to go back.";
+      
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body: [header, lines.join("\n\n"), footer].join("\n\n"),
+        });
+      
+        return res.sendStatus(200);
+      }
+  
+      case "view_courses": {
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body:
+            lang === "arabic"
+              ? "الدورات وورش العمل غير مفعّلة بعد. اسألينا في أي وقت وسنساعدك 😊"
+              : lang === "hebrew"
+              ? "קורסים וסדנאות עדיין לא מחוברים. אפשר לשאול אותנו ונעזור בשמחה 😊"
+              : "Courses & workshops are not wired yet. Ask us directly and we’ll help 😊",
+        });
+        return;
+      }
+  
+      case "about_location": {
+        const loc = biz.location || {};
+        const body =
+          lang === "arabic"
+            ? `📍 عن الصالون / الموقع:\nالمدينة: ${loc.city || "-"}\nالشارع: ${
+                loc.street || "-"
+              }`
+            : lang === "hebrew"
+            ? `📍 על הסלון / מיקום:\nעיר: ${loc.city || "-"}\nרחוב: ${
+                loc.street || "-"
+              }`
+            : `📍 About the salon / location:\nCity: ${loc.city || "-"}\nStreet: ${
+                loc.street || "-"
+              }`;
+  
+        await sendWhatsApp({ from: biz.wa.number, to: from, body });
+        return;
+      }
+  
+      case "my_appointments": {
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body:
+            lang === "arabic"
+              ? "عرض مواعيدك السابقة والقادمة سيتم تفعيله قريبًا."
+              : lang === "hebrew"
+              ? "צפייה בתורים שלך תופעל בקרוב."
+              : "Viewing your appointments will be available soon.",
+        });
+        return;
+      }
+  
+      case "my_orders": {
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body:
+            lang === "arabic"
+              ? "عرض طلباتك السابقة غير مفعّل بعد."
+              : lang === "hebrew"
+              ? "צפייה בהזמנות שלך עדיין לא זמינה."
+              : "Order history is not wired yet.",
+        });
+        return;
+      }
+  
+      case "reschedule_appointment": {
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body:
+            lang === "arabic"
+              ? "لتعديل أو إلغاء موعد، أرسل لنا تفاصيل الموعد الحالي وسنساعدك يدويًا 👩‍💻"
+              : lang === "hebrew"
+              ? "כדי לשנות או לבטל תור, כתבי לנו את פרטי התור הנוכחי ונטפל בזה ידנית 👩‍💻"
+              : "To reschedule or cancel, please send us your current booking details and we’ll handle it manually 👩‍💻",
+        });
+        return;
+      }
+  
+      case "contact_us": {
+        const owner = biz.owner || {};
+        const body =
+          lang === "arabic"
+            ? `📞 تواصلي معنا:\nهاتف: ${owner.phone || "-"}\nبريد: ${
+                owner.email || "-"
+              }`
+            : lang === "hebrew"
+            ? `📞 צרי קשר:\nטלפון: ${owner.phone || "-"}\nאימייל: ${
+                owner.email || "-"
+              }`
+            : `📞 Contact us:\nPhone: ${owner.phone || "-"}\nEmail: ${
+                owner.email || "-"
+              }`;
+  
+        await sendWhatsApp({ from: biz.wa.number, to: from, body });
+        return;
+      }
+  
+      case "follow_instagram": {
+        const url = payload || "";
+        const body =
+          lang === "arabic"
+            ? `📸 تابعينا على إنستغرام:\n${url || "الرابط غير مضاف بعد."}`
+            : lang === "hebrew"
+            ? `📸 עקבי אחרינו באינסטגרם:\n${url || "הקישור עדיין לא הוגדר."}`
+            : `📸 Follow us on Instagram:\n${url || "Link not configured yet."}`;
+  
+        await sendWhatsApp({ from: biz.wa.number, to: from, body });
+        return;
+      }
+  
+      case "custom":
+      default: {
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body:
+            lang === "arabic"
+              ? "هذا الخيار غير مفعّل بعد. جرّبي خيارًا آخر من القائمة أو أرسلي *menu*."
+              : lang === "hebrew"
+              ? "האפשרות הזו עדיין לא מחוברת. נסי אפשרות אחרת בתפריט או שלחי *menu*."
+              : "This option is not wired yet. Please choose another option or send *menu*.",
+        });
+        return;
+      }
+    }
+  }
+
 // -------------------- webhook --------------------
 router.post("/", async (req, res) => {
   try {
@@ -431,183 +711,8 @@ router.post("/", async (req, res) => {
         const action = item.action || "custom";
         const payload = item.payload || "";
 
-        switch (action) {
-          case "book_appointment": {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "تمام! سنبدأ الحجز بخطوات بسيطة. (لاحقًا سنحولها لقوالب أزرار)"
-                  : lang === "hebrew"
-                  ? "מעולה! מתחילים הזמנה בכמה שלבים פשוטים. (בהמשך נעבור לתבניות עם כפתורים)"
-                  : "Great! Let’s start booking in a few simple steps. (We’ll switch to template buttons next)",
-            });
-            await setState(state, { step: "BOOKING_START", data: {} });
-            return res.sendStatus(200);
-          }
-
-          case "view_services": {
-            const services = biz.services || [];
-            const key = langKey; // 'ar' | 'en' | 'he'
-            const lines = services.slice(0, 10).map((s, i) => {
-              const name = s.name?.[key] || s.name?.en || "";
-              const price =
-                typeof s.price === "number" ? ` – ${s.price}₪` : "";
-              return `${i + 1}) ${name}${price}`;
-            });
-
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lines.length > 0
-                  ? lines.join("\n")
-                  : lang === "arabic"
-                  ? "لا توجد خدمات مضافة بعد."
-                  : lang === "hebrew"
-                  ? "עדיין לא הוגדרו שירותים."
-                  : "No services defined yet.",
-            });
-            return res.sendStatus(200);
-          }
-
-          case "view_products": {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "قائمة المنتجات غير مفعّلة بعد. قريبًا يمكنك استعراض المنتجات من هنا."
-                  : lang === "hebrew"
-                  ? "תפריט המוצרים עדיין לא מחובר. בקרוב ניתן יהיה לצפות במוצרים כאן."
-                  : "Product view is not wired yet. Soon you'll be able to browse products here.",
-            });
-            return res.sendStatus(200);
-          }
-
-          case "view_courses": {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "الدورات وورش العمل غير مفعّلة بعد. اسألينا في أي وقت وسنساعدك 😊"
-                  : lang === "hebrew"
-                  ? "קורסים וסדנאות עדיין לא מחוברים. אפשר לשאול אותנו ונעזור בשמחה 😊"
-                  : "Courses & workshops are not wired yet. Ask us directly and we’ll help 😊",
-            });
-            return res.sendStatus(200);
-          }
-
-          case "about_location": {
-            const loc = biz.location || {};
-            const body =
-              lang === "arabic"
-                ? `📍 عن الصالون / الموقع:\nالمدينة: ${loc.city || "-"}\nالشارع: ${
-                    loc.street || "-"
-                  }`
-                : lang === "hebrew"
-                ? `📍 על הסלון / מיקום:\nעיר: ${loc.city || "-"}\nרחוב: ${
-                    loc.street || "-"
-                  }`
-                : `📍 About the salon / location:\nCity: ${loc.city || "-"}\nStreet: ${
-                    loc.street || "-"
-                  }`;
-
-            await sendWhatsApp({ from: biz.wa.number, to: from, body });
-            return res.sendStatus(200);
-          }
-
-          case "my_appointments": {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "عرض مواعيدك السابقة والقادمة سيتم تفعيله قريبًا."
-                  : lang === "hebrew"
-                  ? "צפייה בתורים שלך תופעל בקרוב."
-                  : "Viewing your appointments will be available soon.",
-            });
-            return res.sendStatus(200);
-          }
-
-          case "my_orders": {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "عرض طلباتك السابقة غير مفعّل بعد."
-                  : lang === "hebrew"
-                  ? "צפייה בהזמנות שלך עדיין לא זמינה."
-                  : "Order history is not wired yet.",
-            });
-            return res.sendStatus(200);
-          }
-
-          case "reschedule_appointment": {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "لتعديل أو إلغاء موعد، أرسل لنا تفاصيل الموعد الحالي وسنساعدك يدويًا 👩‍💻"
-                  : lang === "hebrew"
-                  ? "כדי לשנות או לבטל תור, כתבי לנו את פרטי התור הנוכחי ונטפל בזה ידנית 👩‍💻"
-                  : "To reschedule or cancel, please send us your current booking details and we’ll handle it manually 👩‍💻",
-            });
-            return res.sendStatus(200);
-          }
-
-          case "contact_us": {
-            const owner = biz.owner || {};
-            const body =
-              lang === "arabic"
-                ? `📞 تواصلي معنا:\nهاتف: ${owner.phone || "-"}\nبريد: ${
-                    owner.email || "-"
-                  }`
-                : lang === "hebrew"
-                ? `📞 צרי קשר:\nטלפון: ${owner.phone || "-"}\nאימייל: ${
-                    owner.email || "-"
-                  }`
-                : `📞 Contact us:\nPhone: ${owner.phone || "-"}\nEmail: ${
-                    owner.email || "-"
-                  }`;
-
-            await sendWhatsApp({ from: biz.wa.number, to: from, body });
-            return res.sendStatus(200);
-          }
-
-          case "follow_instagram": {
-            const url = payload || "";
-            const body =
-              lang === "arabic"
-                ? `📸 تابعينا على إنستغرام:\n${url || "الرابط غير مضاف بعد."}`
-                : lang === "hebrew"
-                ? `📸 עקבי אחרינו באינסטגרם:\n${url || "הקישור עדיין לא הוגדר."}`
-                : `📸 Follow us on Instagram:\n${url || "Link not configured yet."}`;
-
-            await sendWhatsApp({ from: biz.wa.number, to: from, body });
-            return res.sendStatus(200);
-          }
-
-          case "custom":
-          default: {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "هذا الخيار غير مفعّل بعد. جرّبي خيارًا آخر من القائمة أو أرسلي *menu*."
-                  : lang === "hebrew"
-                  ? "האפשרות הזו עדיין לא מחוברת. נסי אפשרות אחרת בתפריט או שלחי *menu*."
-                  : "This option is not wired yet. Please choose another option or send *menu*.",
-            });
-            return res.sendStatus(200);
-          }
-        }
+        await handleMenuAction({ action, payload, lang, langKey, biz, state, from });
+        return res.sendStatus(200);
       }
 
       // if somehow no structured items while in MENU
