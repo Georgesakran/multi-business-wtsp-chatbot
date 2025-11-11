@@ -71,17 +71,21 @@ const logSchema = new mongoose.Schema({
 // ==========================
 const menuItemSchema = new mongoose.Schema(
   {
-    // internal key used by the bot logic: "BOOK_APPOINTMENT", "VIEW_SERVICES", etc.
-    key: { type: String, required: true },
+    // The number the user types: 1,2,3...
+    id: { type: Number, required: true },
 
-    // for toggling items on/off without deleting them
+    // toggle on/off
     enabled: { type: Boolean, default: true },
 
-    // optional ordering (lower = shown first). If you don’t care, you can leave 0
-    order: { type: Number, default: 0 },
+    // what the bot does with this option
+    // (we'll route on this: "book_appointment", "view_services", etc.)
+    action: {type: String,default: "custom",},
 
-    // labels per language (what the user sees in the menu)
-    labels: {
+    // optional extra data (URL, tag, category, etc.)
+    payload: { type: String, default: "" },
+
+    // label text in each language
+    label: {
       ar: { type: String, default: "" },
       en: { type: String, default: "" },
       he: { type: String, default: "" },
