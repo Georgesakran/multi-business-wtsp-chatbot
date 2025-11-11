@@ -184,54 +184,55 @@ function getVisibleMenuItemsSorted(biz) {
   return arr;
 }
 
-// build the full menu text from config.menuItems
+// build the full menu text ONLY from config.menuItems
 function buildMenuText(biz, langKey, langFull) {
-  const items = getVisibleMenuItemsSorted(biz);
-
-  // If no structured menuItems, fallback to old main_menu text
-  if (!items.length) {
-    return getConfigMessage(
-      biz,
-      langKey,
-      "main_menu",
+    const items = getVisibleMenuItemsSorted(biz);
+    const bizName = businessNameFor(biz, langKey);
+  
+    // If no structured menuItems → fallback to *old main_menu* behavior
+    if (!items.length) {
+      return getConfigMessage(
+        biz,
+        langKey,
+        "main_menu",
+        langFull === "arabic"
+          ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
+          : langFull === "hebrew"
+          ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
+          : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
+      );
+    }
+  
+    // ✅ NEW: header is generated in code – we IGNORE messages.main_menu
+    const header =
       langFull === "arabic"
-        ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
+        ? `🌿 *القائمة الرئيسية — ${bizName}*`
         : langFull === "hebrew"
-        ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
-        : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
-    );
+        ? `🌿 *תפריט ראשי — ${bizName}*`
+        : `🌿 *Main Menu — ${bizName}*`;
+  
+    const lines = items.map((item, idx) => {
+      const n = idx + 1;
+      const labelObj = item.label || item.labels || {};
+      const label =
+        labelObj[langKey] ||
+        labelObj.en ||
+        labelObj.ar ||
+        labelObj.he ||
+        item.action;
+  
+      return `${n}) ${label}`;
+    });
+  
+    const footer =
+      langFull === "arabic"
+        ? "\n💬 أرسل رقم الخيار أو اكتب *menu* في أي وقت لعرض القائمة مرة أخرى."
+        : langFull === "hebrew"
+        ? "\n💬 שלח/י את מספר האפשרות או כתוב/י *menu* בכל זמן כדי לראות את התפריט שוב."
+        : "\n💬 Send the option number or type *menu* anytime to see this list again.";
+  
+    return [header, lines.join("\n"), footer].filter(Boolean).join("\n\n");
   }
-
-  // Take whatever owner wrote in main_menu as header (without list)
-  const header = getConfigMessage(
-    biz,
-    langKey,
-    "main_menu",
-    langFull === "arabic"
-      ? "✨ *القائمة الرئيسية* ✨"
-      : langFull === "hebrew"
-      ? "✨ *תפריט ראשי* ✨"
-      : "✨ *Main Menu* ✨"
-  ).trim();
-
-  const lines = items.map((item, idx) => {
-    const n = idx + 1;
-    const labelObj = item.label || item.labels || {};
-    const label =
-      labelObj[langKey] || labelObj.en || labelObj.ar || labelObj.he || item.action;
-
-    return `${n}) ${label}`;
-  });
-
-  const footer =
-    langFull === "arabic"
-      ? "\n💬 أرسل رقم الخيار أو اكتب *menu* في أي وقت لعرض القائمة مرة أخرى."
-      : langFull === "hebrew"
-      ? "\n💬 שלח/י את מספר האפשרות או כתוב/י *menu* בכל זמן כדי לראות את התפריט שוב."
-      : "\n💬 Send the option number or type *menu* anytime to see this list again.";
-
-  return [header, lines.join("\n"), footer].filter(Boolean).join("\n\n");
-}
 
 // parse user input number (supports Arabic digits)
 function parseMenuIndexFromText(txt) {
