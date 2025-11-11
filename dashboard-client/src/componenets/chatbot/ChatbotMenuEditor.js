@@ -37,11 +37,9 @@ const emptyItem = (nextId) => ({
 });
 
 const ChatbotMenuEditor = ({ config, setConfig }) => {
-  // config.menuItems comes from backend in ChatbotPage
   const [menuItems, setMenuItems] = useState(config.menuItems || []);
   const [activeLang, setActiveLang] = useState("en");
 
-  // Add new item
   const handleAdd = () => {
     const maxId = menuItems.reduce(
       (max, item) => (item.id > max ? item.id : max),
@@ -52,7 +50,6 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
     setMenuItems((prev) => [...prev, newItem]);
   };
 
-  // Remove item
   const handleRemove = (id) => {
     setMenuItems((prev) => prev.filter((item) => item.id !== id));
   };
@@ -88,7 +85,6 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
 
   const handleSave = async () => {
     try {
-      // Local update
       setConfig((prev) => ({
         ...prev,
         menuItems,
@@ -105,11 +101,19 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
     }
   };
 
+  const activeLangLabel =
+    LANGS.find((l) => l.code === activeLang)?.label || "English";
+
   return (
     <div className="chatbot-section">
-      <h3>📋 WhatsApp Main Menu Items</h3>
+      <div className="chatbot-section-header">
+        <h3>📋 WhatsApp Main Menu Items</h3>
+        <span className="chatbot-section-subtitle">
+          Configure what appears when the customer types <code>menu</code>.
+        </span>
+      </div>
 
-      {/* Lang tabs for labels */}
+      {/* Language tabs for labels */}
       <div className="chatbot-lang-tabs">
         {LANGS.map((l) => (
           <button
@@ -127,89 +131,112 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
 
       <p className="chatbot-hint">
         Items are mapped by <b>number</b>. Example: item with ID=1 is option
-        "1️⃣", ID=2 is "2️⃣", etc.  
+        <span className="chatbot-emoji-number"> 1️⃣</span>, ID=2 is
+        <span className="chatbot-emoji-number"> 2️⃣</span>, etc.
+        <br />
         Bot logic reads <code>action</code> + <code>payload</code> to decide
         what to do.
       </p>
 
       <div className="chatbot-menu-items">
         {menuItems.length === 0 && (
-          <div className="chatbot-hint">
-            No menu items yet. Click "Add menu item" to start.
+          <div className="chatbot-empty-state">
+            No menu items yet. Click <b>“Add menu item”</b> to start.
           </div>
         )}
 
         {menuItems.map((item) => (
           <div key={item.id} className="chatbot-menu-item-row">
+            {/* HEADER ROW */}
             <div className="chatbot-menu-item-header">
-              <span className="badge">#{item.id}</span>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={item.enabled !== false}
+              <div className="chatbot-menu-item-header-left">
+                <span className="menu-item-number">#{item.id}</span>
+                <select
+                  className="chatbot-select"
+                  value={item.action || "custom"}
                   onChange={(e) =>
-                    updateItem(item.id, { enabled: e.target.checked })
+                    updateItem(item.id, { action: e.target.value })
                   }
-                />
-                <span className="slider" />
-              </label>
-              <select
-                value={item.action || "custom"}
-                onChange={(e) =>
-                  updateItem(item.id, { action: e.target.value })
-                }
-              >
-                {ACTIONS.map((a) => (
-                  <option key={a.value} value={a.value}>
-                    {a.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="psel-btn danger"
-                onClick={() => handleRemove(item.id)}
-              >
-                ✖ Remove
-              </button>
+                >
+                  {ACTIONS.map((a) => (
+                    <option key={a.value} value={a.value}>
+                      {a.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="chatbot-menu-item-header-right">
+                <span className="menu-item-toggle-label">Enabled</span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={item.enabled !== false}
+                    onChange={(e) =>
+                      updateItem(item.id, { enabled: e.target.checked })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+                <button
+                  type="button"
+                  className="psel-btn danger menu-item-remove-btn"
+                  onClick={() => handleRemove(item.id)}
+                >
+                  ✖ Remove
+                </button>
+              </div>
             </div>
 
+            {/* BODY ROW */}
             <div className="chatbot-menu-item-body">
-              <input
-                type="text"
-                className="chatbot-input"
-                value={(item.label && item.label[activeLang]) || ""}
-                onChange={(e) =>
-                  updateLabel(item.id, activeLang, e.target.value)
-                }
-                placeholder={`Label in ${
-                  activeLang === "ar"
-                    ? "Arabic"
-                    : activeLang === "he"
-                    ? "Hebrew"
-                    : "English"
-                } (what user sees in menu text)`}
-              />
+              <div className="chatbot-field">
+                <label className="chatbot-field-label">
+                  Label in {activeLangLabel}
+                </label>
+                <input
+                  type="text"
+                  className="chatbot-input"
+                  value={(item.label && item.label[activeLang]) || ""}
+                  onChange={(e) =>
+                    updateLabel(item.id, activeLang, e.target.value)
+                  }
+                  placeholder="What the customer sees in the menu"
+                />
+              </div>
 
-              <input
-                type="text"
-                className="chatbot-input"
-                value={item.payload || ""}
-                onChange={(e) =>
-                  updateItem(item.id, { payload: e.target.value })
-                }
-                placeholder="Optional payload (e.g. URL, tag, category name...)"
-              />
+              <div className="chatbot-field">
+                <label className="chatbot-field-label">
+                  Optional payload (URL, tag, category…)
+                </label>
+                <input
+                  type="text"
+                  className="chatbot-input"
+                  value={item.payload || ""}
+                  onChange={(e) =>
+                    updateItem(item.id, { payload: e.target.value })
+                  }
+                  placeholder="Example: https://instagram.com/yourpage"
+                />
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       <div className="chatbot-menu-actions">
-        <button type="button" onClick={handleAdd}>
+        <button
+          type="button"
+          className="psel-btn secondary"
+          onClick={handleAdd}
+        >
           ➕ Add menu item
         </button>
-        <button type="button" onClick={handleSave}>
+        <button
+          type="button"
+          className="psel-btn primary"
+          onClick={handleSave}
+        >
           💾 Save Menu Items
         </button>
       </div>

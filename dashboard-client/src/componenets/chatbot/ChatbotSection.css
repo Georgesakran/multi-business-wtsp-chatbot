@@ -158,3 +158,164 @@
   min-height: 80px;
   line-height: 1.5;
 }
+
+
+
+/* --- Section header --- */
+.chatbot-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.chatbot-section-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.chatbot-section-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* --- Menu items list --- */
+.chatbot-menu-items {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatbot-empty-state {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+/* Each item as a card */
+.chatbot-menu-item-row {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Header row: number, select, toggle, remove */
+.chatbot-menu-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.chatbot-menu-item-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-item-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.chatbot-select {
+  min-width: 210px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  background: #f9fafb;
+}
+
+/* Right side: toggle + remove */
+.chatbot-menu-item-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-item-toggle-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.menu-item-remove-btn {
+  margin-left: 4px;
+}
+
+/* Body: inputs stacked */
+.chatbot-menu-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chatbot-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chatbot-field-label {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* Common text input */
+.chatbot-input {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  outline: none;
+  background: #f9fafb;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.chatbot-input:focus {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Footer buttons */
+.chatbot-menu-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* If you already have .psel-btn, just extend it a bit */
+.psel-btn.primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.psel-btn.secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* Small detail in hint */
+.chatbot-emoji-number {
+  font-size: 1rem;
+  vertical-align: middle;
+}
