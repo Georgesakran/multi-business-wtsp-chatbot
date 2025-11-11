@@ -219,7 +219,6 @@
 
 /* Header row: number, select, toggle, remove */
 .chatbot-menu-item-header {
-  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
@@ -291,7 +290,7 @@
 
 /* Common text input */
 .chatbot-input {
-  width: 100%;
+  width: 90%;
   padding: 7px 9px;
   border-radius: 6px;
   border: 1px solid #d1d5db;

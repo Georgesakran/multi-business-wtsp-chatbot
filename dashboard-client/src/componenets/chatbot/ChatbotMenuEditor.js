@@ -28,7 +28,6 @@ const emptyItem = (nextId) => ({
   id: nextId,
   enabled: true,
   action: "book_appointment",
-  payload: "",
   label: {
     ar: "",
     en: "",
@@ -205,7 +204,7 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
                 />
               </div>
 
-              <div className="chatbot-field">
+              {/* <div className="chatbot-field">
                 <label className="chatbot-field-label">
                   Optional payload (URL, tag, category…)
                 </label>
@@ -218,7 +217,7 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
                   }
                   placeholder="Example: https://instagram.com/yourpage"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         ))}
