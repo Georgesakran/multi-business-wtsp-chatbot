@@ -128,14 +128,14 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
         ))}
       </div>
 
-      <p className="chatbot-hint">
+      {/* <p className="chatbot-hint">
         Items are mapped by <b>number</b>. Example: item with ID=1 is option
         <span className="chatbot-emoji-number"> 1️⃣</span>, ID=2 is
         <span className="chatbot-emoji-number"> 2️⃣</span>, etc.
         <br />
         Bot logic reads <code>action</code> + <code>payload</code> to decide
         what to do.
-      </p>
+      </p> */}
 
       <div className="chatbot-menu-items">
         {menuItems.length === 0 && (

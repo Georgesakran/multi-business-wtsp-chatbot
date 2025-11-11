@@ -330,3 +330,7 @@
   font-size: 1rem;
   vertical-align: middle;
 }
+
+.chatbot-lang-tabs{
+  gap:10px;
+}
