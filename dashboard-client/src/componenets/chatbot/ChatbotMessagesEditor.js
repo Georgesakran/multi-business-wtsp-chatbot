@@ -14,7 +14,6 @@ const emptyMessagesForLang = {
   welcome_first: "",
   welcome_returning: "",
   fallback: "",
-  main_menu: "",
 };
 
 const ChatbotMessagesEditor = ({ config, setConfig }) => {
@@ -119,23 +118,7 @@ const ChatbotMessagesEditor = ({ config, setConfig }) => {
           />
         </label>
 
-        <label>
-          Main menu message:
-          <textarea
-            rows="4"
-            value={current.main_menu}
-            onChange={(e) =>
-              handleChange(activeLang, "main_menu", e.target.value)
-            }
-            placeholder={
-              "Example:\n🌸 Main Menu — {{business_name}}\n1) Book an appointment\n2) FAQs\n3) Contact\n..."
-            }
-          />
-          <small className="chatbot-hint">
-            You can use <code>{"{{business_name}}"}</code> in the text.  
-            This is the full menu text; later we can make it dynamic.
-          </small>
-        </label>
+
       </div>
 
       <button onClick={handleSave}>💾 Save Messages</button>
