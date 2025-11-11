@@ -369,76 +369,76 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
         return res.sendStatus(200);
       }
   
-case "view_products": {
-  // adjust the query to match your Product schema
-  const products = await Product.find({
-    businessId: biz._id,
-    isActive: true,
-    stock: { $gt: 0 },
-  })
-    .sort({ createdAt: -1 })
-    .limit(8); // don’t spam too many
+       case "view_products": {
+        // adjust the query to match your Product schema
+        const products = await Product.find({
+            businessId: biz._id,
+            status: "active",
+            stock: { $gt: 0 },
+        })
+            .sort({ createdAt: -1 })
+            .limit(8); // don’t spam too many
 
-  if (!products.length) {
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to: from,
-      body:
-        lang === "arabic"
-          ? "لا توجد منتجات متاحة حاليًا."
-          : lang === "hebrew"
-          ? "אין מוצרים זמינים כרגע."
-          : "There are no available products right now.",
-    });
-    return res.sendStatus(200);
+        if (!products.length) {
+            await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+                lang === "arabic"
+                ? "لا توجد منتجات متاحة حاليًا."
+                : lang === "hebrew"
+                ? "אין מוצרים זמינים כרגע."
+                : "There are no available products right now.",
+            });
+            return res.sendStatus(200);
   }
 
-  const key = langKey; // 'ar' | 'en' | 'he'
+        const key = langKey; // 'ar' | 'en' | 'he'
 
-  const header =
-    lang === "arabic"
-      ? "🛍️ *منتجات مختارة لك*"
-      : lang === "hebrew"
-      ? "🛍️ *מוצרים נבחרים בשבילך*"
-      : "🛍️ *Featured products for you*";
+        const header =
+            lang === "arabic"
+            ? "🛍️ *منتجات مختارة لك*"
+            : lang === "hebrew"
+            ? "🛍️ *מוצרים נבחרים בשבילך*"
+            : "🛍️ *Featured products for you*";
 
-  const lines = products.map((p, i) => {
-    const name = p.name?.[key] || p.name?.en || "";
-    const desc = p.description?.[key] || p.description?.en || "";
-    const category = p.category || "";
-    const sku = p.sku || "";
-    const price =
-      typeof p.price === "number" && p.price > 0 ? `${p.price}₪` : "";
-    const stock =
-      typeof p.stock === "number" ? p.stock : null;
+        const lines = products.map((p, i) => {
+            const name = p.name?.[key] || p.name?.en || "";
+            const desc = p.description?.[key] || p.description?.en || "";
+            const category = p.category || "";
+            const sku = p.sku || "";
+            const price =
+            typeof p.price === "number" && p.price > 0 ? `${p.price}₪` : "";
+            const stock =
+            typeof p.stock === "number" ? p.stock : null;
 
-    let line =
-      `${i + 1}) ✨ *${name}*` +
-      (price ? ` — ${price}` : "");
+            let line =
+            `${i + 1}) ✨ *${name}*` +
+            (price ? ` — ${price}` : "");
 
-    if (category) line += `\n   📂 ${category}`;
-    if (sku) line += `\n   🆔 SKU: ${sku}`;
-    if (stock != null) line += `\n   📦 ${stock} in stock`;
-    if (desc) line += `\n   📝 ${desc}`;
+            if (category) line += `\n   📂 ${category}`;
+            if (sku) line += `\n   🆔 SKU: ${sku}`;
+            if (stock != null) line += `\n   📦 ${stock} in stock`;
+            if (desc) line += `\n   📝 ${desc}`;
 
-    return line;
-  });
+            return line;
+        });
 
-  const footer =
-    lang === "arabic"
-      ? "\n💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة."
-      : lang === "hebrew"
-      ? "\n💬 כתבי את מספר המוצר שמעניין אותך או שאלי שאלה על כל מוצר, ותמיד אפשר להקליד *menu* כדי לחזור לתפריט."
-      : "\n💬 Reply with the product number you like, or ask about any product. You can always type *menu* to go back.";
+        const footer =
+            lang === "arabic"
+            ? "\n💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة."
+            : lang === "hebrew"
+            ? "\n💬 כתבי את מספר המוצר שמעניין אותך או שאלי שאלה על כל מוצר, ותמיד אפשר להקליד *menu* כדי לחזור לתפריט."
+            : "\n💬 Reply with the product number you like, or ask about any product. You can always type *menu* to go back.";
 
-  await sendWhatsApp({
-    from: biz.wa.number,
-    to: from,
-    body: [header, lines.join("\n\n"), footer].join("\n\n"),
-  });
+        await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: [header, lines.join("\n\n"), footer].join("\n\n"),
+        });
 
-  return res.sendStatus(200);
-}
+        return res.sendStatus(200);
+        }
   
       case "view_courses": {
         await sendWhatsApp({
@@ -561,6 +561,7 @@ case "view_products": {
         });
         return;
       }
+
     }
   }
 
