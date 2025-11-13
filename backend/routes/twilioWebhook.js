@@ -48,6 +48,61 @@ async function setState(stateDoc, patch) {
 }
 
 // ---------- language parsing / mapping ----------
+
+// ---------- Product helpers for multi-language fields ----------
+
+const PRODUCT_LABELS = {
+    arabic: {
+      category: "الفئة",
+      sku: "الكود",
+      stock: "الكمية المتوفرة",
+      listTitle: "🛍️ *منتجات مختارة لك*",
+      listCta:
+        "💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة.",
+      detailTitle: "🛍️ *تفاصيل المنتج*",
+      detailCta:
+        "📞 للطلب الآن: يمكنك الاتصال على الرقم الظاهر أو الرد باسمك + مدينتك + الكمية المطلوبة.\nاكتبي رقم منتج آخر لعرض تفاصيله، أو اكتبي *menu* للعودة للقائمة.",
+    },
+    hebrew: {
+      category: "קטגוריה",
+      sku: "מק״ט",
+      stock: "כמות במלאי",
+      listTitle: "🛍️ *מוצרים נבחרים עבורך*",
+      listCta:
+        "💬 שלחי את מספר המוצר שאהבת או כתבי שאלה על כל מוצר. ניתן תמיד לכתוב *menu* כדי לחזור לתפריט.",
+      detailTitle: "🛍️ *פרטי המוצר*",
+      detailCta:
+        "📞 להזמנה: אפשר להתקשר למספר שמופיע או לשלוח לנו את שמך + העיר + הכמות.\nאפשר לשלוח מספר מוצר אחר לפרטים נוספים, או לכתוב *menu* כדי לחזור לתפריט.",
+    },
+    english: {
+      category: "Category",
+      sku: "SKU",
+      stock: "Stock",
+      listTitle: "🛍️ *Featured Products*",
+      listCta:
+        "💬 Send the product number you like or ask any question. You can always type *menu* to return.",
+      detailTitle: "🛍️ *Product Details*",
+      detailCta:
+        "📞 To order: call the number shown or reply with your name, city and desired quantity.\nYou can send another product number for details, or type *menu* to go back.",
+    },
+  };
+  
+  function productText(fieldObj, langKey) {
+    return (
+      (fieldObj && fieldObj[langKey]) ||
+      fieldObj?.en ||
+      fieldObj?.ar ||
+      fieldObj?.he ||
+      ""
+    );
+  }
+  
+  function shortText(txt, max = 150) {
+    if (!txt) return "";
+    return txt.length > max ? txt.slice(0, max) + "..." : txt;
+  }
+
+
 function parseLanguageChoice(txt) {
   const t = lower(txt);
   // numbers
@@ -390,73 +445,67 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
       }
 
       case "view_products": {
-        // 1) Load products for this business
+        const langKey = langKeyFromCustomer(customer, biz); // 'ar' | 'en' | 'he'
+        const PL = PRODUCT_LABELS[lang] || PRODUCT_LABELS.english;
+      
         const products = await Product.find({
           businessId: biz._id,
           status: "active",
           stock: { $gt: 0 },
         })
           .sort({ createdAt: -1 })
-          .limit(8); // avoid spamming too many
+          .limit(8);
       
-        // 2) If no products
         if (!products.length) {
           await sendWhatsApp({
             from: biz.wa.number,
             to: from,
             body:
               lang === "arabic"
-                ? "لا توجد منتجات متاحة حاليًا."
+                ? "لا توجد منتجات متاحة حالياً."
                 : lang === "hebrew"
-                ? "אין מוצרים זמינים כרגע."
-                : "There are no available products right now.",
+                ? "אין כרגע מוצרים זמינים."
+                : "No products available right now.",
           });
           return res.sendStatus(200);
         }
       
-        // 3) Header
-        const header =
-          lang === "arabic"
-            ? "🛍️ *منتجات مختارة لك*"
-            : lang === "hebrew"
-            ? "🛍️ *מוצרים נבחרים בשבילך*"
-            : "🛍️ *Featured products for you*";
-      
-        // 4) Build each product "card"
-        const lines = products.map((p, i) => {
-          const name = getLocalized(p.name, langKey);           // <— NEW
-          const desc = getLocalized(p.description, langKey);    // <— NEW
-      
-          const category = p.category || "";
-          const sku = p.sku || "";
-          const price =
-            typeof p.price === "number" && p.price > 0 ? `${p.price}₪` : "";
-          const stock =
-            typeof p.stock === "number" ? p.stock : null;
-      
-          let line =
-            `${i + 1}) ✨ *${name || (lang === "arabic" ? "منتج بدون اسم" : lang === "hebrew" ? "מוצר ללא שם" : "Unnamed product")}*` +
-            (price ? ` — ${price}` : "");
-      
-          if (category) line += `\n   📂 ${category}`;
-          if (sku) line += `\n   🆔 SKU: ${sku}`;
-          if (desc) line += `\n   📝 ${desc}`;
-      
-          return line;
+        // נשמור את ה־IDs כדי שנוכל לזהות את הבחירה אח"כ
+        await setState(state, {
+          step: "VIEW_PRODUCTS_LIST",
+          data: {
+            productIds: products.map((p) => String(p._id)),
+          },
         });
       
-        // 5) Footer
-        const footer =
-          lang === "arabic"
-            ? "\n💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة."
-            : lang === "hebrew"
-            ? "\n💬 כתבי את מספר המוצר שמעניין אותך או שאלי שאלה על כל מוצר, ותמיד אפשר להקליד *menu* כדי לחזור לתפריט."
-            : "\n💬 Reply with the product number you like, or ask about any product. You can always type *menu* to go back.";
+        const list = products
+          .map((p, i) => {
+            const name = productText(p.name, langKey);          // name.{ar,en,he}
+            const desc = shortText(productText(p.description, langKey), 180);
+            const category = productText(p.category, langKey);  // category multi-lang
+            const price = p.price ? `${p.price}₪` : "";
+            const sku = p.sku || "-";
+      
+            return (
+      `${i + 1}) ✨ *${name}* — ${price}
+         📂 ${PL.category}: ${category}
+         🆔 ${PL.sku}: ${sku}
+         📝 ${desc}
+      ────────────────────────`
+            );
+          })
+          .join("\n");
+      
+        const body = `${PL.listTitle}
+      
+      ${list}
+      
+      ${PL.listCta}`;
       
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
-          body: [header, lines.join("\n\n"), footer].join("\n\n"),
+          body,
         });
       
         return res.sendStatus(200);
@@ -750,6 +799,130 @@ router.post("/", async (req, res) => {
             : "The menu is not configured yet. Try *menu* later or just ask your question.",
       });
       return res.sendStatus(200);
+    }
+    
+    // ---- PRODUCT DETAILS FLOW after "view_products" ----
+    if (state.step === "VIEW_PRODUCTS_LIST") {
+        const langKey = langKeyFromCustomer(customer, biz);
+        const PL = PRODUCT_LABELS[lang] || PRODUCT_LABELS.english;
+    
+        const index = parseMenuIndexFromText(txt);
+    
+        const productIds = state.data?.productIds || [];
+    
+        // אם המשתמש כתב משהו שהוא לא מספר / מחוץ לטווח
+        if (
+        index == null ||
+        index < 0 ||
+        index >= productIds.length
+        ) {
+        await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+            lang === "arabic"
+                ? "من فضلك أرسلي رقم المنتج من القائمة، أو اكتبي *menu* للعودة للقائمة الرئيسية."
+                : lang === "hebrew"
+                ? "שלחי מספר מוצר מהרשימה, או כתבי *menu* כדי לחזור לתפריט הראשי."
+                : "Please send a product number from the list, or type *menu* to go back to the main menu.",
+        });
+        return res.sendStatus(200);
+        }
+    
+        const productId = productIds[index];
+        const product = await Product.findOne({
+        _id: productId,
+        businessId: biz._id,
+        });
+    
+        if (!product) {
+        await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+            lang === "arabic"
+                ? "هذا المنتج لم يعد متاحاً. جربي منتجاً آخر أو اكتبي *menu*."
+                : lang === "hebrew"
+                ? "המוצר הזה כבר לא זמין. נסי מוצר אחר או כתבי *menu*."
+                : "This product is no longer available. Try another one or type *menu*.",
+        });
+        return res.sendStatus(200);
+        }
+    
+        const name = productText(product.name, langKey);
+        const descFull = productText(product.description, langKey);
+        const category = productText(product.category, langKey);
+        const price = product.price ? `${product.price}₪` : "";
+        const sku = product.sku || "-";
+        const stock = typeof product.stock === "number" ? product.stock : null;
+    
+        const owner = biz.owner || {};
+        const phone = owner.phone || biz.whatsappNumber || biz.wa?.number || "";
+    
+        // 1️⃣ אם יש תמונה – שולחים קודם את התמונה
+        const imgUrl = product.image?.secure_url || product.image?.url;
+        if (imgUrl) {
+        await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: "",           // אפשר גם לשים כותרת קצרה כאן אם אתה רוצה
+            mediaUrl: imgUrl,   // ⚠️ ודא שה־sendWhatsApp שלך מעביר mediaUrl ל-Twilio
+        });
+        }
+    
+        // 2️⃣ ואז שולחים את פרטי המוצר
+        const stockLine =
+        stock != null
+            ? `\n   📦 ${PL.stock}: ${stock}`
+            : "";
+    
+        const phoneLine =
+        phone
+            ? (lang === "arabic"
+                ? `- الاتصال على: ${phone}`
+                : lang === "hebrew"
+                ? `- להתקשר אלינו: ${phone}`
+                : `- Call us at: ${phone}`)
+            : (lang === "arabic"
+                ? "- رقم الهاتف غير مضاف بعد."
+                : lang === "hebrew"
+                ? "- מספר הטלפון עדיין לא מוגדר."
+                : "- Phone number is not configured yet.");
+    
+        const detailHeader =
+        lang === "arabic"
+            ? `${PL.detailTitle} #${index + 1}`
+            : lang === "hebrew"
+            ? `${PL.detailTitle} #${index + 1}`
+            : `${PL.detailTitle} #${index + 1}`;
+    
+        const body =
+    `${detailHeader}
+    
+    ✨ *${name}* — ${price}
+    📂 ${PL.category}: ${category}
+    🆔 ${PL.sku}: ${sku}${stockLine}
+    📝 ${descFull || "-"}
+    
+    📞 ${
+        lang === "arabic"
+            ? "للشراء الآن:"
+            : lang === "hebrew"
+            ? "להזמנה עכשיו:"
+            : "To order now:"
+        }
+    ${phoneLine}
+    
+    ${PL.detailCta}`;
+    
+        await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body,
+        });
+    
+        // נשארים ב־VIEW_PRODUCTS_LIST כדי שיוכל לשלוח עוד מספרים
+        return res.sendStatus(200);
     }
 
     // ---- Default fallback ----

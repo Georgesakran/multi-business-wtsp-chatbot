@@ -5,13 +5,20 @@ const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TO
 /**
  * Plain text WhatsApp
  */
-async function sendWhatsApp({ from, to, body, messagingServiceSid }) {
+async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   const payload = {
-    to: `whatsapp:${to}`,
+    from,
+    to,
     body,
   };
-  if (messagingServiceSid) payload.messagingServiceSid = messagingServiceSid;
-  else payload.from = `whatsapp:${from}`;
+
+  if (mediaUrl) {
+    payload.mediaUrl = [mediaUrl]; // Twilio expects array
+  }
+
+  if (messagingServiceSid) {
+    payload.messagingServiceSid = messagingServiceSid;
+  }
 
   return client.messages.create(payload);
 }
