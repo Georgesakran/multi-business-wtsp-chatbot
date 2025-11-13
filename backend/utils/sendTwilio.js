@@ -1,19 +1,32 @@
 // utils/sendTwilio.js
 const twilio = require("twilio");
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-/**
- * Plain text WhatsApp
- */
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+// helper – מוסיף prefix של whatsapp: אם חסר
+function ensureWhatsAppAddress(num) {
+  if (!num) return num;
+  const s = String(num).trim();
+  if (s.startsWith("whatsapp:")) return s;
+  return `whatsapp:${s}`;
+}
+
+// שליחת הודעה רגילה
 async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   const payload = {
-    from,
-    to,
-    body,
+    from: ensureWhatsAppAddress(
+      from || process.env.TWILIO_WHATSAPP_NUMBER // fallback כללי
+    ),
+    to: ensureWhatsAppAddress(to),
+    body: body || "",
   };
 
+  // תמונות / מדיה
   if (mediaUrl) {
-    payload.mediaUrl = [mediaUrl]; // Twilio expects array
+    payload.mediaUrl = Array.isArray(mediaUrl) ? mediaUrl : [mediaUrl];
   }
 
   if (messagingServiceSid) {
@@ -23,21 +36,31 @@ async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   return client.messages.create(payload);
 }
 
-/**
- * Twilio Content Template (approved “Content SID”)
- * variables: { "{{name}}" : "Dina" }  OR  { name: "Dina" } – both accepted
- */
-async function sendTemplate({ from, to, contentSid, variables = {}, messagingServiceSid }) {
-  // Twilio allows variables either as flat map or as contentVariables JSON string
+// אם אתה עובד גם עם Content Template דרך Twilio (sendTemplate)
+async function sendTemplate({
+  from,
+  to,
+  contentSid,
+  variables = {},
+  messagingServiceSid,
+}) {
   const payload = {
-    to: `whatsapp:${to}`,
+    from: ensureWhatsAppAddress(
+      from || process.env.TWILIO_WHATSAPP_NUMBER
+    ),
+    to: ensureWhatsAppAddress(to),
     contentSid,
     contentVariables: JSON.stringify(variables || {}),
   };
-  if (messagingServiceSid) payload.messagingServiceSid = messagingServiceSid;
-  else payload.from = `whatsapp:${from}`;
+
+  if (messagingServiceSid) {
+    payload.messagingServiceSid = messagingServiceSid;
+  }
 
   return client.messages.create(payload);
 }
 
-module.exports = { sendWhatsApp, sendTemplate };
+module.exports = {
+  sendWhatsApp,
+  sendTemplate,
+};
