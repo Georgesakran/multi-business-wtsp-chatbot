@@ -5,6 +5,7 @@ const router = express.Router();
 const Business = require("../models/Business");
 const Customer = require("../models/Customer");
 const Product = require("../models/Product");
+const Course = require("../models/Course");
 const ConversationState = require("../models/ConversationState");
 
 // Twilio send helpers
@@ -84,6 +85,57 @@ const PRODUCT_LABELS = {
       detailTitle: "🛍️ *Product Details*",
       detailCta:
         "📞 To order: call the number shown or reply with your name, city and desired quantity.\nYou can send another product number for details, or type *menu* to go back.",
+    },
+  };
+
+const COURSE_LABELS = {
+    arabic: {
+      listTitle: "🎓 *الدورات وورش العمل المتاحة*",
+      listCta:
+        "💬 أرسلي رقم الدورة التي تهمك لعرض التفاصيل، أو اكتبي *menu* للعودة للقائمة.",
+      detailTitle: "🎓 *تفاصيل الدورة*",
+      noCourses: "لا توجد دورات أو ورش عمل مضافة حالياً.",
+      price: "السعر",
+      instructor: "المدرِّبة",
+      capacity: "الحد الأقصى للمشاركات",
+      sessionsHeader: "مواعيد الجلسات",
+      sessionLine: "{{date}} — {{timeRange}}",
+      sessionsCount: "عدد الجلسات",
+      firstDate: "تبدأ في",
+      detailCta:
+        "📞 للتسجيل في الدورة: أرسلي اسمك الكامل + مدينتك + رقم الهاتف، أو اكتبي *menu* للعودة للقائمة.",
+    },
+    hebrew: {
+      listTitle: "🎓 *קורסים וסדנאות זמינים*",
+      listCta:
+        "💬 שלחי את מספר הקורס שמעניין אותך כדי לראות פרטים, או כתבי *menu* כדי לחזור לתפריט.",
+      detailTitle: "🎓 *פרטי הקורס*",
+      noCourses: "אין כרגע קורסים או סדנאות מוגדרים.",
+      price: "מחיר",
+      instructor: "מדריכה",
+      capacity: "מספר משתתפות מקסימלי",
+      sessionsHeader: "מועדי המפגשים",
+      sessionLine: "{{date}} — {{timeRange}}",
+      sessionsCount: "מספר המפגשים",
+      firstDate: "מתחיל ב־",
+      detailCta:
+        "📞 להרשמה לקורס: שלחי לנו שם מלא + עיר + מספר טלפון, או כתבי *menu* כדי לחזור לתפריט.",
+    },
+    english: {
+      listTitle: "🎓 *Available Courses & Workshops*",
+      listCta:
+        "💬 Send the course number to see details, or type *menu* to go back to the menu.",
+      detailTitle: "🎓 *Course Details*",
+      noCourses: "No courses or workshops are defined yet.",
+      price: "Price",
+      instructor: "Instructor",
+      capacity: "Max participants",
+      sessionsHeader: "Session schedule",
+      sessionLine: "{{date}} — {{timeRange}}",
+      sessionsCount: "Number of sessions",
+      firstDate: "Starts on",
+      detailCta:
+        "📞 To register: reply with your full name, city and phone number, or type *menu* to return to the menu.",
     },
   };
   
@@ -506,16 +558,80 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
       }
   
       case "view_courses": {
+        const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
+      
+        const courses = await Course.find({ businessId: biz._id })
+          .sort({ createdAt: -1 })
+          .limit(8);
+      
+        if (!courses.length) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: CL.noCourses,
+          });
+          return;
+        }
+      
+        // נשמור ב־state את ה־IDs כדי שנדע על מה המשתמש בחר
+        await setState(state, {
+          step: "VIEW_COURSES_LIST",
+          data: {
+            courseIds: courses.map((c) => String(c._id)),
+          },
+        });
+      
+        const list = courses
+          .map((c, i) => {
+            const firstSession = (c.sessions || [])[0];
+            const firstDate = firstSession?.date || "";
+            const sessionsCount = (c.sessions || []).length || 0;
+      
+            const main =
+              `${i + 1}) 🎓 *${c.title}*` +
+              (c.price ? ` — ${c.price}₪` : "");
+      
+            const metaLines = [];
+      
+            if (c.instructor) {
+              metaLines.push(`👩‍🏫 ${CL.instructor}: ${c.instructor}`);
+            }
+      
+            if (firstDate) {
+              metaLines.push(`📅 ${CL.firstDate}: ${firstDate}`);
+            }
+      
+            if (sessionsCount > 1) {
+              metaLines.push(`🗓️ ${CL.sessionsCount}: ${sessionsCount}`);
+            }
+      
+            if (typeof c.maxParticipants === "number") {
+              metaLines.push(`👥 ${CL.capacity}: ${c.maxParticipants}`);
+            }
+      
+            const meta =
+              metaLines.length > 0 ? "\n   " + metaLines.join("\n   ") : "";
+      
+            const desc = c.description
+              ? `\n   📝 ${shortText(c.description, 180)}`
+              : "";
+      
+            return `${main}${meta}${desc}\n────────────────────`;
+          })
+          .join("\n");
+      
+        const body = `${CL.listTitle}
+      
+      ${list}
+      
+      ${CL.listCta}`;
+      
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
-          body:
-            lang === "arabic"
-              ? "الدورات وورش العمل غير مفعّلة بعد. اسألينا في أي وقت وسنساعدك 😊"
-              : lang === "hebrew"
-              ? "קורסים וסדנאות עדיין לא מחוברים. אפשר לשאול אותנו ונעזור בשמחה 😊"
-              : "Courses & workshops are not wired yet. Ask us directly and we’ll help 😊",
+          body,
         });
+      
         return;
       }
   
@@ -905,6 +1021,94 @@ if (state.step === "VIEW_PRODUCTS_LIST") {
     // נשארים ב־VIEW_PRODUCTS_LIST כדי שיוכל לשלוח עוד מספרים
     return res.sendStatus(200);
   }
+
+// ---- COURSE DETAILS FLOW after "view_courses" ----
+if (state.step === "VIEW_COURSES_LIST") {
+    const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
+    const index = parseMenuIndexFromText(txt);
+    const courseIds = state.data?.courseIds || [];
+  
+    // בדיקה שהמספר תקין
+    if (
+      index == null ||
+      index < 0 ||
+      index >= courseIds.length
+    ) {
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body:
+          lang === "arabic"
+            ? "من فضلك أرسلي رقم الدورة من القائمة، أو اكتبي *menu* للعودة للقائمة الرئيسية."
+            : lang === "hebrew"
+            ? "שלחי מספר קורס מהרשימה, או כתבי *menu* כדי לחזור לתפריט הראשי."
+            : "Please send a course number from the list, or type *menu* to go back to the main menu.",
+      });
+      return res.sendStatus(200);
+    }
+  
+    const courseId = courseIds[index];
+    const course = await Course.findOne({
+      _id: courseId,
+      businessId: biz._id,
+    });
+  
+    if (!course) {
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body:
+          lang === "arabic"
+            ? "هذه الدورة لم تعد متاحة. جرّبي دورة أخرى أو اكتبي *menu*."
+            : lang === "hebrew"
+            ? "הקורס הזה כבר לא זמין. נסי קורס אחר או כתבי *menu*."
+            : "This course is no longer available. Try another one or type *menu*.",
+      });
+      return res.sendStatus(200);
+    }
+  
+    // סידור המפגשים לפי תאריך + שעה
+    const sessions = (course.sessions || [])
+      .slice()
+      .sort((a, b) => {
+        const keyA = `${a.date}T${a.startTime}`;
+        const keyB = `${b.date}T${b.startTime}`;
+        return keyA.localeCompare(keyB);
+      });
+  
+    const sessionsLines = sessions.length
+      ? sessions
+          .map((s) => {
+            const timeRange = `${s.startTime}–${s.endTime}`;
+            return `• ${s.date} — ${timeRange}`;
+          })
+          .join("\n")
+      : "-";
+  
+    const detailHeader = `${CL.detailTitle} #${index + 1}`;
+  
+    const body = `${detailHeader}
+  
+  🎓 *${course.title}*${course.price ? ` — ${course.price}₪` : ""}
+  
+  👩‍🏫 ${CL.instructor}: ${course.instructor || "-"}
+  👥 ${CL.capacity}: ${course.maxParticipants ?? "-"}
+  🗓️ ${CL.sessionsHeader}:
+  ${sessionsLines}
+  
+  📝 ${course.description || "-"}
+  
+  ${CL.detailCta}`;
+  
+    await sendWhatsApp({
+      from: biz.wa.number,
+      to: from,
+      body,
+    });
+  
+    // נשארים ב־VIEW_COURSES_LIST כדי שיוכלו לבחור עוד מספר
+    return res.sendStatus(200);
+  }  
 
     // ---- Default fallback ----
     const fallbackText = getConfigMessage(
