@@ -381,7 +381,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
         const services = (biz.services || []).filter(
           (s) => s && s.isActive !== false
         );
-      
+  
         if (!services.length) {
           await sendWhatsApp({
             from: biz.wa.number,
@@ -393,18 +393,18 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
                 ? "עדיין לא הוגדרו שירותים."
                 : "No services defined yet.",
           });
-          return res.sendStatus(200);
+          return;
         }
-      
+  
         const key = langKey; // 'ar' | 'en' | 'he'
-      
+  
         const header =
           lang === "arabic"
             ? "✨ *خدماتنا الرئيسية*"
             : lang === "hebrew"
             ? "✨ *השירותים שלנו*"
             : "✨ *Our main services*";
-      
+  
         const lines = services.slice(0, 8).map((s, i) => {
           const name = s.name?.[key] || s.name?.en || "";
           const desc = s.description?.[key] || s.description?.en || "";
@@ -418,8 +418,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
                 ? `${s.duration} דק׳`
                 : `${s.duration} min`
               : "";
-      
-          // nice compact card per service
+  
           return (
             `${i + 1}) 💅 *${name}*` +
             (price ? ` — ${price}` : "") +
@@ -427,27 +426,28 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
             (desc ? `\n   ${desc}` : "")
           );
         });
-      
+  
         const footer =
           lang === "arabic"
             ? "\n💬 أرسلي رقم الخدمة التي تهمك، أو اكتبي *menu* للعودة إلى القائمة."
             : lang === "hebrew"
             ? "\n💬 כתבי את מספר השירות שמעניין אותך, או הקלידי *menu* כדי לחזור לתפריט."
             : "\n💬 Reply with the service number you like, or type *menu* to go back to the main menu.";
-      
+  
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
           body: [header, lines.join("\n\n"), footer].join("\n\n"),
         });
-      
-        return res.sendStatus(200);
+  
+        return;
       }
-
+  
       case "view_products": {
-        const langKey = langKeyFromCustomer(customer, biz); // 'ar' | 'en' | 'he'
+        // משתמשים ב-langKey שהעברנו לפונקציה – לא ב-customer
+        const key = langKey; // 'ar' | 'en' | 'he'
         const PL = PRODUCT_LABELS[lang] || PRODUCT_LABELS.english;
-      
+  
         const products = await Product.find({
           businessId: biz._id,
           status: "active",
@@ -455,7 +455,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
         })
           .sort({ createdAt: -1 })
           .limit(8);
-      
+  
         if (!products.length) {
           await sendWhatsApp({
             from: biz.wa.number,
@@ -467,9 +467,9 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
                 ? "אין כרגע מוצרים זמינים."
                 : "No products available right now.",
           });
-          return res.sendStatus(200);
+          return;
         }
-      
+  
         // נשמור את ה־IDs כדי שנוכל לזהות את הבחירה אח"כ
         await setState(state, {
           step: "VIEW_PRODUCTS_LIST",
@@ -477,38 +477,38 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
             productIds: products.map((p) => String(p._id)),
           },
         });
-      
+  
         const list = products
           .map((p, i) => {
-            const name = productText(p.name, langKey);          // name.{ar,en,he}
-            const desc = shortText(productText(p.description, langKey), 180);
-            const category = productText(p.category, langKey);  // category multi-lang
+            const name = productText(p.name, key);
+            const desc = shortText(productText(p.description, key), 180);
+            const category = productText(p.category, key);
             const price = p.price ? `${p.price}₪` : "";
             const sku = p.sku || "-";
-      
+  
             return (
-      `${i + 1}) ✨ *${name}* — ${price}
-         📂 ${PL.category}: ${category}
-         🆔 ${PL.sku}: ${sku}
-         📝 ${desc}
-      ────────────────────────`
+  `${i + 1}) ✨ *${name}* — ${price}
+     📂 ${PL.category}: ${category}
+     🆔 ${PL.sku}: ${sku}
+     📝 ${desc}
+  ────────────────────────`
             );
           })
           .join("\n");
-      
+  
         const body = `${PL.listTitle}
-      
-      ${list}
-      
-      ${PL.listCta}`;
-      
+  
+  ${list}
+  
+  ${PL.listCta}`;
+  
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
           body,
         });
-      
-        return res.sendStatus(200);
+  
+        return;
       }
   
       case "view_courses": {
@@ -632,7 +632,6 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
         });
         return;
       }
-
     }
   }
 
@@ -800,7 +799,7 @@ router.post("/", async (req, res) => {
       });
       return res.sendStatus(200);
     }
-    
+
     // ---- PRODUCT DETAILS FLOW after "view_products" ----
     if (state.step === "VIEW_PRODUCTS_LIST") {
         const langKey = langKeyFromCustomer(customer, biz);
