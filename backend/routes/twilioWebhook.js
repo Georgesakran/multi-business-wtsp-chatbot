@@ -88,13 +88,7 @@ const PRODUCT_LABELS = {
   };
   
   function productText(fieldObj, langKey) {
-    return (
-      (fieldObj && fieldObj[langKey]) ||
-      fieldObj?.en ||
-      fieldObj?.ar ||
-      fieldObj?.he ||
-      ""
-    );
+    return getLocalized(fieldObj, langKey);
   }
   
   function shortText(txt, max = 150) {
@@ -353,7 +347,7 @@ async function sendLanguageTemplate(biz, to) {
 
 async function sendLanguageFallback(biz, to) {
   const body =
-    "Please choose language:\n" +
+    "💬 Please choose language:\n" +
     "1) العربية\n" +
     "2) English\n" +
     "3) עברית";
@@ -420,7 +414,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
               : "";
   
           return (
-            `${i + 1}) 💅 *${name}*` +
+            `${i + 1}) 🔹 *${name}*` +
             (price ? ` — ${price}` : "") +
             (duration ? ` • ${duration}` : "") +
             (desc ? `\n   ${desc}` : "")
@@ -491,7 +485,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
      📂 ${PL.category}: ${category}
      🆔 ${PL.sku}: ${sku}
      📝 ${desc}
-  ────────────────────────`
+  ──────────────`
             );
           })
           .join("\n");
