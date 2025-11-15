@@ -560,20 +560,45 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
       case "view_courses": {
         const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
       
-        const courses = await Course.find({ businessId: biz._id })
-          .sort({ createdAt: -1 })
-          .limit(8);
+        // === Define "today" (midnight) ===
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
       
+        // === Fetch all courses, we'll filter manually ===
+        let courses = await Course.find({ businessId: biz._id }).lean();
+      
+        // === Filter: only upcoming courses (first session today or later) ===
+        courses = courses.filter((c) => {
+          const firstSession = (c.sessions || [])[0];
+          if (!firstSession?.date) return false;
+      
+          const sessionDate = new Date(firstSession.date);
+          sessionDate.setHours(0, 0, 0, 0);
+      
+          return sessionDate >= today;
+        });
+      
+        // === Sort by first session date ASC ===
+        courses.sort((a, b) => {
+          const d1 = new Date(a.sessions?.[0]?.date || 0);
+          const d2 = new Date(b.sessions?.[0]?.date || 0);
+          return d1 - d2;
+        });
+      
+        // === Limit to 8 ===
+        courses = courses.slice(0, 8);
+      
+        // === If no future courses ===
         if (!courses.length) {
           await sendWhatsApp({
             from: biz.wa.number,
             to: from,
-            body: CL.noCourses,
+            body: CL.noCourses, // already translated label
           });
           return;
         }
       
-        // נשמור ב־state את ה־IDs כדי שנדע על מה המשתמש בחר
+        // === Save state: list of IDs ===
         await setState(state, {
           step: "VIEW_COURSES_LIST",
           data: {
@@ -581,6 +606,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
           },
         });
       
+        // === Build WhatsApp list message ===
         const list = courses
           .map((c, i) => {
             const firstSession = (c.sessions || [])[0];
@@ -634,6 +660,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
       
         return;
       }
+      
   
       case "about_location": {
         const loc = biz.location || {};
