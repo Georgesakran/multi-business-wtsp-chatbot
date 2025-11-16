@@ -252,6 +252,16 @@ const translations = {
         ar: "قابل للحجز",
         he: "ניתן להזמנה",
       },
+      bookableLabel: {
+        en: "Allow customers to book this service online",
+        ar: "السماح للعملاء بحجز هذه الخدمة عبر الإنترنت",
+        he: "אפשר ללקוחות להזמין שירות זה באינטרנט",
+      },
+      fillAllLanguagesHint: {
+        en: "Please fill all name and description fields in EN, AR and HE to enable Save.",
+        ar: "يرجى تعبئة جميع حقول الاسم والوصف باللغات الإنجليزية والعربية والعبرية لتفعيل زر الحفظ.",
+        he: "אנא מלא את כל שדות השם והתיאור באנגלית, ערבית ועברית כדי לאפשר שמירה."
+      },      
       status: {
         en: "Status",
         ar: "الحالة",

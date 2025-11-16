@@ -150,7 +150,7 @@
   .hidden { display: none !important; }
   
   /* ====== Dark mode (auto) ====== */
-  @media (prefers-color-scheme: dark) {
+  /* @media (prefers-color-scheme: dark) {
     .products-page {
       --bg: #0b1220;
       --card: #0f172a;
@@ -166,4 +166,4 @@
   
     .products-empty { color: #cbd5e1; }
     .products-loading { color: #9aa3b2; }
-  }
+  } */

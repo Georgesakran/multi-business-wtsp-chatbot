@@ -234,7 +234,7 @@
 /* ====== Utilities (optional) ====== */
 .hidden { display: none !important; }
 
-/* ====== Dark mode (auto) ====== */
+/* ====== Dark mode (auto) ======
 @media (prefers-color-scheme: dark) {
   .courses-page {
     --bg: #0b1220;
@@ -251,4 +251,4 @@
 
   .courses-empty { color: #cbd5e1; }
   .courses-loading { color: #9aa3b2; }
-}
+} */
