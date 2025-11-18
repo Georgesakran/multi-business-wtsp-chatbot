@@ -27,6 +27,8 @@ const ChatbotToggleSection = ({ config, setConfig }) => {
     }
   };
 
+  
+
   return (
     <div className="chatbot-section">
       <h3>🟢 {getLabelByLang(translations.chatbotmanegement.chatbotToggleTitle, langKey)}</h3>
