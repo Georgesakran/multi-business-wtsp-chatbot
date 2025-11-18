@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "../services/api";
+import api from "../services/api";
+
 import { LanguageContext } from "../context/LanguageContext";
 import ChatbotToggleSection from "../componenets/chatbot/ChatbotToggleSection";
 import ChatbotLanguageSelector from "../componenets/chatbot/ChatbotLanguageSelector";
@@ -20,7 +21,7 @@ const ChatbotPage = () => {
     const fetchData = async () => {
       try {
         // 1️⃣ Load config
-        const configRes = await axios.get(
+        const configRes = await api.get(
           `/businesses/${user.businessId}/chatbot-config`
         );
         setConfig({
@@ -29,7 +30,7 @@ const ChatbotPage = () => {
         });
 
         // 2️⃣ Load stats separately
-        const statsRes = await axios.get(
+        const statsRes = await api.get(
           `/businesses/${user.businessId}/chatbot-usage`
         );
         setStats(statsRes.data);
@@ -65,7 +66,7 @@ const ChatbotPage = () => {
       const { _id, ...configBody } = nextConfig;
 
       // 🔧 if your PUT route name is different, just change this URL
-      await axios.put(
+      await api.put(
         `/businesses/${user.businessId}/chatbot-config`,
         { config: configBody }
       );
