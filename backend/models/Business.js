@@ -188,7 +188,6 @@ const businessSchema = new mongoose.Schema(
 
     config: {
       chatbotEnabled: { type: Boolean, default: false },
-
       // Default business language (fallback if customer has none)
       language: {
         type: String,
@@ -243,8 +242,13 @@ const businessSchema = new mongoose.Schema(
         closingTime: String,
         allowNotes: Boolean,
         slotGapMinutes: Number,
+        chatbotDefaultStatus: {
+          type: String,
+          enum: ["pending", "confirmed"],
+          default: "pending",
+        },
       },
-
+      
       product: {
         allowPriceInquiry: { type: Boolean, default: true },
       },

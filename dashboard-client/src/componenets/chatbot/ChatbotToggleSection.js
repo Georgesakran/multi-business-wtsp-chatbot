@@ -33,6 +33,7 @@ const ChatbotToggleSection = ({ config, setConfig }) => {
       <p>{getLabelByLang(translations.chatbotmanegement.chatbotToggleDescription, langKey)}</p>
       <ToggleSwitch checked={config.chatbotEnabled} onChange={handleToggle} />
     </div>
+    
   );
 };
 

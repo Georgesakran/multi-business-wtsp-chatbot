@@ -1436,17 +1436,23 @@ router.post("/", async (req, res) => {
               throw new Error("Slot already taken");
             }
     
+            // decide default status from business config
+            const defaultStatus =
+              biz?.config?.booking?.chatbotDefaultStatus === "confirmed"
+                ? "confirmed"
+                : "pending"; // safe fallback
+
             const booking = await Booking.create({
               businessId: biz._id,
               customerName,
               phoneNumber: from,
-              serviceId,
-              serviceSnapshot: serviceSnapshot || {},
-              date,
-              time,
-              status: "pending",
+              serviceId: selectedService._id,
+              serviceSnapshot: snapshot,
+              date: chosenDate,
+              time: chosenTime,
+              status: defaultStatus,
               source: "whatsapp",
-              notes: notes || "",
+              notes: "",
             });
     
             await setState(state, { step: "MENU", data: {} });
