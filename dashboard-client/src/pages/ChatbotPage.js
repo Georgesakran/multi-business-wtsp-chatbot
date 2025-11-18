@@ -46,7 +46,6 @@ const ChatbotPage = () => {
 
 
   if (!config || !stats) return <div>Loading...</div>;
-
   return (
     <div className={`chatbot-page ${["ar", "he"].includes(language) ? "rtl" : "ltr"}`}>
       <div className="first-section-chatbot-page">
