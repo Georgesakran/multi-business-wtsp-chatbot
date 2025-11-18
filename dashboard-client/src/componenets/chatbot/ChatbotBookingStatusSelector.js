@@ -13,10 +13,10 @@ const ChatbotBookingStatusSelector = ({ config, setConfig }) => {
   // current value from config (default "pending")
   const currentStatus =
     config?.booking?.chatbotDefaultStatus;
-    console.log("currentStatus : ",currentStatus);
+
+
   const handleChange = async (e) => {
     const newStatus = e.target.value;
-console.log("newStatus : ",newStatus);
     // 1️⃣ Update local state immediately
     setConfig((prev) => ({
       ...prev,
