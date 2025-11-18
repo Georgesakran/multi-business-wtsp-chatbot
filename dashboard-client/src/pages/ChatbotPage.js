@@ -45,34 +45,25 @@ const ChatbotPage = () => {
   // ✅ NEW: change handler for chatbot booking status
   const handleBookingStatusChange = async (e) => {
     const value = e.target.value; // "pending" | "confirmed"
-
-    // build next config in memory
-    const nextConfig = (prev => {
-      const prevBooking = prev?.booking || {};
-      return {
-        ...prev,
+  
+    // update UI immediately
+    setConfig((prev) => ({
+      ...prev,
+      booking: {
+        ...(prev?.booking || {}),
+        chatbotDefaultStatus: value,
+      },
+    }));
+  
+    try {
+      await api.put(`/businesses/${user.businessId}/update-chatbot`, {
         booking: {
-          ...prevBooking,
           chatbotDefaultStatus: value,
         },
-      };
-    })(config);
-
-    // update local state immediately
-    setConfig(nextConfig);
-
-    try {
-      // don’t send _id inside config body
-      const { _id, ...configBody } = nextConfig;
-
-      // 🔧 if your PUT route name is different, just change this URL
-      await api.put(
-        `/businesses/${user.businessId}/chatbot-config`,
-        { config: configBody }
-      );
+      });
     } catch (err) {
       console.error("❌ Failed to update chatbot booking status", err);
-      // optional: rollback / show toast
+      // optional: show toast or rollback
     }
   };
 
@@ -91,9 +82,8 @@ const ChatbotPage = () => {
       <div className="first-section-chatbot-page">
         <ChatbotToggleSection config={config} setConfig={setConfig} />
         <ChatbotLanguageSelector config={config} setConfig={setConfig} />
-      </div>
-            {/* ✅ NEW BLOCK: chatbot booking status */}
-            <div className="chatbot-card">
+                    {/* ✅ NEW BLOCK: chatbot booking status */}
+      <div className="chatbot-card">
         <h3>Chatbot booking status</h3>
         <p className="chatbot-setting-description">
           Choose how new bookings created via WhatsApp chatbot should be saved
@@ -112,6 +102,8 @@ const ChatbotPage = () => {
           </option>
         </select>
       </div>
+      </div>
+
 
       <ChatbotMessagesEditor config={config} setConfig={setConfig} />
       <ChatbotMenuEditor config={config} setConfig={setConfig} />

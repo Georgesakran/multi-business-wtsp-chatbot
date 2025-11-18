@@ -138,7 +138,18 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
     if (!business.config.features) business.config.features = {};
     if (!business.config.systemPrompt) business.config.systemPrompt = "";
     if (!business.config.language) business.config.language = "arabic"; // must match enum
-    
+
+    // ✅ NEW: ensure booking config exists
+    if (!business.config.booking) {
+      business.config.booking = {};
+    }
+    if (
+      !["pending", "confirmed"].includes(
+        business.config.booking.chatbotDefaultStatus
+      )
+    ) {
+      business.config.booking.chatbotDefaultStatus = "pending";
+    }
 
     // ✅ Ensure messages structure exists
     if (!business.config.messages) {
@@ -167,10 +178,8 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
     if (!Array.isArray(business.config.menuItems)) {
       business.config.menuItems = [];
     }
-    
 
-
-    // (optional) persist defaults if you want them saved
+    // (optional) persist defaults
     await business.save();
 
     // ✅ Send both config and _id
@@ -199,7 +208,8 @@ router.put("/:id/update-chatbot", protect, async (req, res) => {
       welcomeMessage,
       fallbackMessage,
       messages,
-      menuItems, // 👈 NEW
+      menuItems,   // existing
+      booking,     // ✅ NEW
     } = req.body;
 
     // 1) old fields (for backward compatibility)
@@ -231,17 +241,27 @@ router.put("/:id/update-chatbot", protect, async (req, res) => {
     }
 
     // 2) NEW multi-language messages
-    // expects: { ar: {...}, en: {...}, he: {...} }
     if (messages && typeof messages === "object") {
       business.config.messages = {
         ...(business.config.messages || {}),
-        ...messages, // we assume frontend sends full object for each lang
+        ...messages,
       };
     }
-        // 3) NEW: menuItems array
-        if (Array.isArray(menuItems)) {
-          business.config.menuItems = menuItems;
-        }
+
+    // 3) NEW: menuItems array
+    if (Array.isArray(menuItems)) {
+      business.config.menuItems = menuItems;
+    }
+
+    // 4) ✅ NEW: booking-related config (including chatbotDefaultStatus)
+    if (booking && typeof booking === "object") {
+      if (!business.config.booking) business.config.booking = {};
+
+      business.config.booking = {
+        ...business.config.booking,
+        ...booking,
+      };
+    }
 
     await business.save();
     res.status(200).json(business.config);
