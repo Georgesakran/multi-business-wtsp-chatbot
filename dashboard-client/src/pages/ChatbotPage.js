@@ -4,6 +4,7 @@ import api from "../services/api";
 import { LanguageContext } from "../context/LanguageContext";
 import ChatbotToggleSection from "../componenets/chatbot/ChatbotToggleSection";
 import ChatbotLanguageSelector from "../componenets/chatbot/ChatbotLanguageSelector";
+import ChatbotBookingStatusSelector from "../componenets/chatbot/ChatbotBookingStatusSelector";
 import ChatbotMessagesEditor from "../componenets/chatbot/ChatbotMessagesEditor";
 import ChatbotMenuEditor from "../componenets/chatbot/ChatbotMenuEditor";
 import SystemPromptEditor from "../componenets/chatbot/SystemPromptEditor";
@@ -42,66 +43,17 @@ const ChatbotPage = () => {
     fetchData();
   }, [user.businessId]);
 
-  // ✅ NEW: change handler for chatbot booking status
-  const handleBookingStatusChange = async (e) => {
-    const value = e.target.value; // "pending" | "confirmed"
-  
-    // update UI immediately
-    setConfig((prev) => ({
-      ...prev,
-      booking: {
-        ...(prev?.booking || {}),
-        chatbotDefaultStatus: value,
-      },
-    }));
-  
-    try {
-      await api.put(`/businesses/${user.businessId}/update-chatbot`, {
-        booking: {
-          chatbotDefaultStatus: value,
-        },
-      });
-    } catch (err) {
-      console.error("❌ Failed to update chatbot booking status", err);
-      // optional: show toast or rollback
-    }
-  };
+
 
   if (!config || !stats) return <div>Loading...</div>;
 
-  // current selected value
-  const chatbotBookingStatus =
-    config?.booking?.chatbotDefaultStatus || "pending";
-
   return (
-    <div
-      className={`chatbot-page ${
-        ["ar", "he"].includes(language) ? "rtl" : "ltr"
-      }`}
-    >
+    <div className={`chatbot-page ${["ar", "he"].includes(language) ? "rtl" : "ltr"}`}>
       <div className="first-section-chatbot-page">
         <ChatbotToggleSection config={config} setConfig={setConfig} />
         <ChatbotLanguageSelector config={config} setConfig={setConfig} />
-                    {/* ✅ NEW BLOCK: chatbot booking status */}
-      <div className="chatbot-card">
-        <h3>Chatbot booking status</h3>
-        <p className="chatbot-setting-description">
-          Choose how new bookings created via WhatsApp chatbot should be saved
-          in the system.
-        </p>
+        <ChatbotBookingStatusSelector config={config} setConfig={setConfig} />
 
-        <select
-          value={chatbotBookingStatus}
-          onChange={handleBookingStatusChange}
-        >
-          <option value="pending">
-            Pending — owner will confirm manually
-          </option>
-          <option value="confirmed">
-            Confirmed — auto-approved immediately
-          </option>
-        </select>
-      </div>
       </div>
 
 
@@ -109,9 +61,6 @@ const ChatbotPage = () => {
       <ChatbotMenuEditor config={config} setConfig={setConfig} />
       <SystemPromptEditor config={config} setConfig={setConfig} />
       <FeatureToggles config={config} setConfig={setConfig} />
-
-
-
       <UsageStats stats={stats} />
     </div>
   );

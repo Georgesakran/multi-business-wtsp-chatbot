@@ -923,6 +923,36 @@ const translations = {
           ar: "فشل في تحديث حالة الشات بوت ❌",
           he: "עדכון מצב הצ'אטבוט נכשל ❌"
         },
+        bookingStatusTitle: {
+          en: "Default booking status from chatbot",
+          ar: "حالة الحجز الافتراضية من الشات",
+          he: "סטטוס ברירת מחדל להזמנה מהצ'אט"
+        },
+        bookingStatusDescription: {
+          en: "Choose if bookings created by the WhatsApp chatbot are created as pending (require confirmation) or confirmed.",
+          ar: "اختاري إذا كانت الحجوزات التي ينشئها الشات تُسجل كمعلقة وتحتاج لتأكيد أو مؤكدة مباشرة.",
+          he: "בחר/י האם הזמנות מהצ'אט נשמרות כממתינות לאישור או מאושרות אוטומטית."
+        },
+        bookingStatusPending: {
+          en: "Pending — owner will confirm manually",
+          ar: "معلّقة — سيتم تأكيدها يدويًا من قبل الصالون",
+          he: "ממתין — יאושר ידנית על ידי העסק"
+        },
+        bookingStatusConfirmed: {
+          en: "Confirmed — auto-approved immediately",
+          ar: "مؤكدة — يتم تأكيدها تلقائيًا مباشرة",
+          he: "מאושר — מאושר אוטומטית מיד"
+        },
+        bookingStatusSaved: {
+          en: "✅ Booking status updated",
+          ar: "✅ تم تحديث حالة الحجز",
+          he: "✅ סטטוס ההזמנה עודכן"
+        },
+        bookingStatusError: {
+          en: "❌ Failed to update booking status",
+          ar: "❌ فشل في تحديث حالة الحجز",
+          he: "❌ עדכון סטטוס ההזמנה נכשל",
+        },
       
       },
 
