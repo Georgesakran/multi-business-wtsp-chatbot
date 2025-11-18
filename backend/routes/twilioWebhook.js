@@ -456,9 +456,9 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
 
         const header =
           lang === "arabic"
-            ? "1️⃣ *اختاري الخدمة المطلوبة*"
+            ? "1️⃣ *اختار/ي الخدمة المطلوبة*"
             : lang === "hebrew"
-            ? "1️⃣ *בחרי את השירות*"
+            ? "1️⃣ *בחר/י את השירות*"
             : "1️⃣ *Choose a service*";
 
         const lines = services.map((s, i) => {
@@ -1296,13 +1296,13 @@ router.post("/", async (req, res) => {
               to: from,
               body:
                 lang === "arabic"
-                  ? `من فضلك اختاري رقمًا من الأوقات:\n\n${lines.join(
+                  ? `من فضلك اختار/ي رقمًا من الأوقات:\n\n${lines.join(
                       "\n"
-                    )}\n\nأو اكتبي *menu* للعودة.`
+                    )}\n\nأو اكتب/ي *menu* للعودة.`
                   : lang === "hebrew"
-                  ? `בחרי מספר מתוך השעות הבאות:\n\n${lines.join(
+                  ? `בחר/י מספר מתוך השעות הבאות:\n\n${lines.join(
                       "\n"
-                    )}\n\nאו כתבי *menu* כדי לחזור.`
+                    )}\n\nאו כתב/י *menu* כדי לחזור.`
                   : `Please choose a number from these times:\n\n${lines.join(
                       "\n"
                     )}\n\nOr type *menu* to go back.`,
@@ -1322,9 +1322,9 @@ router.post("/", async (req, res) => {
     
           const msg =
             lang === "arabic"
-              ? `✅ تم اختيار الوقت: *${time}*\n\n4️⃣ اكتبي اسمك الكامل للحجز.`
+              ? `✅ تم اختيار الوقت: *${time}*\n\n4️⃣ اكتب/ي اسمك الكامل للحجز.`
               : lang === "hebrew"
-              ? `✅ נבחרה שעה: *${time}*\n\n4️⃣ כתבי את שמך המלא להזמנה.`
+              ? `✅ נבחרה שעה: *${time}*\n\n4️⃣ כתב/י את שמך המלא להזמנה.`
               : `✅ Time selected: *${time}*\n\n4️⃣ Please send your full name for the booking.`;
     
           await sendWhatsApp({
@@ -1345,7 +1345,7 @@ router.post("/", async (req, res) => {
               to: from,
               body:
                 lang === "arabic"
-                  ? "من فضلك اكتبي اسمًا واضحًا (على الأقل حرفين)."
+                  ? "من فضلك اكتب/ي اسمًا واضحًا (على الأقل حرفين)."
                   : lang === "hebrew"
                   ? "נא לכתוב שם ברור (לפחות שני תווים)."
                   : "Please send a clear name (at least 2 characters).",
@@ -1363,9 +1363,9 @@ router.post("/", async (req, res) => {
     
           const msg =
             lang === "arabic"
-              ? "5️⃣ هل لديك ملاحظات خاصة !! (مثال: لون/شكل/معلومة إضافية)؟\nاكتبي ما تريدين، أو اكتبي *0* إذا لا توجد ملاحظات."
+              ? "5️⃣ هل لديك ملاحظات خاصة !! (مثال: لون/شكل/معلومة إضافية)؟\nاكتب/ي ما تريدين، أو اكتب/ي *0* إذا لا توجد ملاحظات."
               : lang === "hebrew"
-              ? "5️⃣ יש לך הערות מיוחדות (צבע, צורה, בקשה נוספת)?\nכתבי מה שצריך, או כתבי *0* אם אין הערות."
+              ? "5️⃣ יש לך הערות מיוחדות (צבע, צורה, בקשה נוספת)?\nכתב/י מה שצריך, או כתב/י *0* אם אין הערות."
               : "5️⃣ Any special notes (e.g. style, color, anything extra)?\nWrite your note, or send *0* if you have no notes.";
     
           await sendWhatsApp({
@@ -1394,9 +1394,9 @@ router.post("/", async (req, res) => {
               to: from,
               body:
                 lang === "arabic"
-                  ? "حدث خطأ في الحجز. اكتبي *menu* للبدء من جديد."
+                  ? "حدث خطأ في الحجز. اكتب/ي *menu* للبدء من جديد."
                   : lang === "hebrew"
-                  ? "אירעה שגיאה בתהליך ההזמנה. כתבי *menu* כדי להתחיל מחדש."
+                  ? "אירעה שגיאה בתהליך ההזמנה. כתב/י *menu* כדי להתחיל מחדש."
                   : "Something went wrong with the booking flow. Please type *menu* to start again.",
             });
             await setState(state, { step: "MENU", data: {} });
@@ -1476,7 +1476,7 @@ router.post("/", async (req, res) => {
     
             const msg =
               lang === "arabic"
-                ? "❌ لم نتمكن من تأكيد هذا الموعد (ربما الحجز ممتلئ أو التوقيت غير متاح). اكتبي *menu* وحاولي من جديد."
+                ? "❌ لم نتمكن من تأكيد هذا الموعد (ربما الحجز ممتلئ أو التوقيت غير متاح). اكتبي *menu* وحاول/ي من جديد."
                 : lang === "hebrew"
                 ? "❌ לא הצלחנו לאשר את התור (אולי השעה נתפסה בינתיים). כתבי *menu* ונסי שוב."
                 : "❌ We couldn’t confirm this booking (maybe the time was just taken). Please type *menu* and try again.";
