@@ -6,6 +6,7 @@ const Business = require("../models/Business");
 const Customer = require("../models/Customer");
 const Product = require("../models/Product");
 const Course = require("../models/Course");
+const Booking = require("../models/Booking");
 const ConversationState = require("../models/ConversationState");
 
 // Twilio send helpers
@@ -138,6 +139,7 @@ const COURSE_LABELS = {
         "📞 To register: reply with your full name, city and phone number, or type *menu* to return to the menu.",
     },
   };
+
   
   function productText(fieldObj, langKey) {
     return getLocalized(fieldObj, langKey);
@@ -409,17 +411,100 @@ async function sendLanguageFallback(biz, to) {
 async function handleMenuAction({ action, payload, lang, langKey, biz, state, from }) {
     switch (action) {
       case "book_appointment": {
+        // 1) Check if this business supports bookings
+        if (!biz.enabledServices?.includes("bookingFlow")) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "حالياً هذا النشاط لا يدعم حجز المواعيد عبر الواتساب."
+                : lang === "hebrew"
+                ? "לעסק הזה אין עדיין מערכת תורים דרך הצ'אט."
+                : "This business does not support booking appointments via WhatsApp yet.",
+          });
+          return;
+        }
+
+        // 2) Get bookable services
+        const services = (biz.services || []).filter(
+          (s) => s && s.isActive !== false && s.bookable !== false
+        );
+
+        if (!services.length) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "لا توجد خدمات للحجز مضافة حالياً."
+                : lang === "hebrew"
+                ? "אין כרגע שירותים זמינים לחיוב תורים."
+                : "There are no bookable services configured yet.",
+          });
+          return;
+        }
+
+        const key = langKey; // 'ar' | 'en' | 'he'
+
+        const intro =
+          lang === "arabic"
+            ? "تمام! نبدأ الحجز بخطوات بسيطة 👇"
+            : lang === "hebrew"
+            ? "מעולה! נתחיל הזמנה בכמה שלבים פשוטים 👇"
+            : "Great! Let’s start your booking in a few simple steps 👇";
+
+        const header =
+          lang === "arabic"
+            ? "1️⃣ *اختاري الخدمة المطلوبة*"
+            : lang === "hebrew"
+            ? "1️⃣ *בחרי את השירות*"
+            : "1️⃣ *Choose a service*";
+
+        const lines = services.map((s, i) => {
+          const name = s.name?.[key] || s.name?.en || "";
+          const desc = s.description?.[key] || s.description?.en || "";
+          const price =
+            typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
+          const duration =
+            typeof s.duration === "number" && s.duration > 0
+              ? lang === "arabic"
+                ? `${s.duration} دقيقة`
+                : lang === "hebrew"
+                ? `${s.duration} דק׳`
+                : `${s.duration} min`
+              : "";
+
+          return (
+            `${i + 1}) 🔹 *${name}*` +
+            (price ? ` — ${price}` : "") +
+            (duration ? ` • ${duration}` : "") +
+            (desc ? `\n   ${desc}` : "")
+          );
+        });
+
+        const footer =
+          lang === "arabic"
+            ? "\n💬 أرسلي رقم الخدمة التي تريدين حجزها.\nيمكنك في أي وقت كتابة *menu* للعودة للقائمة."
+            : lang === "hebrew"
+            ? "\n💬 כתבי את מספר השירות שברצונך להזמין.\nאפשר בכל שלב לכתוב *menu* כדי לחזור לתפריט."
+            : "\n💬 Reply with the number of the service you want to book.\nYou can type *menu* anytime to go back.";
+
+        // 3) Save state with service IDs
+        await setState(state, {
+          step: "BOOKING_SELECT_SERVICE",
+          data: {
+            serviceIds: services.map((s) => String(s._id)),
+          },
+        });
+
+        // 4) Send message
         await sendWhatsApp({
           from: biz.wa.number,
           to: from,
-          body:
-            lang === "arabic"
-              ? "تمام! سنبدأ الحجز بخطوات بسيطة. (لاحقًا سنحولها لقوالب أزرار)"
-              : lang === "hebrew"
-              ? "מעולה! מתחילים הזמנה בכמה שלבים פשוטים. (בהמשך נעבור לתבניות עם כפתורים)"
-              : "Great! Let’s start booking in a few simple steps. (We’ll switch to template buttons next)",
+          body: [intro, header, lines.join("\n\n"), footer].join("\n\n"),
         });
-        await setState(state, { step: "BOOKING_START", data: {} });
+
         return;
       }
   
@@ -451,27 +536,28 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
             ? "✨ *השירותים שלנו*"
             : "✨ *Our main services*";
   
-        const lines = services.slice(0, 8).map((s, i) => {
-          const name = s.name?.[key] || s.name?.en || "";
-          const desc = s.description?.[key] || s.description?.en || "";
-          const price =
-            typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
-          const duration =
-            typeof s.duration === "number" && s.duration > 0
-              ? lang === "arabic"
-                ? `${s.duration} دقيقة`
-                : lang === "hebrew"
-                ? `${s.duration} דק׳`
-                : `${s.duration} min`
-              : "";
-  
-          return (
-            `${i + 1}) 🔹 *${name}*` +
-            (price ? ` — ${price}` : "") +
-            (duration ? ` • ${duration}` : "") +
-            (desc ? `\n   ${desc}` : "")
-          );
-        });
+            const lines = services.map((s, i) => {
+              const name = s.name?.[key] || s.name?.en || "";
+              const desc = s.description?.[key] || s.description?.en || "";
+              const price =
+                typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
+              const duration =
+                typeof s.duration === "number" && s.duration > 0
+                  ? lang === "arabic"
+                    ? `${s.duration} دقيقة`
+                    : lang === "hebrew"
+                    ? `${s.duration} דק׳`
+                    : `${s.duration} min`
+                  : "";
+            
+              return (
+                `${i + 1}) 🔹 *${name}*` +
+                (price ? ` — ${price}` : "") +
+                (duration ? ` • ${duration}` : "") +
+                (desc ? `\n   ${desc}` : "")
+              );
+            });
+            
   
         const footer =
           lang === "arabic"
@@ -772,6 +858,67 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
     }
   }
 
+// ---------- BOOKING HELPERS (same logic as bookingsRoutes.js) ----------
+const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+
+const toMinutes = (hhmm) => {
+  const [h, m] = String(hhmm).split(":").map(Number);
+  return h * 60 + m;
+};
+const toHHMM = (mins) => {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
+const weekdayFromISO = (iso) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
+
+function makeDayGrid(openingTime, closingTime, slotGapMinutes) {
+  const start = toMinutes(openingTime);
+  const end = toMinutes(closingTime);
+  const gap = Math.max(5, Number(slotGapMinutes || 15));
+  const out = [];
+  for (let t = start; t + gap <= end; t += gap) out.push(toHHMM(t));
+  return out;
+}
+
+function slotsNeeded(duration, slotGapMinutes) {
+  const gap = Math.max(5, Number(slotGapMinutes || 15));
+  return Math.max(1, Math.ceil(Number(duration || 0) / gap));
+}
+
+function findServiceById(biz, serviceId) {
+  if (!serviceId) return null;
+  const sid = String(serviceId);
+  return (biz.services || []).find((s) => String(s._id) === sid) || null;
+}
+
+async function getTakenMap(businessId, date) {
+  const sameDay = await Booking.find({
+    businessId,
+    date,
+    status: { $in: ["pending", "confirmed"] },
+  })
+    .select("time status")
+    .lean();
+
+  const map = new Map();
+  for (const b of sameDay) {
+    if (isTime(b.time)) map.set(b.time, true);
+  }
+  return map;
+}
+
+function isRangeFree(dayGrid, takenMap, startIndex, need) {
+  for (let i = 0; i < need; i++) {
+    const t = dayGrid[startIndex + i];
+    if (!t || takenMap.get(t)) return false;
+  }
+  return true;
+}  
+
 // -------------------- webhook --------------------
 router.post("/", async (req, res) => {
   try {
@@ -937,205 +1084,614 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // ---- PRODUCT DETAILS FLOW after "view_products" ----
-if (state.step === "VIEW_PRODUCTS_LIST") {
-    const langKey = langKeyFromCustomer(customer, biz);
-    const PL = PRODUCT_LABELS[lang] || PRODUCT_LABELS.english;
-  
-    const index = parseMenuIndexFromText(txt);
-    const productIds = state.data?.productIds || [];
-  
-    // אם המשתמש כתב משהו שהוא לא מספר / מחוץ לטווח
-    if (index == null || index < 0 || index >= productIds.length) {
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body:
-          lang === "arabic"
-            ? "من فضلك أرسلي رقم المنتج من القائمة، أو اكتبي *menu* للعودة للقائمة الرئيسية."
-            : lang === "hebrew"
-            ? "שלחי מספר מוצר מהרשימה, או כתבי *menu* כדי לחזור לתפריט הראשי."
-            : "Please send a product number from the list, or type *menu* to go back to the main menu.",
-      });
-      return res.sendStatus(200);
-    }
-  
-    const productId = productIds[index];
-    const product = await Product.findOne({
-      _id: productId,
-      businessId: biz._id,
-    });
-  
-    if (!product) {
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body:
-          lang === "arabic"
-            ? "هذا المنتج لم يعد متاحاً. جربي منتجاً آخر أو اكتبي *menu*."
-            : lang === "hebrew"
-            ? "המוצר הזה כבר לא זמין. נסי מוצר אחר או כתבי *menu*."
-            : "This product is no longer available. Try another one or type *menu*.",
-      });
-      return res.sendStatus(200);
-    }
-  
-    const name = productText(product.name, langKey);
-    const descFull = productText(product.description, langKey);
-    const category = productText(product.category, langKey);
-    const price = product.price ? `${product.price}₪` : "";
-    const sku = product.sku || "-";
-    const stock = typeof product.stock === "number" ? product.stock : null;
-  
-    const owner = biz.owner || {};
-    const phone = owner.phone || biz.whatsappNumber || biz.wa?.number || "";
-  
-    // 1️⃣ אם יש תמונה – שולחים קודם את התמונה (עם כותרת קצרה)
-    const imgUrl = product.image?.secure_url || product.image?.url;
-    console.log("PRODUCT IMAGE URL:", imgUrl, product.image);
-  
-    if (imgUrl) {
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: `🛍️ ${name || ""}`,
-        mediaUrl: imgUrl, // sendTwilio כבר יודע לטפל בזה
-      });
-    }
-  
-    // 2️⃣ ואז שולחים את פרטי המוצר
-    const stockLine =
-      stock != null ? `\n📦 ${PL.stock}: ${stock}` : "";
-  
-    const phoneLine = phone
-      ? lang === "arabic"
-        ? `- الاتصال على: ${phone}`
-        : lang === "hebrew"
-        ? `- להתקשר אלינו: ${phone}`
-        : `- Call us at: ${phone}`
-      : lang === "arabic"
-      ? "- رقم الهاتف غير مضاف بعد."
-      : lang === "hebrew"
-      ? "- מספר הטלפון עדיין לא מוגדר."
-      : "- Phone number is not configured yet.";
-  
-    const detailHeader = `${PL.detailTitle} #${index + 1}`;
-  
-    const body = `${detailHeader}
-  
-  ✨ *${name}* — ${price}
-  📂 ${PL.category}: ${category}
-  🆔 ${PL.sku}: ${sku}${stockLine}
-  📝 ${descFull || "-"}
-  
-  📞 ${
-      lang === "arabic"
-        ? "للشراء الآن:"
-        : lang === "hebrew"
-        ? "להזמנה עכשיו:"
-        : "To order now:"
-    }
-  ${phoneLine}
-  
-  ${PL.detailCta}`;
-  
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to: from,
-      body,
-    });
-  
-    // נשארים ב־VIEW_PRODUCTS_LIST כדי שיוכל לשלוח עוד מספרים
-    return res.sendStatus(200);
-  }
+        // ---- BOOKING: SELECT SERVICE ----
+        if (state.step === "BOOKING_SELECT_SERVICE") {
+          const serviceIds = state.data?.serviceIds || [];
+          const index = parseMenuIndexFromText(txt);
+    
+          if (index == null || index < 0 || index >= serviceIds.length) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "من فضلك أرسلي رقم خدمة من القائمة، أو اكتبي *menu* للعودة."
+                  : lang === "hebrew"
+                  ? "בחרי מספר שירות מהרשימה, או כתבי *menu* כדי לחזור."
+                  : "Please send a service number from the list, or type *menu* to go back.",
+            });
+            return res.sendStatus(200);
+          }
+    
+          const selectedServiceId = serviceIds[index];
+          const svc = findServiceById(biz, selectedServiceId);
+          if (!svc) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "هذا الخدمة لم تعد متاحة. اكتبي *menu* لبدء من جديد."
+                  : lang === "hebrew"
+                  ? "השירות הזה כבר לא זמין. כתבי *menu* כדי להתחיל מחדש."
+                  : "This service is no longer available. Type *menu* to start again.",
+            });
+            return res.sendStatus(200);
+          }
+    
+          const key = langKey; // 'ar' | 'en' | 'he'
+          const svcName = svc.name?.[key] || svc.name?.en || "";
+    
+          // snapshot like in bookingsRoutes
+          const serviceSnapshot = {
+            name: {
+              en: svc.name?.en || "",
+              ar: svc.name?.ar || "",
+              he: svc.name?.he || "",
+            },
+            price: Number(svc.price || 0),
+            duration: Number(svc.duration || 0),
+          };
+    
+          await setState(state, {
+            step: "BOOKING_SELECT_DATE",
+            data: {
+              serviceId: selectedServiceId,
+              serviceSnapshot,
+            },
+          });
+    
+          const msg =
+            lang === "arabic"
+              ? `👍 تم اختيار الخدمة: *${svcName}*\n\n2️⃣ أرسلي تاريخ الموعد المطلوب بصيغة *YYYY-MM-DD* (مثال: 2025-12-05).`
+              : lang === "hebrew"
+              ? `👍 נבחר השירות: *${svcName}*\n\n2️⃣ כתבי את תאריך התור בפורמט *YYYY-MM-DD* (לדוגמה: 2025-12-05).`
+              : `👍 Service selected: *${svcName}*\n\n2️⃣ Please send your preferred date in format *YYYY-MM-DD* (e.g. 2025-12-05).`;
+    
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: msg,
+          });
+    
+          return res.sendStatus(200);
+        }
+    
+        // ---- BOOKING: SELECT DATE (show available slots) ----
+        if (state.step === "BOOKING_SELECT_DATE") {
+          const date = txt;
+    
+          if (!isDate(date)) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "📅 من فضلك اكتبي التاريخ بصيغة صحيحة: *YYYY-MM-DD* (مثال: 2025-12-05)."
+                  : lang === "hebrew"
+                  ? "📅 בבקשה כתבי את התאריך בפורמט *YYYY-MM-DD* (לדוגמה: 2025-12-05)."
+                  : "📅 Please send the date in format *YYYY-MM-DD* (e.g. 2025-12-05).",
+            });
+            return res.sendStatus(200);
+          }
+    
+          const bookingCfg = biz.config?.booking || {};
+          const workingDays = Array.isArray(bookingCfg.workingDays)
+            ? bookingCfg.workingDays
+            : [];
+          const openingTime = bookingCfg.openingTime || "09:00";
+          const closingTime = bookingCfg.closingTime || "18:00";
+          const gap = Number(bookingCfg.slotGapMinutes || 15);
+    
+          // closed date?
+          if ((biz.closedDates || []).includes(date)) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "❌ في هذا التاريخ الصالون مغلق. اختاري تاريخاً آخر."
+                  : lang === "hebrew"
+                  ? "❌ בתאריך זה העסק סגור. אנא בחרי תאריך אחר."
+                  : "❌ The business is closed on that date. Please choose another date.",
+            });
+            return res.sendStatus(200);
+          }
+    
+          const weekday = weekdayFromISO(date);
+          if (!workingDays.includes(weekday)) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? `❌ يوم ${weekday} ليس من أيام العمل. اختاري يوماً آخر.`
+                  : lang === "hebrew"
+                  ? `❌ יום ${weekday} אינו יום עבודה. בחרי יום אחר.`
+                  : `❌ ${weekday} is not a working day. Please choose a different date.`,
+            });
+            return res.sendStatus(200);
+          }
+    
+          const grid = makeDayGrid(openingTime, closingTime, gap);
+          const taken = await getTakenMap(biz._id, date);
+    
+          const serviceId = state.data?.serviceId;
+          const snapshot = state.data?.serviceSnapshot || {};
+          let need = 1;
+          if (snapshot.duration) {
+            need = slotsNeeded(snapshot.duration, gap);
+          } else if (serviceId) {
+            const svc = findServiceById(biz, serviceId);
+            if (svc?.duration) {
+              need = slotsNeeded(Number(svc.duration), gap);
+            }
+          }
+    
+          const free = [];
+          for (let i = 0; i < grid.length; i++) {
+            if (isRangeFree(grid, taken, i, need)) free.push(grid[i]);
+          }
+    
+          if (!free.length) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "⚠️ في هذا التاريخ لا يوجد أوقات متاحة. حاولي تاريخاً آخر."
+                  : lang === "hebrew"
+                  ? "⚠️ אין שעות פנויות בתאריך הזה. נסי תאריך אחר."
+                  : "⚠️ There are no free time slots on that date. Please choose another date.",
+            });
+            return res.sendStatus(200);
+          }
+    
+          const slotsToShow = free.slice(0, 10); // show up to 10 options
+          const lines = slotsToShow.map((t, i) => `${i + 1}) ${t}`);
+    
+          await setState(state, {
+            step: "BOOKING_SELECT_TIME",
+            data: {
+              ...state.data,
+              date,
+              slots: slotsToShow,
+              slotGapMinutes: gap,
+              openingTime,
+              closingTime,
+            },
+          });
+    
+          const msg =
+            lang === "arabic"
+              ? `3️⃣ الأوقات المتاحة في *${date}*:\n\n${lines.join(
+                  "\n"
+                )}\n\n💬 أرسلي رقم الوقت المناسب لك.`
+              : lang === "hebrew"
+              ? `3️⃣ השעות הפנויות ב-*${date}*:\n\n${lines.join(
+                  "\n"
+                )}\n\n💬 כתבי את מספר השעה המתאימה.`
+              : `3️⃣ Available times on *${date}*:\n\n${lines.join(
+                  "\n"
+                )}\n\n💬 Please reply with the number of your preferred time.`;
+    
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: msg,
+          });
+    
+          return res.sendStatus(200);
+        }
+    
+        // ---- BOOKING: SELECT TIME ----
+        if (state.step === "BOOKING_SELECT_TIME") {
+          const slots = state.data?.slots || [];
+          const idx = parseMenuIndexFromText(txt);
+    
+          if (idx == null || idx < 0 || idx >= slots.length) {
+            const lines = slots.map((t, i) => `${i + 1}) ${t}`);
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? `من فضلك اختاري رقمًا من الأوقات:\n\n${lines.join(
+                      "\n"
+                    )}\n\nأو اكتبي *menu* للعودة.`
+                  : lang === "hebrew"
+                  ? `בחרי מספר מתוך השעות הבאות:\n\n${lines.join(
+                      "\n"
+                    )}\n\nאו כתבי *menu* כדי לחזור.`
+                  : `Please choose a number from these times:\n\n${lines.join(
+                      "\n"
+                    )}\n\nOr type *menu* to go back.`,
+            });
+            return res.sendStatus(200);
+          }
+    
+          const time = slots[idx];
+    
+          await setState(state, {
+            step: "BOOKING_ENTER_NAME",
+            data: {
+              ...state.data,
+              time,
+            },
+          });
+    
+          const msg =
+            lang === "arabic"
+              ? `✅ تم اختيار الوقت: *${time}*\n\n4️⃣ اكتبي اسمك الكامل للحجز.`
+              : lang === "hebrew"
+              ? `✅ נבחרה שעה: *${time}*\n\n4️⃣ כתבי את שמך המלא להזמנה.`
+              : `✅ Time selected: *${time}*\n\n4️⃣ Please send your full name for the booking.`;
+    
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: msg,
+          });
+    
+          return res.sendStatus(200);
+        }
+    
+        // ---- BOOKING: ENTER NAME ----
+        if (state.step === "BOOKING_ENTER_NAME") {
+          const name = txt;
+          if (!name || name.length < 2) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "من فضلك اكتبي اسمًا واضحًا (على الأقل حرفين)."
+                  : lang === "hebrew"
+                  ? "נא לכתוב שם ברור (לפחות שני תווים)."
+                  : "Please send a clear name (at least 2 characters).",
+            });
+            return res.sendStatus(200);
+          }
+    
+          await setState(state, {
+            step: "BOOKING_ENTER_NOTE",
+            data: {
+              ...state.data,
+              customerName: name,
+            },
+          });
+    
+          const msg =
+            lang === "arabic"
+              ? "5️⃣ هل لديك ملاحظات خاصة (مثال: لون/شكل/معلومة إضافية)؟\nاكتبي ما تريدين، أو اكتبي *0* إذا لا توجد ملاحظات."
+              : lang === "hebrew"
+              ? "5️⃣ יש לך הערות מיוחדות (צבע, צורה, בקשה נוספת)?\nכתבי מה שצריך, או כתבי *0* אם אין הערות."
+              : "5️⃣ Any special notes (e.g. style, color, anything extra)?\nWrite your note, or send *0* if you have no notes.";
+    
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: msg,
+          });
+    
+          return res.sendStatus(200);
+        }
+    
+        // ---- BOOKING: ENTER NOTE + CREATE BOOKING ----
+        if (state.step === "BOOKING_ENTER_NOTE") {
+          let notes = txt;
+          if (notes === "0" || lower(txt) === "skip") {
+            notes = "";
+          }
+    
+          const { serviceId, serviceSnapshot, date, time, customerName } =
+            state.data || {};
+    
+          if (!serviceId || !date || !time || !customerName) {
+            // something went wrong in state
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "حدث خطأ في الحجز. اكتبي *menu* للبدء من جديد."
+                  : lang === "hebrew"
+                  ? "אירעה שגיאה בתהליך ההזמנה. כתבי *menu* כדי להתחיל מחדש."
+                  : "Something went wrong with the booking flow. Please type *menu* to start again.",
+            });
+            await setState(state, { step: "MENU", data: {} });
+            return res.sendStatus(200);
+          }
+    
+          try {
+            const bookingCfg = biz.config?.booking || {};
+            const workingDays = Array.isArray(bookingCfg.workingDays)
+              ? bookingCfg.workingDays
+              : [];
+            const weekday = weekdayFromISO(date);
+    
+            if ((biz.closedDates || []).includes(date)) {
+              throw new Error("Business closed on that date");
+            }
+            if (!workingDays.includes(weekday)) {
+              throw new Error("Selected date is not a working day");
+            }
+    
+            const openingTime = bookingCfg.openingTime || "09:00";
+            const closingTime = bookingCfg.closingTime || "18:00";
+            const gap = Number(bookingCfg.slotGapMinutes || 15);
+            const grid = makeDayGrid(openingTime, closingTime, gap);
+            const idx = grid.indexOf(time);
+            if (idx === -1) {
+              throw new Error("Time is outside working hours");
+            }
+    
+            let need = 1;
+            if (serviceSnapshot?.duration) {
+              need = slotsNeeded(serviceSnapshot.duration, gap);
+            }
+    
+            const taken = await getTakenMap(biz._id, date);
+            if (!isRangeFree(grid, taken, idx, need)) {
+              throw new Error("Slot already taken");
+            }
+    
+            const booking = await Booking.create({
+              businessId: biz._id,
+              customerName,
+              phoneNumber: from,
+              serviceId,
+              serviceSnapshot: serviceSnapshot || {},
+              date,
+              time,
+              status: "pending",
+              source: "whatsapp",
+              notes: notes || "",
+            });
+    
+            await setState(state, { step: "MENU", data: {} });
+    
+            const key = langKey;
+            const svcName =
+              serviceSnapshot?.name?.[key] ||
+              serviceSnapshot?.name?.en ||
+              "";
+    
+            const msg =
+              lang === "arabic"
+                ? `✅ تم إنشاء حجزك بنجاح!\n\n👤 الاسم: *${booking.customerName}*\n💅 الخدمة: *${svcName}*\n📅 التاريخ: *${booking.date}*\n⏰ الساعة: *${booking.time}*\n\nسيتم تأكيد الموعد قريباً. يمكنك دائماً كتابة *menu* للعودة للقائمة.`
+                : lang === "hebrew"
+                ? `✅ ההזמנה שלך נוצרה בהצלחה!\n\n👤 שם: *${booking.customerName}*\n💅 שירות: *${svcName}*\n📅 תאריך: *${booking.date}*\n⏰ שעה: *${booking.time}*\n\nהאישור הסופי יגיע בהמשך. אפשר בכל רגע לכתוב *menu* כדי לחזור לתפריט.`
+                : `✅ Your booking has been created!\n\n👤 Name: *${booking.customerName}*\n💅 Service: *${svcName}*\n📅 Date: *${booking.date}*\n⏰ Time: *${booking.time}*\n\nThe appointment will be confirmed shortly. You can type *menu* anytime to go back.`;
+    
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body: msg,
+            });
+    
+            return res.sendStatus(200);
+          } catch (err) {
+            console.error("Booking via WhatsApp error:", err);
+    
+            const msg =
+              lang === "arabic"
+                ? "❌ لم نتمكن من تأكيد هذا الموعد (ربما الحجز ممتلئ أو التوقيت غير متاح). اكتبي *menu* وحاولي من جديد."
+                : lang === "hebrew"
+                ? "❌ לא הצלחנו לאשר את התור (אולי השעה נתפסה בינתיים). כתבי *menu* ונסי שוב."
+                : "❌ We couldn’t confirm this booking (maybe the time was just taken). Please type *menu* and try again.";
+    
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body: msg,
+            });
+    
+            await setState(state, { step: "MENU", data: {} });
+            return res.sendStatus(200);
+          }
+        }
 
-// ---- COURSE DETAILS FLOW after "view_courses" ----
-if (state.step === "VIEW_COURSES_LIST") {
-    const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
-    const index = parseMenuIndexFromText(txt);
-    const courseIds = state.data?.courseIds || [];
-  
-    // בדיקה שהמספר תקין
-    if (
-      index == null ||
-      index < 0 ||
-      index >= courseIds.length
-    ) {
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body:
-          lang === "arabic"
-            ? "من فضلك أرسلي رقم الدورة من القائمة، أو اكتبي *menu* للعودة للقائمة الرئيسية."
+
+        // ---- PRODUCT DETAILS FLOW after "view_products" ----
+    if (state.step === "VIEW_PRODUCTS_LIST") {
+        const langKey = langKeyFromCustomer(customer, biz);
+        const PL = PRODUCT_LABELS[lang] || PRODUCT_LABELS.english;
+      
+        const index = parseMenuIndexFromText(txt);
+        const productIds = state.data?.productIds || [];
+      
+        // אם המשתמש כתב משהו שהוא לא מספר / מחוץ לטווח
+        if (index == null || index < 0 || index >= productIds.length) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "من فضلك أرسلي رقم المنتج من القائمة، أو اكتبي *menu* للعودة للقائمة الرئيسية."
+                : lang === "hebrew"
+                ? "שלחי מספר מוצר מהרשימה, או כתבי *menu* כדי לחזור לתפריט הראשי."
+                : "Please send a product number from the list, or type *menu* to go back to the main menu.",
+          });
+          return res.sendStatus(200);
+        }
+      
+        const productId = productIds[index];
+        const product = await Product.findOne({
+          _id: productId,
+          businessId: biz._id,
+        });
+      
+        if (!product) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "هذا المنتج لم يعد متاحاً. جربي منتجاً آخر أو اكتبي *menu*."
+                : lang === "hebrew"
+                ? "המוצר הזה כבר לא זמין. נסי מוצר אחר או כתבי *menu*."
+                : "This product is no longer available. Try another one or type *menu*.",
+          });
+          return res.sendStatus(200);
+        }
+      
+        const name = productText(product.name, langKey);
+        const descFull = productText(product.description, langKey);
+        const category = productText(product.category, langKey);
+        const price = product.price ? `${product.price}₪` : "";
+        const sku = product.sku || "-";
+        const stock = typeof product.stock === "number" ? product.stock : null;
+      
+        const owner = biz.owner || {};
+        const phone = owner.phone || biz.whatsappNumber || biz.wa?.number || "";
+      
+        // 1️⃣ אם יש תמונה – שולחים קודם את התמונה (עם כותרת קצרה)
+        const imgUrl = product.image?.secure_url || product.image?.url;
+        console.log("PRODUCT IMAGE URL:", imgUrl, product.image);
+      
+        if (imgUrl) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body: `🛍️ ${name || ""}`,
+            mediaUrl: imgUrl, // sendTwilio כבר יודע לטפל בזה
+          });
+        }
+      
+        // 2️⃣ ואז שולחים את פרטי המוצר
+        const stockLine =
+          stock != null ? `\n📦 ${PL.stock}: ${stock}` : "";
+      
+        const phoneLine = phone
+          ? lang === "arabic"
+            ? `- الاتصال على: ${phone}`
             : lang === "hebrew"
-            ? "שלחי מספר קורס מהרשימה, או כתבי *menu* כדי לחזור לתפריט הראשי."
-            : "Please send a course number from the list, or type *menu* to go back to the main menu.",
-      });
-      return res.sendStatus(200);
-    }
-  
-    const courseId = courseIds[index];
-    const course = await Course.findOne({
-      _id: courseId,
-      businessId: biz._id,
-    });
-  
-    if (!course) {
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body:
+            ? `- להתקשר אלינו: ${phone}`
+            : `- Call us at: ${phone}`
+          : lang === "arabic"
+          ? "- رقم الهاتف غير مضاف بعد."
+          : lang === "hebrew"
+          ? "- מספר הטלפון עדיין לא מוגדר."
+          : "- Phone number is not configured yet.";
+      
+        const detailHeader = `${PL.detailTitle} #${index + 1}`;
+      
+        const body = `${detailHeader}
+      
+      ✨ *${name}* — ${price}
+      📂 ${PL.category}: ${category}
+      🆔 ${PL.sku}: ${sku}${stockLine}
+      📝 ${descFull || "-"}
+      
+      📞 ${
           lang === "arabic"
-            ? "هذه الدورة لم تعد متاحة. جرّبي دورة أخرى أو اكتبي *menu*."
+            ? "للشراء الآن:"
             : lang === "hebrew"
-            ? "הקורס הזה כבר לא זמין. נסי קורס אחר או כתבי *menu*."
-            : "This course is no longer available. Try another one or type *menu*.",
-      });
-      return res.sendStatus(200);
-    }
-  
-    // סידור המפגשים לפי תאריך + שעה
-    const sessions = (course.sessions || [])
-      .slice()
-      .sort((a, b) => {
-        const keyA = `${a.date}T${a.startTime}`;
-        const keyB = `${b.date}T${b.startTime}`;
-        return keyA.localeCompare(keyB);
-      });
-  
-    const sessionsLines = sessions.length
-      ? sessions
-          .map((s) => {
-            const timeRange = `${s.startTime}–${s.endTime}`;
-            return `• ${s.date} — ${timeRange}`;
-          })
-          .join("\n")
-      : "-";
-  
-    const detailHeader = `${CL.detailTitle} #${index + 1}`;
-  
-    const body = `${detailHeader}
-  
-  🎓 *${course.title}*${course.price ? ` — ${course.price}₪` : ""}
-  
-  👩‍🏫 ${CL.instructor}: ${course.instructor || "-"}
-  👥 ${CL.capacity}: ${course.maxParticipants ?? "-"}
-  🗓️ ${CL.sessionsHeader}:
-  ${sessionsLines}
-  
-  📝 ${course.description || "-"}
-  
-  ${CL.detailCta}`;
-  
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to: from,
-      body,
-    });
-  
-    // נשארים ב־VIEW_COURSES_LIST כדי שיוכלו לבחור עוד מספר
-    return res.sendStatus(200);
-  }  
+            ? "להזמנה עכשיו:"
+            : "To order now:"
+        }
+      ${phoneLine}
+      
+      ${PL.detailCta}`;
+      
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body,
+        });
+      
+        // נשארים ב־VIEW_PRODUCTS_LIST כדי שיוכל לשלוח עוד מספרים
+        return res.sendStatus(200);
+      }
+
+    // ---- COURSE DETAILS FLOW after "view_courses" ----
+    if (state.step === "VIEW_COURSES_LIST") {
+        const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
+        const index = parseMenuIndexFromText(txt);
+        const courseIds = state.data?.courseIds || [];
+      
+        // בדיקה שהמספר תקין
+        if (
+          index == null ||
+          index < 0 ||
+          index >= courseIds.length
+        ) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "من فضلك أرسلي رقم الدورة من القائمة، أو اكتبي *menu* للعودة للقائمة الرئيسية."
+                : lang === "hebrew"
+                ? "שלחי מספר קורס מהרשימה, או כתבי *menu* כדי לחזור לתפריט הראשי."
+                : "Please send a course number from the list, or type *menu* to go back to the main menu.",
+          });
+          return res.sendStatus(200);
+        }
+      
+        const courseId = courseIds[index];
+        const course = await Course.findOne({
+          _id: courseId,
+          businessId: biz._id,
+        });
+      
+        if (!course) {
+          await sendWhatsApp({
+            from: biz.wa.number,
+            to: from,
+            body:
+              lang === "arabic"
+                ? "هذه الدورة لم تعد متاحة. جرّبي دورة أخرى أو اكتبي *menu*."
+                : lang === "hebrew"
+                ? "הקורס הזה כבר לא זמין. נסי קורס אחר או כתבי *menu*."
+                : "This course is no longer available. Try another one or type *menu*.",
+          });
+          return res.sendStatus(200);
+        }
+      
+        // סידור המפגשים לפי תאריך + שעה
+        const sessions = (course.sessions || [])
+          .slice()
+          .sort((a, b) => {
+            const keyA = `${a.date}T${a.startTime}`;
+            const keyB = `${b.date}T${b.startTime}`;
+            return keyA.localeCompare(keyB);
+          });
+      
+        const sessionsLines = sessions.length
+          ? sessions
+              .map((s) => {
+                const timeRange = `${s.startTime}–${s.endTime}`;
+                return `• ${s.date} — ${timeRange}`;
+              })
+              .join("\n")
+          : "-";
+      
+        const detailHeader = `${CL.detailTitle} #${index + 1}`;
+      
+        const body = `${detailHeader}
+      
+      🎓 *${course.title}*${course.price ? ` — ${course.price}₪` : ""}
+      
+      👩‍🏫 ${CL.instructor}: ${course.instructor || "-"}
+      👥 ${CL.capacity}: ${course.maxParticipants ?? "-"}
+      🗓️ ${CL.sessionsHeader}:
+      ${sessionsLines}
+      
+      📝 ${course.description || "-"}
+      
+      ${CL.detailCta}`;
+      
+        await sendWhatsApp({
+          from: biz.wa.number,
+          to: from,
+          body,
+        });
+      
+        // נשארים ב־VIEW_COURSES_LIST כדי שיוכלו לבחור עוד מספר
+        return res.sendStatus(200);
+      }  
 
     // ---- Default fallback ----
     const fallbackText = getConfigMessage(
