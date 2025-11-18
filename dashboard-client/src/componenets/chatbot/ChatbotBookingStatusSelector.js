@@ -12,8 +12,8 @@ const ChatbotBookingStatusSelector = ({ config, setConfig }) => {
 
   // current value from config (default "pending")
   const currentStatus =
-    config?.booking?.chatbotDefaultStatus ;
-
+    config?.booking?.chatbotDefaultStatus;
+ console.log("currentStatus : ", currentStatus);
   const handleChange = async (e) => {
     const newStatus = e.target.value;
 
@@ -33,6 +33,7 @@ const ChatbotBookingStatusSelector = ({ config, setConfig }) => {
           chatbotDefaultStatus: newStatus,
         },
       });
+      console.log("newStatus : ", newStatus);
 
       toast.success(
         getLabelByLang(
