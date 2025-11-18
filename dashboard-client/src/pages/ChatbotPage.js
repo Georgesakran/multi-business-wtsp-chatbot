@@ -92,14 +92,8 @@ const ChatbotPage = () => {
         <ChatbotToggleSection config={config} setConfig={setConfig} />
         <ChatbotLanguageSelector config={config} setConfig={setConfig} />
       </div>
-
-      <ChatbotMessagesEditor config={config} setConfig={setConfig} />
-      <ChatbotMenuEditor config={config} setConfig={setConfig} />
-      <SystemPromptEditor config={config} setConfig={setConfig} />
-      <FeatureToggles config={config} setConfig={setConfig} />
-
-      {/* ✅ NEW BLOCK: chatbot booking status */}
-      <div className="chatbot-card">
+            {/* ✅ NEW BLOCK: chatbot booking status */}
+            <div className="chatbot-card">
         <h3>Chatbot booking status</h3>
         <p className="chatbot-setting-description">
           Choose how new bookings created via WhatsApp chatbot should be saved
@@ -118,6 +112,13 @@ const ChatbotPage = () => {
           </option>
         </select>
       </div>
+
+      <ChatbotMessagesEditor config={config} setConfig={setConfig} />
+      <ChatbotMenuEditor config={config} setConfig={setConfig} />
+      <SystemPromptEditor config={config} setConfig={setConfig} />
+      <FeatureToggles config={config} setConfig={setConfig} />
+
+
 
       <UsageStats stats={stats} />
     </div>
