@@ -193,7 +193,6 @@ router.get("/:id/chatbot-config", protect, async (req, res) => {
   }
 });
 
-
 // ✅ Update chatbot config (toggles + messages)
 router.put("/:id/update-chatbot", protect, async (req, res) => {
   try {
@@ -270,6 +269,9 @@ router.put("/:id/update-chatbot", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+
 
 // GET /api/businesses/:id/chatbot-usage
 router.get("/:id/chatbot-usage", protect, async (req, res) => {
