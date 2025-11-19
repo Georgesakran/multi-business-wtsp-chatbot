@@ -31,9 +31,9 @@ const ChatbotToggleSection = ({ config, setConfig }) => {
 
   return (
     <div className="chatbot-section">
-      <h3>🟢 {getLabelByLang(translations.chatbotmanegement.chatbotToggleTitle, langKey)}</h3>
-      <p>{getLabelByLang(translations.chatbotmanegement.chatbotToggleDescription, langKey)}</p>
-      <ToggleSwitch checked={config.chatbotEnabled} onChange={handleToggle} />
+      <h3 className="chatbot-section-h3">🟢 {getLabelByLang(translations.chatbotmanegement.chatbotToggleTitle, langKey)}</h3>
+      <p className="chatbot-section-p">{getLabelByLang(translations.chatbotmanegement.chatbotToggleDescription, langKey)}</p>
+      <ToggleSwitch className="switch-first-sec-chatbot-page" checked={config.chatbotEnabled} onChange={handleToggle} />
     </div>
     
   );

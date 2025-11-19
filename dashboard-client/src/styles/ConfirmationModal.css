@@ -19,7 +19,8 @@
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     max-width: 80%;
   }
-  .confirmation-modal-content h3,p{
+  .confirmation-modal-content-h3,
+  .confirmation-modal-content-p{
     margin: 0 0 15px;
     font-size: 1.5em;
     color: #333;

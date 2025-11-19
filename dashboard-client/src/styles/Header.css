@@ -11,6 +11,7 @@
   align-items: center;
   box-shadow: none;
   height: 70px;
+  z-index:9;
 }
 .header-left{
   display: flex;

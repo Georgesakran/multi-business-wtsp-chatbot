@@ -37,6 +37,7 @@ const emptyItem = (nextId) => ({
 
 const ChatbotMenuEditor = ({ config, setConfig }) => {
   const [menuItems, setMenuItems] = useState(config.menuItems || []);
+  const [collapsed, setCollapsed] = useState(true); // NEW
   const [activeLang, setActiveLang] = useState("en");
 
   const handleAdd = () => {
@@ -105,119 +106,124 @@ const ChatbotMenuEditor = ({ config, setConfig }) => {
 
   return (
     <div className="chatbot-section">
-      <div className="chatbot-section-header">
-        <h3>📋 WhatsApp Main Menu Items</h3>
-        <span className="chatbot-section-subtitle">
-          Configure what appears when the customer types <code>menu</code>.
-        </span>
-      </div>
-
-      {/* Language tabs for labels */}
-      <div className="chatbot-lang-tabs">
-        {LANGS.map((l) => (
-          <button
-            key={l.code}
-            className={
-              "chatbot-lang-tab" +
-              (activeLang === l.code ? " chatbot-lang-tab--active" : "")
-            }
-            onClick={() => setActiveLang(l.code)}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
-
-
-
-      <div className="chatbot-menu-items">
-        {menuItems.length === 0 && (
-          <div className="chatbot-empty-state">
-            No menu items yet. Click <b>“Add menu item”</b> to start.
-          </div>
-        )}
-
-        {menuItems.map((item) => (
-          <div key={item.id} className="chatbot-menu-item-row">
-            {/* HEADER ROW */}
-            <div className="chatbot-menu-item-header">
-              <div className="chatbot-menu-item-header-left">
-                <span className="menu-item-number">#{item.id}</span>
-                <select
-                  className="chatbot-select"
-                  value={item.action || "custom"}
-                  onChange={(e) =>
-                    updateItem(item.id, { action: e.target.value })
-                  }
-                >
-                  {ACTIONS.map((a) => (
-                    <option key={a.value} value={a.value}>
-                      {a.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="chatbot-menu-item-header-right">
-                <span className="menu-item-toggle-label">Enabled</span>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={item.enabled !== false}
-                    onChange={(e) =>
-                      updateItem(item.id, { enabled: e.target.checked })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
-                <button
-                  type="button"
-                  className="psel-btn danger menu-item-remove-btn"
-                  onClick={() => handleRemove(item.id)}
-                >
-                  ✖ Remove
-                </button>
-              </div>
-            </div>
-
-            {/* BODY ROW */}
-            <div className="chatbot-menu-item-body">
-              <div className="chatbot-field">
-                <label className="chatbot-field-label">
-                  Label in {activeLangLabel}
-                </label>
-                <input
-                  type="text"
-                  className="chatbot-input"
-                  value={(item.label && item.label[activeLang]) || ""}
-                  onChange={(e) =>
-                    updateLabel(item.id, activeLang, e.target.value)
-                  }
-                  placeholder="What the customer sees in the menu"
-                />
-              </div>
-
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="chatbot-menu-actions">
         <button
-          type="button"
-          className="psel-btn secondary"
-          onClick={handleAdd}
+          className="chatbot-section-toggle"
+          onClick={() => setCollapsed((prev) => !prev)}
         >
-          ➕ Add menu item
-        </button>
-        <button
-          type="button"
-          className="psel-btn primary"
-          onClick={handleSave}
-        >
-          💾 Save Menu Items
-        </button>
-      </div>
+          📋 WhatsApp Main Menu Items {collapsed ? "▼" : "▲"}
+      </button>
+
+    
+      {!collapsed && (
+        // Language tabs for labels
+        <div className="chatbot-section-content">
+
+          <div className="chatbot-lang-tabs">
+            {LANGS.map((l) => (
+              <button
+                key={l.code}
+                className={
+                  "chatbot-lang-tab" +
+                  (activeLang === l.code ? " chatbot-lang-tab--active" : "")
+                }
+                onClick={() => setActiveLang(l.code)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="chatbot-menu-items">
+            {menuItems.length === 0 && (
+              <div className="chatbot-empty-state">
+                No menu items yet. Click <b>“Add menu item”</b> to start.
+              </div>
+            )}
+
+            {menuItems.map((item) => (
+              <div key={item.id} className="chatbot-menu-item-row">
+                {/* HEADER ROW */}
+                <div className="chatbot-menu-item-header">
+                  <div className="chatbot-menu-item-header-left">
+                    <span className="menu-item-number">#{item.id}</span>
+                    <select
+                      className="chatbot-select"
+                      value={item.action || "custom"}
+                      onChange={(e) =>
+                        updateItem(item.id, { action: e.target.value })
+                      }
+                    >
+                      {ACTIONS.map((a) => (
+                        <option key={a.value} value={a.value}>
+                          {a.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="chatbot-menu-item-header-right">
+                    <span className="menu-item-toggle-label">Enabled</span>
+                    <label className="switch">
+                      <input
+                        type="checkbox"
+                        checked={item.enabled !== false}
+                        onChange={(e) =>
+                          updateItem(item.id, { enabled: e.target.checked })
+                        }
+                      />
+                      <span className="slider" />
+                    </label>
+                    <button
+                      type="button"
+                      className="psel-btn danger menu-item-remove-btn"
+                      onClick={() => handleRemove(item.id)}
+                    >
+                      ✖ Remove
+                    </button>
+                  </div>
+                </div>
+
+                {/* BODY ROW */}
+                <div className="chatbot-menu-item-body">
+                  <div className="chatbot-field">
+                    <label className="chatbot-field-label">
+                      Label in {activeLangLabel}
+                    </label>
+                    <input
+                      type="text"
+                      className="chatbot-input"
+                      value={(item.label && item.label[activeLang]) || ""}
+                      onChange={(e) =>
+                        updateLabel(item.id, activeLang, e.target.value)
+                      }
+                      placeholder="What the customer sees in the menu"
+                    />
+                  </div>
+
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="chatbot-menu-actions">
+            <button
+              type="button"
+              className="psel-btn secondary"
+              onClick={handleAdd}
+            >
+              ➕ Add menu item
+            </button>
+            <button
+              type="button"
+              className="psel-btn primary"
+              onClick={handleSave}
+            >
+              💾 Save Menu Items
+            </button>
+          </div>
+
+        </div>  
+      )}
     </div>
   );
 };

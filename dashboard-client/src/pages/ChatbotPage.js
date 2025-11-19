@@ -52,7 +52,6 @@ const ChatbotPage = () => {
         <ChatbotToggleSection config={config} setConfig={setConfig} />
         <ChatbotLanguageSelector config={config} setConfig={setConfig} />
         <ChatbotBookingStatusSelector config={config} setConfig={setConfig} />
-
       </div>
 
 

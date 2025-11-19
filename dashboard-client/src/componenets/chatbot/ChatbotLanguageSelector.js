@@ -28,9 +28,9 @@ const ChatbotLanguageSelector = ({ config, setConfig }) => {
 
   return (
     <div className="chatbot-section">
-      <h3>🌐 {getLabelByLang(translations.chatbotmanegement.chatbotLanguageTitle, langKey)}</h3>
-      <p>{getLabelByLang(translations.chatbotmanegement.chatbotLanguageDescription, langKey)}</p>
-      <select value={config.language || "english"} onChange={handleChange}>
+      <h3 className="chatbot-section-h3">🌐 {getLabelByLang(translations.chatbotmanegement.chatbotLanguageTitle, langKey)}</h3>
+      <p className="chatbot-section-p">{getLabelByLang(translations.chatbotmanegement.chatbotLanguageDescription, langKey)}</p>
+      <select className="select-first-sec-chatbot-page" value={config.language || "english"} onChange={handleChange}>
         <option value="english">{getLabelByLang(translations.chatbotmanegement.languageEnglish, langKey)}</option>
         <option value="arabic">{getLabelByLang(translations.chatbotmanegement.languageArabic, langKey)}</option>
         <option value="hebrew">{getLabelByLang(translations.chatbotmanegement.languageHebrew, langKey)}</option>

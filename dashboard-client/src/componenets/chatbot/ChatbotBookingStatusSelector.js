@@ -53,33 +53,11 @@ const ChatbotBookingStatusSelector = ({ config, setConfig }) => {
 
   return (
     <div className="chatbot-section">
-      <h3>
-        📅{" "}
-        {getLabelByLang(
-          translations.chatbotmanegement.bookingStatusTitle,
-          langKey
-        )}
-      </h3>
-      <p>
-        {getLabelByLang(
-          translations.chatbotmanegement.bookingStatusDescription,
-          langKey
-        )}
-      </p>
-
+      <h3 className="chatbot-section-h3">📅{" "}{getLabelByLang(translations.chatbotmanegement.bookingStatusTitle,langKey)}</h3>
+      <p className="chatbot-section-p">{getLabelByLang(translations.chatbotmanegement.bookingStatusDescription,langKey)}</p>
       <select value={currentStatus} onChange={handleChange}>
-        <option value="pending">
-          {getLabelByLang(
-            translations.chatbotmanegement.bookingStatusPending,
-            langKey
-          )}
-        </option>
-        <option value="confirmed">
-          {getLabelByLang(
-            translations.chatbotmanegement.bookingStatusConfirmed,
-            langKey
-          )}
-        </option>
+        <option value="pending">{getLabelByLang(translations.chatbotmanegement.bookingStatusPending,langKey)}</option>
+        <option value="confirmed">{getLabelByLang(translations.chatbotmanegement.bookingStatusConfirmed,langKey)}</option>
       </select>
     </div>
   );
