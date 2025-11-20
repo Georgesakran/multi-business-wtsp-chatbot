@@ -862,21 +862,21 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
   }
 
 // ---------- BOOKING HELPERS (same logic as bookingsRoutes.js) ----------
-const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
-const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
-let days = getNext10Days(biz);
+// const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+// const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+// let days = getNext10Days(biz);
 
-// get today's date
-const todayStr = moment().format("YYYY-MM-DD");
+// // get today's date
+// const todayStr = moment().format("YYYY-MM-DD");
 
-if (days.includes(todayStr)) {
-  const hasFreeSlots = await checkFreeSlotsToday(biz); // we will write this helper next
+// if (days.includes(todayStr)) {
+//   const hasFreeSlots = await checkFreeSlotsToday(biz); // we will write this helper next
   
-  if (!hasFreeSlots) {
-    // remove today
-    days = days.filter(d => d !== todayStr);
-  }
-}
+//   if (!hasFreeSlots) {
+//     // remove today
+//     days = days.filter(d => d !== todayStr);
+//   }
+// }
 
 const toMinutes = (hhmm) => {
   const [h, m] = String(hhmm).split(":").map(Number);
@@ -1080,48 +1080,48 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // ---- MENU selection logic ----
-    if (state.step === "MENU") {
-      const structuredItems = getVisibleMenuItemsSorted(biz);
+        // ---- MENU selection logic ----
+        if (state.step === "MENU") {
+          const structuredItems = getVisibleMenuItemsSorted(biz);
 
-      if (structuredItems.length) {
-        const index = parseMenuIndexFromText(txt);
+          if (structuredItems.length) {
+            const index = parseMenuIndexFromText(txt);
 
-        if (index == null || index < 0 || index >= structuredItems.length) {
+            if (index == null || index < 0 || index >= structuredItems.length) {
+              await sendWhatsApp({
+                from: biz.wa.number,
+                to: from,
+                body:
+                  lang === "arabic"
+                    ? "من فضلك اختر رقمًا من القائمة أو أرسل *menu* لعرضها مرة أخرى."
+                    : lang === "hebrew"
+                    ? "בחר/י מספר מהתפריט או שלח/י *menu* להצגה מחדש."
+                    : "Please choose a number from the menu, or send *menu* again.",
+              });
+              return res.sendStatus(200);
+            }
+
+            const item = structuredItems[index];
+            const action = item.action || "custom";
+            const payload = item.payload || "";
+
+            await handleMenuAction({ action, payload, lang, langKey, biz, state, from });
+            return res.sendStatus(200);
+          }
+
+          // if somehow no structured items while in MENU
           await sendWhatsApp({
             from: biz.wa.number,
             to: from,
             body:
               lang === "arabic"
-                ? "من فضلك اختر رقمًا من القائمة أو أرسل *menu* لعرضها مرة أخرى."
+                ? "القائمة غير مهيّأة بعد. أرسلي *menu* لاحقًا أو اكتبي سؤالك بحرية."
                 : lang === "hebrew"
-                ? "בחר/י מספר מהתפריט או שלח/י *menu* להצגה מחדש."
-                : "Please choose a number from the menu, or send *menu* again.",
+                ? "התפריט עדיין לא הוגדר. שלחי *menu* שוב מאוחר יותר או כתבי לנו חופשי."
+                : "The menu is not configured yet. Try *menu* later or just ask your question.",
           });
           return res.sendStatus(200);
         }
-
-        const item = structuredItems[index];
-        const action = item.action || "custom";
-        const payload = item.payload || "";
-
-        await handleMenuAction({ action, payload, lang, langKey, biz, state, from });
-        return res.sendStatus(200);
-      }
-
-      // if somehow no structured items while in MENU
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body:
-          lang === "arabic"
-            ? "القائمة غير مهيّأة بعد. أرسلي *menu* لاحقًا أو اكتبي سؤالك بحرية."
-            : lang === "hebrew"
-            ? "התפריט עדיין לא הוגדר. שלחי *menu* שוב מאוחר יותר או כתבי לנו חופשי."
-            : "The menu is not configured yet. Try *menu* later or just ask your question.",
-      });
-      return res.sendStatus(200);
-    }
 
         // ---- BOOKING: SELECT SERVICE ----
         if (state.step === "BOOKING_SELECT_SERVICE") {
@@ -1173,8 +1173,6 @@ router.post("/", async (req, res) => {
           };
     
           const rawDays = getNext10Days(biz);
-
-          // filter today if no free slots
           let days = [...rawDays];
           const todayStr = moment().format("YYYY-MM-DD");
           
