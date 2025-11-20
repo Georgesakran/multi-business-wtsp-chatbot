@@ -11,6 +11,7 @@ const ConversationState = require("../models/ConversationState");
 
 // Twilio send helpers
 const { sendWhatsApp, sendTemplate } = require("../utils/sendTwilio");
+const getNext10Days = require("../utils/getNext10Days");
 
 // -------------------- constants & helpers --------------------
 const BACK = "0";
@@ -398,6 +399,8 @@ async function sendLanguageTemplate(biz, to) {
 
   return true;
 }
+
+
 
 async function sendLanguageFallback(biz, to) {
   const body =
@@ -861,6 +864,19 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
 // ---------- BOOKING HELPERS (same logic as bookingsRoutes.js) ----------
 const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+let days = getNext10Days(biz);
+
+// get today's date
+const todayStr = moment().format("YYYY-MM-DD");
+
+if (days.includes(todayStr)) {
+  const hasFreeSlots = await checkFreeSlotsToday(biz); // we will write this helper next
+  
+  if (!hasFreeSlots) {
+    // remove today
+    days = days.filter(d => d !== todayStr);
+  }
+}
 
 const toMinutes = (hhmm) => {
   const [h, m] = String(hhmm).split(":").map(Number);
@@ -874,6 +890,29 @@ const toHHMM = (mins) => {
 
 const weekdayFromISO = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
+
+async function checkFreeSlotsToday(biz) {
+  const booking = biz.config.booking;
+  const openingTime = booking.openingTime || "09:00";
+  const closingTime = booking.closingTime || "18:00";
+  const gap = Number(booking.slotGapMinutes || 15);
+
+  const today = moment().format("YYYY-MM-DD");
+
+  const grid = makeDayGrid(openingTime, closingTime, gap);
+  const taken = await getTakenMap(biz._id, today);
+
+  const now = moment();
+
+  for (let i = 0; i < grid.length; i++) {
+    const slotTime = moment(grid[i], "HH:mm");
+    if (slotTime.isBefore(now)) continue; // skip past times
+    if (taken[i] !== true) return true; // found at least ONE free slot
+  }
+
+  return false;
+}
+
 
 function makeDayGrid(openingTime, closingTime, slotGapMinutes) {
   const start = toMinutes(openingTime);
@@ -1133,30 +1172,79 @@ router.post("/", async (req, res) => {
             duration: Number(svc.duration || 0),
           };
     
+          const rawDays = getNext10Days(biz);
+
+          // filter today if no free slots
+          let days = [...rawDays];
+          const todayStr = moment().format("YYYY-MM-DD");
+          
+          if (days.includes(todayStr)) {
+            const hasFree = await checkFreeSlotsToday(biz);
+            if (!hasFree) days = days.filter((d) => d !== todayStr);
+          }
+          
           await setState(state, {
-            step: "BOOKING_SELECT_DATE",
+            step: "BOOKING_SELECT_DATE_LIST",
             data: {
               serviceId: selectedServiceId,
               serviceSnapshot,
+              days,
             },
           });
-    
-          const msg =
-            lang === "arabic"
-              ? `👍 تم اختيار الخدمة: *${svcName}*\n\n2️⃣ أرسلي تاريخ الموعد المطلوب بصيغة *YYYY-MM-DD* (مثال: 2025-12-05).`
-              : lang === "hebrew"
-              ? `👍 נבחר השירות: *${svcName}*\n\n2️⃣ כתבי את תאריך התור בפורמט *YYYY-MM-DD* (לדוגמה: 2025-12-05).`
-              : `👍 Service selected: *${svcName}*\n\n2️⃣ Please send your preferred date in format *YYYY-MM-DD* (e.g. 2025-12-05).`;
-    
-          await sendWhatsApp({
-            from: biz.wa.number,
-            to: from,
-            body: msg,
-          });
-    
+          
+          // send Twilio Template
+          await sendDatePickerTemplate(biz, from, days, lang);
           return res.sendStatus(200);
+    
+          // const msg =
+          //   lang === "arabic"
+          //     ? `👍 تم اختيار الخدمة: *${svcName}*\n\n2️⃣ أرسلي تاريخ الموعد المطلوب بصيغة *YYYY-MM-DD* (مثال: 2025-12-05).`
+          //     : lang === "hebrew"
+          //     ? `👍 נבחר השירות: *${svcName}*\n\n2️⃣ כתבי את תאריך התור בפורמט *YYYY-MM-DD* (לדוגמה: 2025-12-05).`
+          //     : `👍 Service selected: *${svcName}*\n\n2️⃣ Please send your preferred date in format *YYYY-MM-DD* (e.g. 2025-12-05).`;
+    
+          // await sendWhatsApp({
+          //   from: biz.wa.number,
+          //   to: from,
+          //   body: msg,
+          // });
+    
+          // return res.sendStatus(200);
         }
     
+        if (state.step === "BOOKING_SELECT_DATE_LIST") {
+          const days = state.data?.days || [];
+          const idx = parseMenuIndexFromText(txt);
+        
+          if (idx == null || idx < 0 || idx >= days.length) {
+            await sendWhatsApp({
+              from: biz.wa.number,
+              to: from,
+              body:
+                lang === "arabic"
+                  ? "من فضلك اختاري رقم تاريخ صحيح من القائمة."
+                  : lang === "hebrew"
+                  ? "בחרי מספר תאריך מהרשימה."
+                  : "Please select a valid date number.",
+            });
+            return res.sendStatus(200);
+          }
+        
+          const chosenDate = days[idx];
+        
+          await setState(state, {
+            step: "BOOKING_SELECT_DATE",
+            data: {
+              ...state.data,
+              date: chosenDate,
+            },
+          });
+        
+          // now continue with logic of BOOKING_SELECT_DATE as usual
+          txt = chosenDate;
+        }
+
+
         // ---- BOOKING: SELECT DATE (show available slots) ----
         if (state.step === "BOOKING_SELECT_DATE") {
           const date = txt;
