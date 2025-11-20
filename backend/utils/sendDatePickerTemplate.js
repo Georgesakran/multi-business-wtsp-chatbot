@@ -1,21 +1,18 @@
+// utils/sendDatePickerTemplate.js
 const { sendTemplate } = require("./sendTwilio");
 
-/**
- * Sends the 10-day date picker list using Twilio Content Template
- * @param {*} biz - business document
- * @param {*} to - customer number
- * @param {*} days - array of 10 dates ["2025-02-02", ...]
- * @param {*} lang - "arabic" | "english" | "hebrew"
- */
 async function sendDatePickerTemplate(biz, to, days, lang) {
-  const sid =
-    biz?.wa?.templates?.booking?.askDateSid;
-  // Row titles ONLY (we do not send IDs because template contains fixed row IDs)
-  // Template rows must already exist inside Twilio template editor
+  const sid = biz?.wa?.templates?.booking?.askDateSid;
+  if (!sid) return false;
+
   const vars = {};
 
   days.forEach((d, idx) => {
-    vars[`row${idx + 1}`] = d;
+    const n = idx + 1;
+
+    vars[`row${n}_name`] = d;   // visible text
+    vars[`row${n}_id`]   = `${n}`; // the row ID (1–10)
+    vars[`row${n}_desc`] = "";  // required by template, but empty
   });
 
   await sendTemplate({
@@ -29,4 +26,4 @@ async function sendDatePickerTemplate(biz, to, days, lang) {
   return true;
 }
 
-module.exports = { sendDatePickerTemplate };
+module.exports = sendDatePickerTemplate;
