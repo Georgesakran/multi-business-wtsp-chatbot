@@ -29,4 +29,4 @@ async function sendDatePickerTemplate(biz, to, days, lang) {
   return true;
 }
 
-module.exports = sendDatePickerTemplate;
+module.exports = { sendDatePickerTemplate };
