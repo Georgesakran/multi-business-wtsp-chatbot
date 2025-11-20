@@ -1241,14 +1241,10 @@ router.post("/", async (req, res) => {
             },
           });
         
-          // now continue with logic of BOOKING_SELECT_DATE as usual
-          // instead of: txt = chosenDate;
           req.body.Body = chosenDate;  
-          const newTxt = chosenDate;
+          //const newTxt = chosenDate;
 
-          // then call validation normally:
         }
-
 
         // ---- BOOKING: SELECT DATE (show available slots) ----
         if (state.step === "BOOKING_SELECT_DATE") {
