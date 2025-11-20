@@ -936,6 +936,8 @@ function findServiceById(biz, serviceId) {
 }
 
 async function getTakenMap(businessId, date) {
+  const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+
   const sameDay = await Booking.find({
     businessId,
     date,
