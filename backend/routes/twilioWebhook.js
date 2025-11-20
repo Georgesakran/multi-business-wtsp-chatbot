@@ -1242,13 +1242,17 @@ router.post("/", async (req, res) => {
           });
         
           // now continue with logic of BOOKING_SELECT_DATE as usual
-          txt = chosenDate;
+          // instead of: txt = chosenDate;
+          req.body.Body = chosenDate;  
+          const newTxt = chosenDate;
+
+          // then call validation normally:
         }
 
 
         // ---- BOOKING: SELECT DATE (show available slots) ----
         if (state.step === "BOOKING_SELECT_DATE") {
-          const date = txt;
+          const date = req.body.Body || txt;
     
           if (!isDate(date)) {
             await sendWhatsApp({
