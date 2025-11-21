@@ -4,7 +4,9 @@ const { getLocalized } = require("../utils/i18n");
 
 module.exports = {
   async showServices({ biz, from, langKey }) {
-    const services = biz.services || [];
+    const services = (biz.services || []).filter(
+    (s) => s && s.isActive !== false
+    );
 
     if (!services.length) {
       return sendWhatsApp({
@@ -19,19 +21,48 @@ module.exports = {
       });
     }
 
-    let msg =
-      langKey === "ar"
-        ? "💆‍♀️ *قائمة الخدمات:*\n\n"
-        : langKey === "he"
-        ? "💆‍♀️ *רשימת השירותים:*\n\n"
-        : "💆‍♀️ *Our Services:*\n\n";
+    const header =
+        lang === "arabic"
+        ? "✨ *خدماتنا الرئيسية*"
+        : lang === "hebrew"
+        ? "✨ *השירותים שלנו*"
+        : "✨ *Our main services*";
 
-    services.forEach((srv, i) => {
-      const name = getLocalized(srv.name, langKey);
-      const price = srv.price ? `${srv.price}₪` : "";
-      msg += `${i + 1}) ${name} ${price}\n`;
+    const lines = services.map((s, i) => {
+        const name = s.name?.[key] || s.name?.en || "";
+        const desc = s.description?.[key] || s.description?.en || "";
+        const price =
+            typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
+        const duration =
+            typeof s.duration === "number" && s.duration > 0
+                ? lang === "arabic"
+                ? `${s.duration} دقيقة`
+                : lang === "hebrew"
+                ? `${s.duration} דק׳`
+                : `${s.duration} min`
+                : "";
+            
+        return (
+            `${i + 1}) 🔹 *${name}*` +
+            (price ? ` — ${price}` : "") +
+            (duration ? ` • ${duration}` : "") +
+            (desc ? `\n   ${desc}` : "")
+        );
     });
 
-    await sendWhatsApp({ from: biz.wa.number, to: from, body: msg });
+    const footer =
+        lang === "arabic"
+        ? "\n💬 أرسلي رقم الخدمة التي تهمك، أو اكتبي *menu* للعودة إلى القائمة."
+        : lang === "hebrew"
+        ? "\n💬 כתבי את מספר השירות שמעניין אותך, או הקלידי *menu* כדי לחזור לתפריט."
+        : "\n💬 Reply with the service number you like, or type *menu* to go back to the main menu.";
+  
+    await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: [header, lines.join("\n\n"), footer].join("\n\n"),
+    });
+  
+    return;
   }
 };
