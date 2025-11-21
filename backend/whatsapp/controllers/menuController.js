@@ -1,73 +1,147 @@
-// controllers/menuController.js
+// services/menuService.js
 
-const stateManager = require("../state/stateManager");
-const menuService = require("../services/menuService");
-const { sendWhatsApp } = require("../services/messaging/twilioService");
 const { t } = require("../utils/i18n");
+const { sendWhatsApp } = require("./messaging/twilioService");
+const stateManager = require("../state/stateManager");
 
-module.exports = {
-  /**
-   * Show the main menu (multi-language, dynamic)
-   */
-  showMainMenu: async ({ biz, from, customer, state }) => {
-    const lang = customer.language;
-    const langKey = customer.language === "arabic"
-      ? "ar"
-      : customer.language === "hebrew"
-      ? "he"
-      : "en";
+// -----------------------------------------
+// Parse menu index (Arabic/Hebrew/English)
+// -----------------------------------------
+function parseMenuIndex(text) {
+  if (!text) return null;
 
-    const menuText = await menuService.buildMenuText(biz, langKey, lang);
+  text = text.trim();
 
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to: from,
-      body: menuText,
-    });
+  // Arabic-Indic digits: ٠١٢٣٤٥٦٧٨٩
+  const arZero = "٠".charCodeAt(0);
+  // Persian-Indic digits: ۰۱۲۳۴۵۶۷۸۹
+  const faZero = "۰".charCodeAt(0);
 
-    await stateManager.setState(state, { step: "MENU" });
-  },
+  let normalized = "";
 
-  /**
-   * Handle user selection from the menu
-   */
-  handleMenuSelection: async ({ biz, from, customer, state, text }) => {
-    const lang = customer.language;
-    const langKey = customer.language === "arabic"
-      ? "ar"
-      : customer.language === "hebrew"
-      ? "he"
-      : "en";
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
 
-    const structuredItems = menuService.getVisibleMenuItems(biz);
-    const index = menuService.parseMenuIndex(text);
+    // Arabic-Indic
+    if (code >= arZero && code <= arZero + 9) {
+      normalized += (code - arZero).toString();
+      continue;
+    }
 
-    if (index == null || index < 0 || index >= structuredItems.length) {
+    // Persian-Indic
+    if (code >= faZero && code <= faZero + 9) {
+      normalized += (code - faZero).toString();
+      continue;
+    }
+
+    // English digits
+    if (/[0-9]/.test(ch)) {
+      normalized += ch;
+      continue;
+    }
+  }
+
+  if (!normalized) return null;
+
+  const n = parseInt(normalized, 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+
+  return n - 1;
+}
+
+// -----------------------------------------
+// Return structured menu items
+// -----------------------------------------
+function getVisibleMenuItems(biz) {
+  // Later we can add dynamic filtering
+  return biz.config?.menuItems || [];
+}
+
+// -----------------------------------------
+// Build the main menu text (multi-language)
+// -----------------------------------------
+function buildMenuText(biz, langKey, lang) {
+  const items = getVisibleMenuItems(biz);
+
+  let lines = [];
+
+  items.forEach((item, i) => {
+    const label = item.label?.[langKey] || item.label?.en || "";
+    lines.push(`${i + 1}) ${label}`);
+  });
+
+  const footer =
+    lang === "arabic"
+      ? "\n\n💬 أرسل رقم الخيار أو اكتب *menu* لعرض القائمة."
+      : lang === "hebrew"
+      ? "\n\n💬 כתוב/י מספר בתפריט או *menu*."
+      : "\n\n💬 Send a number or type *menu*.";
+
+  return t(lang, "main_menu_title") + "\n\n" + lines.join("\n") + footer;
+}
+
+// -----------------------------------------
+// Execute menu item actions
+// -----------------------------------------
+async function executeMenuAction({
+  action,
+  payload,
+  biz,
+  from,
+  customer,
+  state,
+  lang,
+  langKey,
+}) {
+  switch (action) {
+    case "booking":
+      await stateManager.setState(state, { step: "BOOKING_SELECT_SERVICE" });
       return sendWhatsApp({
         from: biz.wa.number,
         to: from,
-        body:
-          lang === "arabic"
-            ? "من فضلك اختر رقمًا من القائمة أو أرسل *menu* لعرضها."
-            : lang === "hebrew"
-            ? "בחר/י מספר מהתפריט או כתוב/י *menu*."
-            : "Please choose a number from the menu or type *menu*.",
+        body: t(lang, "ask_service"),
       });
-    }
 
-    const item = structuredItems[index];
-    const action = item.action || "custom";
-    const payload = item.payload || "";
+    case "services":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "services_list"),
+      });
 
-    return menuService.executeMenuAction({
-      action,
-      payload,
-      biz,
-      from,
-      customer,
-      state,
-      lang,
-      langKey,
-    });
-  },
+    case "products":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "products_list"),
+      });
+
+    case "about":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "about_business"),
+      });
+
+    case "contact":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "contact_us"),
+      });
+
+    default:
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "unknown_option"),
+      });
+  }
+}
+
+module.exports = {
+  parseMenuIndex,
+  buildMenuText,
+  getVisibleMenuItems,
+  executeMenuAction,
 };
