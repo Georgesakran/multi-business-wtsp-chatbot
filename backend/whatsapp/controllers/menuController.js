@@ -1,47 +1,73 @@
 // controllers/menuController.js
+
+const stateManager = require("../state/stateManager");
 const menuService = require("../services/menuService");
-const customerService = require("../services/customerService");
 const { sendWhatsApp } = require("../services/messaging/twilioService");
+const { t } = require("../utils/i18n");
 
 module.exports = {
-  // Display menu
-  showMenu: async ({ biz, customer, from }) => {
+  /**
+   * Show the main menu (multi-language, dynamic)
+   */
+  showMainMenu: async ({ biz, from, customer, state }) => {
     const lang = customer.language;
-    const langKey = customerService.langKey(customer.language);
+    const langKey = customer.language === "arabic"
+      ? "ar"
+      : customer.language === "hebrew"
+      ? "he"
+      : "en";
 
-    const menu = menuService.buildMenuText(biz, langKey, lang);
+    const menuText = await menuService.buildMenuText(biz, langKey, lang);
 
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
-      body: menu,
+      body: menuText,
     });
+
+    await stateManager.setState(state, { step: "MENU" });
   },
 
-  // Process selection
-  handleMenuSelection: async ({ biz, customer, state, text, from }) => {
-    const items = menuService.getVisibleMenuItems(biz);
+  /**
+   * Handle user selection from the menu
+   */
+  handleMenuSelection: async ({ biz, from, customer, state, text }) => {
+    const lang = customer.language;
+    const langKey = customer.language === "arabic"
+      ? "ar"
+      : customer.language === "hebrew"
+      ? "he"
+      : "en";
+
+    const structuredItems = menuService.getVisibleMenuItems(biz);
     const index = menuService.parseMenuIndex(text);
 
-    if (index == null || index < 0 || index >= items.length) {
-      await sendWhatsApp({
+    if (index == null || index < 0 || index >= structuredItems.length) {
+      return sendWhatsApp({
         from: biz.wa.number,
         to: from,
-        body: "⚠️ Invalid option. Send *menu*.",
+        body:
+          lang === "arabic"
+            ? "من فضلك اختر رقمًا من القائمة أو أرسل *menu* لعرضها."
+            : lang === "hebrew"
+            ? "בחר/י מספר מהתפריט או כתוב/י *menu*."
+            : "Please choose a number from the menu or type *menu*.",
       });
-      return;
     }
 
-    const item = items[index];
+    const item = structuredItems[index];
+    const action = item.action || "custom";
+    const payload = item.payload || "";
 
-    await menuService.handleMenuAction({
-      action: item.action,
-      payload: item.payload,
+    return menuService.executeMenuAction({
+      action,
+      payload,
       biz,
+      from,
       customer,
       state,
-      from,
-      text,
+      lang,
+      langKey,
     });
   },
 };
