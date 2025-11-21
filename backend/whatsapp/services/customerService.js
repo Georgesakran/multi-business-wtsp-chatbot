@@ -2,27 +2,38 @@
 const Customer = require("../../models/Customer");
 
 module.exports = {
-  async getOrCreate(businessId, phone) {
-    let c = await Customer.findOne({ businessId, phone }).lean();
-    if (c) return c;
+  async getOrCreateCustomer(businessId, phone) {
+    if (!businessId || !phone) throw new Error("Missing businessId or phone");
 
-    return Customer.create({
-      businessId,
-      phone,
-      language: null,
-      stats: { lastSeenAt: new Date() }
-    });
+    let customer = await Customer.findOne({ businessId, phone });
+
+    if (!customer) {
+      customer = await Customer.create({
+        businessId,
+        phone,
+        language: "english", // default language
+        stats: { lastSeenAt: new Date() }
+      });
+      return customer;
+    }
+
+    // update last seen
+    customer.stats = customer.stats || {};
+    customer.stats.lastSeenAt = new Date();
+    await customer.save();
+
+    return customer;
   },
 
-  async updateLanguage(businessId, phone, lang) {
-    return Customer.findOneAndUpdate(
+  /**
+   * Update customer language
+   */
+  async setLanguage(businessId, phone, lang) {
+    return await Customer.findOneAndUpdate(
       { businessId, phone },
-      {
-        $setOnInsert: { businessId, phone },
-        $set: { language: lang, "stats.lastSeenAt": new Date() },
-      },
-      { new: true, upsert: true }
-    ).lean();
+      { language: lang, "stats.lastSeenAt": new Date() },
+      { new: true }
+    );
   },
 
   detectLanguage(customer, biz) {

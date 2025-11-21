@@ -177,6 +177,7 @@ module.exports = {
 
 
 module.exports.processStep = async ({ biz, from, customer, state, text }) => {
+  
   switch (state.step) {
     case "BOOKING_SELECT_SERVICE":
       return module.exports.askForDate({ biz, from, customer, state });
