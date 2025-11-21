@@ -4,7 +4,9 @@ const languageController = require("./languageController");
 const menuController = require("./menuController");
 const bookingController = require("./bookingController");
 const fallbackController = require("./fallbackController");
-const { detectLanguage } = require("../utils/i18n");
+
+const customerService = require("../services/customerService");
+
 const { isListPickerSelection } = require("../utils/parsing");
 const { log, error } = require("../utils/logger");
 
@@ -17,18 +19,25 @@ module.exports = {
       log("📥 Incoming:", { from, to, body });
 
       // 1) Load state
-      const state = await stateManager.getState(biz._id, from);
+      let state = await stateManager.getState(biz._id, from);
 
-      // 2) Detect language from business config
-      const lang = biz.config?.language || "arabic";
+      // 2) Load or create customer (CRITICAL FIX!!)
+      let customer = await customerService.getOrCreateCustomer(biz._id, from);
 
-      // 3) Handle MENU command
+      // 3) Determine language (customer > business)
+      const lang = customer.language || biz.config?.language || "english";
+
+      // -------------------------
+      // (A) MENU COMMAND
+      // -------------------------
       if (body.toLowerCase().trim() === "menu") {
-        await menuController.showMainMenu({ biz, from, to, lang, state });
+        await menuController.showMainMenu({ biz, from, lang, customer, state });
         return res.sendStatus(200);
       }
 
-      // 4) Detect Twilio List Picker Click
+      // -------------------------
+      // (B) LIST PICKER HANDLING
+      // -------------------------
       if (isListPickerSelection(payload)) {
         return await this.handleListPickerSelection({
           payload,
@@ -36,25 +45,34 @@ module.exports = {
           from,
           to,
           state,
+          customer,
           lang,
           res
         });
       }
 
-      // 5) Route based on current flow step
+      // -------------------------
+      // (C) BOOKING FLOW
+      // (processStep DOES NOT EXIST → FIX)
+      // -------------------------
       if (state?.step?.startsWith("BOOKING_")) {
-        await bookingController.processStep({
+
+        await bookingController.process({
           biz,
           from,
           to,
           body,
           state,
-          lang,
+          customer,
+          lang
         });
+
         return res.sendStatus(200);
       }
 
-      // 6) Language switching
+      // -------------------------
+      // (D) LANGUAGE SWITCH
+      // -------------------------
       if (languageController.isLanguageSwitch(body)) {
         await languageController.setLanguage({
           biz,
@@ -62,32 +80,40 @@ module.exports = {
           to,
           body,
           state,
+          customer
         });
         return res.sendStatus(200);
       }
 
-      // 7) Detect main menu number selection
+      // -------------------------
+      // (E) MENU SELECTION
+      // -------------------------
       const menuHandled = await menuController.handleMenuSelection({
         biz,
         from,
         to,
         body,
         lang,
-        state,
+        customer,
+        state
       });
+
       if (menuHandled) {
         return res.sendStatus(200);
       }
 
-      // 8) Fallback
+      // -------------------------
+      // (F) FALLBACK
+      // -------------------------
       await fallbackController.sendFallbackMessage({
         biz,
         from,
         to,
-        lang,
+        lang
       });
 
       return res.sendStatus(200);
+
     } catch (err) {
       error("❌ chatbotEntryController error:", err);
       return res.sendStatus(500);
@@ -95,9 +121,9 @@ module.exports = {
   },
 
   /**
-   * Handles Twilio List Picker clicks
+   * HANDLE TWILIO LIST PICKER
    */
-  async handleListPickerSelection({ payload, biz, from, to, state, lang, res }) {
+  async handleListPickerSelection({ payload, biz, from, to, state, customer, lang, res }) {
     try {
       const selectionId =
         payload?.Interactive?.ListReply?.Id ||
@@ -108,7 +134,7 @@ module.exports = {
         return res.sendStatus(200);
       }
 
-      // DATE Selection = "DATE_2025-01-06"
+      // DATE Selection
       if (selectionId.startsWith("DATE_")) {
         const selectedDate = selectionId.replace("DATE_", "");
         await bookingController.dateSelected({
@@ -116,13 +142,14 @@ module.exports = {
           from,
           to,
           state,
+          customer,
           selectedDate,
-          lang,
+          lang
         });
         return res.sendStatus(200);
       }
 
-      // TIME Selection = "TIME_10:30"
+      // TIME Selection
       if (selectionId.startsWith("TIME_")) {
         const selectedTime = selectionId.replace("TIME_", "");
         await bookingController.timeSelected({
@@ -130,20 +157,20 @@ module.exports = {
           from,
           to,
           state,
+          customer,
           selectedTime,
-          lang,
+          lang
         });
         return res.sendStatus(200);
       }
 
       log("⚠️ Unknown list picker payload:", selectionId);
       return res.sendStatus(200);
+
     } catch (err) {
       error("❌ handleListPickerSelection error:", err);
       return res.sendStatus(500);
     }
-  },
-
+  }
 
 };
-
