@@ -94,7 +94,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // BOOKING FLOW
     // --------------------------------------------------
-    case "booking":
+    case "book_appointment":
       const bookingController = require("../controllers/bookingController");
       return bookingController.startFlow({
         biz,
@@ -107,7 +107,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // SERVICES
     // --------------------------------------------------
-    case "services":
+    case "view_services":
       const servicesController = require("../controllers/servicesController");
       return servicesController.showServices({
         biz,
@@ -119,7 +119,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // PRODUCTS
     // --------------------------------------------------
-    case "products":
+    case "view_products":
       const productController = require("../controllers/productController");
       return productController.showProducts({
         biz,
@@ -131,7 +131,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // COURSES
     // --------------------------------------------------
-    case "courses":
+    case "view_courses":
       const courseController = require("../controllers/courseController");
       return courseController.showCourses({
         biz,
@@ -143,7 +143,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // ABOUT / LOCATION
     // --------------------------------------------------
-    case "about":
+    case "about_location":
       const aboutController = require("../controllers/aboutController");
       return aboutController.showAbout({
         biz,
@@ -155,7 +155,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // CONTACT US
     // --------------------------------------------------
-    case "contact":
+    case "contact_us":
       const contactController = require("../controllers/contactController");
       return contactController.showContact({
         biz,
@@ -193,7 +193,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // RESCHEDULE / CANCEL
     // --------------------------------------------------
-    case "reschedule":
+    case "reschedule_appointment":
       const rescheduleController = require("../controllers/rescheduleController");
       return rescheduleController.startReschedule({
         biz,
@@ -207,7 +207,7 @@ async function executeMenuAction({
     // --------------------------------------------------
     // INSTAGRAM LINK
     // --------------------------------------------------
-    case "instagram":
+    case "follow_instagram":
       return sendWhatsApp({
         from: biz.wa.number,
         to: from,
