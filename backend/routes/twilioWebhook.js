@@ -1833,12 +1833,13 @@
 // routes/twilioWebhook.js
 const express = require("express");
 const router = express.Router();
-const chatbotEntryController = require("../controllers/chatbotEntryController");
+const chatbotEntryController = require("../whatsapp/controllers/chatbotEntryController");
 const Business = require("../models/Business");
-const { error, log } = require("../utils/logger");
+const { error, log } = require("../whatsapp/utils/logger");
 
 // Twilio supports only POST webhooks
 router.post("/", async (req, res) => {
+  console.log(1);
   try {
     const from = req.body.From || req.body.from;
     const bizNumber = req.body.To || req.body.to; // business WhatsApp number

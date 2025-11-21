@@ -2,7 +2,7 @@
 const stateManager = require("../state/stateManager");
 const languageController = require("./languageController");
 const menuController = require("./menuController");
-const bookingController = require("./booking/bookingController");
+const bookingController = require("./bookingController");
 const fallbackController = require("./fallbackController");
 const { detectLanguage } = require("../utils/i18n");
 const { isListPickerSelection } = require("../utils/parsing");
