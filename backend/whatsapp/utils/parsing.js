@@ -40,18 +40,41 @@ function parseMenuIndexFromText(txt) {
   return n - 1;
 }
 
-/**
- * Simple date validator YYYY-MM-DD
- */
+/*  Simple date validator YYYY-MM-DD */
 function isDate(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 }
 
-/**
- * Simple time validator HH:mm
- */
+/* Simple time validator HH:mm */
+
 function isTime(s) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+}
+
+function isListPickerSelection(payload) {
+  try {
+    return (
+      payload?.Interactive?.Type === "list_reply" ||
+      payload?.interactive?.type === "list_reply" ||
+      payload?.ListPicker === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+/*  Extract the selected option ID from Twilio list reply  */
+function extractListPickerSelection(payload) {
+  // Twilio format 1
+  if (payload?.Interactive?.ListReply?.Id) {
+    return payload.Interactive.ListReply.Id;
+  }
+
+  // Twilio format 2
+  if (payload?.interactive?.list_reply?.id) {
+    return payload.interactive.list_reply.id;
+  }
+  return null;
 }
 
 module.exports = {
@@ -59,5 +82,7 @@ module.exports = {
   lower,
   parseMenuIndexFromText,
   isDate,
-  isTime
+  isTime,
+  isListPickerSelection,
+  extractListPickerSelection,
 };
