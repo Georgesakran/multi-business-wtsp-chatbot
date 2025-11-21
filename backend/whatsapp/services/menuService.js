@@ -1,51 +1,147 @@
 // services/menuService.js
-const { getLocalized } = require("../utils/i18n");
 
-module.exports = {
-  getVisibleMenuItems(biz) {
-    const list = (biz?.config?.menuItems || []).filter(
-      (item) => item && item.enabled !== false
-    );
+const { t } = require("../utils/i18n");
+const { sendWhatsApp } = require("../services/messaging/twilioService");
+const stateManager = require("../state/stateManager");
 
-    list.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
-    return list;
-  },
+// -----------------------------------------
+// Parse menu index (Arabic/Hebrew/English)
+// -----------------------------------------
+function parseMenuIndex(text) {
+  if (!text) return null;
 
-  buildMenuText(biz, langKey, langFull) {
-    const items = this.getVisibleMenuItems(biz);
+  text = text.trim();
 
-    if (!items.length) {
-      return langFull === "arabic"
-        ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞"
-        : langFull === "hebrew"
-        ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞"
-        : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞";
+  // Arabic-Indic digits: ٠١٢٣٤٥٦٧٨٩
+  const arZero = "٠".charCodeAt(0);
+  // Persian-Indic digits: ۰۱۲۳۴۵۶۷۸۹
+  const faZero = "۰".charCodeAt(0);
+
+  let normalized = "";
+
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
+
+    // Arabic-Indic
+    if (code >= arZero && code <= arZero + 9) {
+      normalized += (code - arZero).toString();
+      continue;
     }
 
-    const header =
-      langFull === "arabic"
-        ? "🌿 *القائمة الرئيسية*"
-        : langFull === "hebrew"
-        ? "🌿 *תפריט ראשי*"
-        : "🌿 *Main Menu*";
+    // Persian-Indic
+    if (code >= faZero && code <= faZero + 9) {
+      normalized += (code - faZero).toString();
+      continue;
+    }
 
-    const lines = items.map((item, i) => {
-      const label =
-        item.label?.[langKey] ||
-        item.label?.en ||
-        item.label?.ar ||
-        item.label?.he ||
-        item.action;
-      return `${i + 1}) ${label}`;
-    });
+    // English digits
+    if (/[0-9]/.test(ch)) {
+      normalized += ch;
+      continue;
+    }
+  }
 
-    const footer =
-      langFull === "arabic"
-        ? "\n💬 أرسل رقم الخيار أو اكتب *menu* لعرض القائمة."
-        : langFull === "hebrew"
-        ? "\n💬 שלח/י מספר או כתוב/י *menu*."
-        : "\n💬 Send the option number or type *menu* anytime.";
+  if (!normalized) return null;
 
-    return [header, lines.join("\n"), footer].join("\n\n");
-  },
+  const n = parseInt(normalized, 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+
+  return n - 1;
+}
+
+// -----------------------------------------
+// Return structured menu items
+// -----------------------------------------
+function getVisibleMenuItems(biz) {
+  // Later we can add dynamic filtering
+  return biz.config?.menuItems || [];
+}
+
+// -----------------------------------------
+// Build the main menu text (multi-language)
+// -----------------------------------------
+function buildMenuText(biz, langKey, lang) {
+  const items = getVisibleMenuItems(biz);
+
+  let lines = [];
+
+  items.forEach((item, i) => {
+    const label = item.label?.[langKey] || item.label?.en || "";
+    lines.push(`${i + 1}) ${label}`);
+  });
+
+  const footer =
+    lang === "arabic"
+      ? "\n\n💬 أرسل رقم الخيار أو اكتب *menu* لعرض القائمة."
+      : lang === "hebrew"
+      ? "\n\n💬 כתוב/י מספר בתפריט או *menu*."
+      : "\n\n💬 Send a number or type *menu*.";
+
+  return t(lang, "main_menu_title") + "\n\n" + lines.join("\n") + footer;
+}
+
+// -----------------------------------------
+// Execute menu item actions
+// -----------------------------------------
+async function executeMenuAction({
+  action,
+  payload,
+  biz,
+  from,
+  customer,
+  state,
+  lang,
+  langKey,
+}) {
+  switch (action) {
+    case "booking":
+      await stateManager.setState(state, { step: "BOOKING_SELECT_SERVICE" });
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "ask_service"),
+      });
+
+    case "services":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "services_list"),
+      });
+
+    case "products":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "products_list"),
+      });
+
+    case "about":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "about_business"),
+      });
+
+    case "contact":
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "contact_us"),
+      });
+
+    default:
+      return sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body: t(lang, "unknown_option"),
+      });
+  }
+}
+
+module.exports = {
+  parseMenuIndex,
+  buildMenuText,
+  getVisibleMenuItems,
+  executeMenuAction,
 };
