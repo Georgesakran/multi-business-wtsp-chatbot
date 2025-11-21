@@ -1,7 +1,7 @@
 // services/menuService.js
 
 const { t } = require("../utils/i18n");
-const { sendWhatsApp } = require("./messaging/twilioService");
+const { sendWhatsApp } = require("../services/messaging/twilioService");
 const stateManager = require("../state/stateManager");
 
 // -----------------------------------------
