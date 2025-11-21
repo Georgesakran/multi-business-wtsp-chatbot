@@ -22,22 +22,22 @@ module.exports = {
     }
 
     const header =
-        lang === "arabic"
+        langKey === "ar"
         ? "✨ *خدماتنا الرئيسية*"
-        : lang === "hebrew"
+        : langKey === "he"
         ? "✨ *השירותים שלנו*"
         : "✨ *Our main services*";
 
     const lines = services.map((s, i) => {
-        const name = s.name?.[key] || s.name?.en || "";
-        const desc = s.description?.[key] || s.description?.en || "";
+        const name = s.name?.[langKey] || s.name?.en || "";
+        const desc = s.description?.[langKey] || s.description?.en || "";
         const price =
             typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
         const duration =
             typeof s.duration === "number" && s.duration > 0
-                ? lang === "arabic"
+                ? langKey === "ar"
                 ? `${s.duration} دقيقة`
-                : lang === "hebrew"
+                : langKey === "he"
                 ? `${s.duration} דק׳`
                 : `${s.duration} min`
                 : "";
@@ -51,9 +51,9 @@ module.exports = {
     });
 
     const footer =
-        lang === "arabic"
+        langkey === "ar"
         ? "\n💬 أرسلي رقم الخدمة التي تهمك، أو اكتبي *menu* للعودة إلى القائمة."
-        : lang === "hebrew"
+        : lang === "he"
         ? "\n💬 כתבי את מספר השירות שמעניין אותך, או הקלידי *menu* כדי לחזור לתפריט."
         : "\n💬 Reply with the service number you like, or type *menu* to go back to the main menu.";
   
