@@ -1,40 +1,40 @@
 // services/menuService.js
 
 const { t } = require("../utils/i18n");
-const { sendWhatsApp } = require("../services/messaging/twilioService");
-const stateManager = require("../state/stateManager");
 
-// -----------------------------------------
-// Parse menu index (Arabic/Hebrew/English)
-// -----------------------------------------
+/**
+ * Parse menu index (Arabic / Persian / English digits)
+ * Supports:
+ *   - 1,2,3
+ *   - ١,٢,٣ (Arabic-Indic)
+ *   - ۱,۲,۳ (Persian-Indic)
+ */
 function parseMenuIndex(text) {
   if (!text) return null;
 
   text = text.trim();
 
-  // Arabic-Indic digits: ٠١٢٣٤٥٦٧٨٩
-  const arZero = "٠".charCodeAt(0);
-  // Persian-Indic digits: ۰۱۲۳۴۵۶۷۸۹
-  const faZero = "۰".charCodeAt(0);
+  const arZero = "٠".charCodeAt(0); // Arabic-Indic
+  const faZero = "۰".charCodeAt(0); // Persian-Indic
 
   let normalized = "";
 
   for (const ch of text) {
     const code = ch.charCodeAt(0);
 
-    // Arabic-Indic
+    // Arabic-Indic ٠١٢٣٤٥٦٧٨٩
     if (code >= arZero && code <= arZero + 9) {
       normalized += (code - arZero).toString();
       continue;
     }
 
-    // Persian-Indic
+    // Persian-Indic ۰۱۲۳۴۵۶۷۸۹
     if (code >= faZero && code <= faZero + 9) {
       normalized += (code - faZero).toString();
       continue;
     }
 
-    // English digits
+    // English 0–9
     if (/[0-9]/.test(ch)) {
       normalized += ch;
       continue;
@@ -49,24 +49,28 @@ function parseMenuIndex(text) {
   return n - 1;
 }
 
-// -----------------------------------------
-// Return structured menu items
-// -----------------------------------------
+/**
+ * Return structured menu items from business config
+ */
 function getVisibleMenuItems(biz) {
-  // Later we can add dynamic filtering
-  return biz.config?.menuItems || [];
+  return Array.isArray(biz?.config?.menuItems)
+    ? biz.config.menuItems.filter((x) => x.enabled !== false)
+    : [];
 }
 
-// -----------------------------------------
-// Build the main menu text (multi-language)
-// -----------------------------------------
+/**
+ * Build multi-language menu text
+ */
 function buildMenuText(biz, langKey, lang) {
   const items = getVisibleMenuItems(biz);
 
   let lines = [];
 
   items.forEach((item, i) => {
-    const label = item.label?.[langKey] || item.label?.en || "";
+    const label =
+      item.label?.[langKey] ||
+      item.label?.en ||
+      "—";
     lines.push(`${i + 1}) ${label}`);
   });
 
@@ -80,9 +84,9 @@ function buildMenuText(biz, langKey, lang) {
   return t(lang, "main_menu_title") + "\n\n" + lines.join("\n") + footer;
 }
 
-// -----------------------------------------
-// Execute menu item actions
-// -----------------------------------------
+/**
+ * Execute menu action based on config
+ */
 async function executeMenuAction({
   action,
   payload,
@@ -93,9 +97,15 @@ async function executeMenuAction({
   lang,
   langKey,
 }) {
+  const { sendWhatsApp } = require("./messaging/twilioService");
+  const stateManager = require("../state/stateManager");
+
   switch (action) {
     case "booking":
-      await stateManager.setState(state, { step: "BOOKING_SELECT_SERVICE" });
+      await stateManager.setState(state, {
+        step: "BOOKING_SELECT_SERVICE",
+      });
+
       return sendWhatsApp({
         from: biz.wa.number,
         to: from,
@@ -130,6 +140,7 @@ async function executeMenuAction({
         body: t(lang, "contact_us"),
       });
 
+    case "custom":
     default:
       return sendWhatsApp({
         from: biz.wa.number,
