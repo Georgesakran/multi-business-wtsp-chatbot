@@ -1,5 +1,3 @@
-// utils/parsing.js
-
 function rawText(req) {
   return (req.body?.Body || "").trim();
 }
@@ -8,10 +6,7 @@ function lower(s) {
   return String(s || "").toLowerCase();
 }
 
-/**
- * Parse menu index (1 → 0)
- * Supports Arabic digits
- */
+/*  Parse menu index (1 → 0)  Supports Arabic digits  */
 function parseMenuIndexFromText(txt) {
   if (!txt) return null;
 
