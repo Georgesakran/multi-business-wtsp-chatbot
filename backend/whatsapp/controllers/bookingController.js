@@ -176,3 +176,28 @@ module.exports = {
 };
 
 
+module.exports.processStep = async ({ biz, from, customer, state, text }) => {
+  switch (state.step) {
+    case "BOOKING_SELECT_SERVICE":
+      return module.exports.askForDate({ biz, from, customer, state });
+
+    case "BOOKING_SELECT_DATE_LIST":
+      return module.exports.handleDateChosen({ biz, from, customer, state, text });
+
+    case "BOOKING_SELECT_DATE":
+      return module.exports.askForTime({ biz, from, customer, state, text });
+
+    case "BOOKING_SELECT_TIME":
+      return module.exports.handleTimeChosen({ biz, from, customer, state, text });
+
+    case "BOOKING_ENTER_NAME":
+      return module.exports.handleName({ biz, from, customer, state, text });
+
+    case "BOOKING_ENTER_NOTE":
+      return module.exports.handleFinalize({ biz, from, customer, state, text });
+
+    default:
+      console.warn("bookingController.processStep → Unknown state:", state.step);
+      return;
+  }
+};
