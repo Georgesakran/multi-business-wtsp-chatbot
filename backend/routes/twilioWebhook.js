@@ -1836,45 +1836,55 @@ const router = express.Router();
 const chatbotEntryController = require("../whatsapp/controllers/chatbotEntryController");
 const Business = require("../models/Business");
 const { error, log } = require("../whatsapp/utils/logger");
+const { rawText } = require("../whatsapp/utils/parsing"); // FIXED: now imported
 
-// Twilio supports only POST webhooks
+// Twilio only uses POST for WhatsApp webhooks
 router.post("/", async (req, res) => {
-  console.log(1);
   try {
-    const from = req.body.From || req.body.from;
-    const bizNumber = req.body.To || req.body.to; // business WhatsApp number
-
-    if (!from || !bizNumber) {
-      error("Missing From or To fields in webhook");
+    if (!req.body) {
+      error("❌ Empty webhook payload");
       return res.sendStatus(400);
     }
 
-    // 1) Find business
+    // Normalize whatsapp:+972...
+    const normalize = (v) => String(v || "").replace(/^whatsapp:/, "");
+
+    const from = normalize(req.body.From || req.body.from);
+    const to = normalize(req.body.To || req.body.to); // business WA number
+    const text = rawText(req); // FIXED: now safe
+
+    if (!from || !to) {
+      error("❌ Webhook missing From or To field:", { from, to });
+      return res.sendStatus(400);
+    }
+
+    // 1️⃣ Find the matching business by its WhatsApp number
     const biz = await Business.findOne({
       $or: [
-        { "wa.number": bizNumber },
-        { whatsappNumber: bizNumber } // legacy fallback
-      ]
+        { "wa.number": to },      // new Twilio number
+        { whatsappNumber: to }    // legacy stored number
+      ],
+      isActive: true
     });
 
     if (!biz) {
-      error("No business matches this WhatsApp number:", bizNumber);
+      error("❌ No active business found for WhatsApp number:", to);
       return res.sendStatus(404);
     }
 
-    // 2) Forward everything to controller
+    // 2️⃣ Forward request to central controller
     await chatbotEntryController.handleIncomingMessage({
       req,
       res,
       biz,
       from,
-      to: bizNumber,
-      body: req.body.Body || "",
-      payload: req.body,     // Full payload (for list picker selection)
+      to,
+      body: req.body.Body || req.body.body || "",
+      payload: req.body, // full Twilio webhook payload
     });
 
   } catch (err) {
-    error("Twilio webhook exception:", err);
+    error("❌ Twilio webhook exception:", err);
     return res.sendStatus(500);
   }
 });
