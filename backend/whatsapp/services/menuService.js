@@ -126,12 +126,24 @@ async function executeMenuAction({
         body: t(lang, "products_list"),
       });
 
-    case "about":
-      return sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: t(lang, "about_business"),
-      });
+      case "about": {
+        const loc = biz.location || {};
+        const city = loc.city || "-";
+        const street = loc.street || "-";
+      
+        let body;
+      
+        if (lang === "arabic") {
+          body = `📍 *عن الصالون / الموقع*\n\nالمدينة: ${city}\nالشارع: ${street}`;
+        } else if (lang === "hebrew") {
+          body = `📍 *על הסלון / מיקום*\n\nעיר: ${city}\nרחוב: ${street}`;
+        } else {
+          body = `📍 *About the salon / location*\n\nCity: ${city}\nStreet: ${street}`;
+        }
+      
+        await sendWhatsApp({ from: biz.wa.number, to: from, body });
+        return;
+      }
 
     case "contact":
       return sendWhatsApp({
