@@ -14,6 +14,7 @@ function t(lang, key, vars = {}) {
     arabic: { arabic: "العربية", english: "Arabic", hebrew: "Arabic" },
     english: { arabic: "الإنجليزية", english: "English", hebrew: "English" },
     hebrew: { arabic: "العبرية", english: "Hebrew", hebrew: "עברית" },
+    
     got_language: {
       arabic: "تم تحديث اللغة ✅",
       english: "Language updated ✅",

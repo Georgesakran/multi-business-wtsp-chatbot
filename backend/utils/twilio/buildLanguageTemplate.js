@@ -5,9 +5,9 @@ function buildLanguageTemplate(lang = "english") {
   return {
     body: t(lang, "choose_language"),
 
-    btn1_text: t(lang, "arabic"),
+    btn1_text: t(arabic, "arabic"),
     btn2_text: t(lang, "english"),
-    btn3_text: t(lang, "hebrew"),
+    btn3_text: t(hebrew, "hebrew"),
 
     LANG_AR,
     LANG_EN,
