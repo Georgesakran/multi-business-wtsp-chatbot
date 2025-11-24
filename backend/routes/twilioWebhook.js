@@ -550,74 +550,74 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
 
 
 
-async function checkFreeSlotsToday(biz) {
-  const booking = biz.config.booking;
-  const openingTime = booking.openingTime || "09:00";
-  const closingTime = booking.closingTime || "18:00";
-  const gap = Number(booking.slotGapMinutes || 15);
+// async function checkFreeSlotsToday(biz) {
+//   const booking = biz.config.booking;
+//   const openingTime = booking.openingTime || "09:00";
+//   const closingTime = booking.closingTime || "18:00";
+//   const gap = Number(booking.slotGapMinutes || 15);
 
-  const today = moment().format("YYYY-MM-DD");
+//   const today = moment().format("YYYY-MM-DD");
 
-  const grid = makeDayGrid(openingTime, closingTime, gap);
-  const taken = await getTakenMap(biz._id, today);
+//   const grid = makeDayGrid(openingTime, closingTime, gap);
+//   const taken = await getTakenMap(biz._id, today);
 
-  const now = moment();
+//   const now = moment();
 
-  for (let i = 0; i < grid.length; i++) {
-    const slotTime = moment(grid[i], "HH:mm");
-    if (slotTime.isBefore(now)) continue; // skip past times
-    if (taken[i] !== true) return true; // found at least ONE free slot
-  }
+//   for (let i = 0; i < grid.length; i++) {
+//     const slotTime = moment(grid[i], "HH:mm");
+//     if (slotTime.isBefore(now)) continue; // skip past times
+//     if (taken[i] !== true) return true; // found at least ONE free slot
+//   }
 
-  return false;
-}
+//   return false;
+// }
 
 
-function makeDayGrid(openingTime, closingTime, slotGapMinutes) {
-  const start = toMinutes(openingTime);
-  const end = toMinutes(closingTime);
-  const gap = Math.max(5, Number(slotGapMinutes || 15));
-  const out = [];
-  for (let t = start; t + gap <= end; t += gap) out.push(toHHMM(t));
-  return out;
-}
+// function makeDayGrid(openingTime, closingTime, slotGapMinutes) {
+//   const start = toMinutes(openingTime);
+//   const end = toMinutes(closingTime);
+//   const gap = Math.max(5, Number(slotGapMinutes || 15));
+//   const out = [];
+//   for (let t = start; t + gap <= end; t += gap) out.push(toHHMM(t));
+//   return out;
+// }
 
-function slotsNeeded(duration, slotGapMinutes) {
-  const gap = Math.max(5, Number(slotGapMinutes || 15));
-  return Math.max(1, Math.ceil(Number(duration || 0) / gap));
-}
+// function slotsNeeded(duration, slotGapMinutes) {
+//   const gap = Math.max(5, Number(slotGapMinutes || 15));
+//   return Math.max(1, Math.ceil(Number(duration || 0) / gap));
+// }
 
-function findServiceById(biz, serviceId) {
-  if (!serviceId) return null;
-  const sid = String(serviceId);
-  return (biz.services || []).find((s) => String(s._id) === sid) || null;
-}
+// function findServiceById(biz, serviceId) {
+//   if (!serviceId) return null;
+//   const sid = String(serviceId);
+//   return (biz.services || []).find((s) => String(s._id) === sid) || null;
+// }
 
-async function getTakenMap(businessId, date) {
-  const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+// async function getTakenMap(businessId, date) {
+//   const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
 
-  const sameDay = await Booking.find({
-    businessId,
-    date,
-    status: { $in: ["pending", "confirmed"] },
-  })
-    .select("time status")
-    .lean();
+//   const sameDay = await Booking.find({
+//     businessId,
+//     date,
+//     status: { $in: ["pending", "confirmed"] },
+//   })
+//     .select("time status")
+//     .lean();
 
-  const map = new Map();
-  for (const b of sameDay) {
-    if (isTime(b.time)) map.set(b.time, true);
-  }
-  return map;
-}
+//   const map = new Map();
+//   for (const b of sameDay) {
+//     if (isTime(b.time)) map.set(b.time, true);
+//   }
+//   return map;
+// }
 
-function isRangeFree(dayGrid, takenMap, startIndex, need) {
-  for (let i = 0; i < need; i++) {
-    const t = dayGrid[startIndex + i];
-    if (!t || takenMap.get(t)) return false;
-  }
-  return true;
-}  
+// function isRangeFree(dayGrid, takenMap, startIndex, need) {
+//   for (let i = 0; i < need; i++) {
+//     const t = dayGrid[startIndex + i];
+//     if (!t || takenMap.get(t)) return false;
+//   }
+//   return true;
+// }  
 
 // -------------------- webhook --------------------
 router.post("/", async (req, res) => {
