@@ -7,10 +7,10 @@ const { CANCEL } = require("../constants/systemConstants");
 function t(lang, key, vars = {}) {
   const L = {
     choose_language: {
-      arabic: "من فضلك اختر اللغة:",
-      english: "Please choose your language:",
-      hebrew: "בחר/י שפה בבקשה:",
-    },
+      arabic: "من فضلك اختر اللغة: 💬",
+      english: "💬 Please choose your language:",
+      hebrew: "בחר/י שפה בבקשה: 💬",
+    }, 
     arabic: { arabic: "العربية", english: "Arabic", hebrew: "Arabic" },
     english: { arabic: "الإنجليزية", english: "English", hebrew: "English" },
     hebrew: { arabic: "العبرية", english: "Hebrew", hebrew: "עברית" },

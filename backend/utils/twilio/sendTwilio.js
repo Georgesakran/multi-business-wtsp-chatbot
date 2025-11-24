@@ -1,4 +1,3 @@
-// utils/sendTwilio.js
 const twilio = require("twilio");
 
 const client = twilio(
@@ -6,7 +5,7 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-// helper – מוסיף prefix של whatsapp: אם חסר
+// add whatsapp: prefix if missing
 function ensureWhatsAppAddress(num) {
   if (!num) return num;
   const s = String(num).trim();
@@ -14,17 +13,16 @@ function ensureWhatsAppAddress(num) {
   return `whatsapp:${s}`;
 }
 
-// שליחת הודעה רגילה
+// send regular WhatsApp text message
 async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   const payload = {
     from: ensureWhatsAppAddress(
-      from || process.env.TWILIO_WHATSAPP_NUMBER // fallback כללי
+      from || process.env.TWILIO_WHATSAPP_NUMBER
     ),
     to: ensureWhatsAppAddress(to),
     body: body || "",
   };
 
-  // תמונות / מדיה
   if (mediaUrl) {
     payload.mediaUrl = Array.isArray(mediaUrl) ? mediaUrl : [mediaUrl];
   }
@@ -36,7 +34,7 @@ async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   return client.messages.create(payload);
 }
 
-// אם אתה עובד גם עם Content Template דרך Twilio (sendTemplate)
+// send a Twilio Content Template message
 async function sendTemplate({
   from,
   to,
@@ -44,13 +42,17 @@ async function sendTemplate({
   variables = {},
   messagingServiceSid,
 }) {
+
+  // ---- IMPORTANT: Twilio requires stringified JSON values ----
+  const safeVars = JSON.stringify(variables);
+
   const payload = {
     from: ensureWhatsAppAddress(
       from || process.env.TWILIO_WHATSAPP_NUMBER
     ),
     to: ensureWhatsAppAddress(to),
     contentSid,
-    contentVariables: JSON.stringify(variables || {}),
+    contentVariables: safeVars,
   };
 
   if (messagingServiceSid) {
