@@ -1,10 +1,6 @@
 const { getVisibleMenuItemsSorted } = require("./menuUtils");
-const { businessNameFor } = require("../business/businessNameHelper"); 
-const { getConfigMessage } = require("../config/configMessageHelper");
-
-// The above paths depend on your folder structure.
-// If you don’t yet have businessNameHelper or configMessageHelper,
-// tell me and I will create them for you.
+const { businessNameFor } = require("../../business/businessNameHelper"); 
+const { getConfigMessage } = require("../../config/configMessageHelper");
 
 
 function buildMenuText(biz, langKey, langFull) {
