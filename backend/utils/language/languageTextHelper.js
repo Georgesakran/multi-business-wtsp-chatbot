@@ -11,6 +11,9 @@ function t(lang, key, vars = {}) {
       english: "Please choose your language:",
       hebrew: "בחר/י שפה בבקשה:",
     },
+    arabic: { arabic: "العربية", english: "Arabic", hebrew: "Arabic" },
+    english: { arabic: "الإنجليزية", english: "English", hebrew: "English" },
+    hebrew: { arabic: "العبرية", english: "Hebrew", hebrew: "עברית" },
     got_language: {
       arabic: "تم تحديث اللغة ✅",
       english: "Language updated ✅",
@@ -74,15 +77,12 @@ function langKeyFromCustomer(customer, biz) {
   if (customer?.language === "arabic") return "ar";
   if (customer?.language === "english") return "en";
   if (customer?.language === "hebrew") return "he";
-
   if (biz?.config?.language === "arabic") return "ar";
   if (biz?.config?.language === "english") return "en";
   if (biz?.config?.language === "hebrew") return "he";
-
   if (biz?.wa?.locale === "ar") return "ar";
   if (biz?.wa?.locale === "he") return "he";
   if (biz?.wa?.locale === "en") return "en";
-
   return "en";
 }
 
