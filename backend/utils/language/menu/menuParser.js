@@ -21,4 +21,4 @@ function parseMenuIndexFromText(txt) {
   if (!Number.isFinite(n) || n <= 0) return null;
   return n - 1; // index
 }
-moduke.exports = parseMenuIndexFromText;
+module.exports = parseMenuIndexFromText;
