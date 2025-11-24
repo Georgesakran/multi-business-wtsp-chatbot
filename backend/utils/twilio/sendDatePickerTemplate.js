@@ -1,4 +1,4 @@
-const { sendTemplate } = require("./twilio/sendTwilio");
+const { sendTemplate } = require("./sendTwilio");
 
 async function sendDatePickerTemplate(biz, to, days, lang) {
   const sid = biz?.wa?.templates?.booking?.askDateSid;
