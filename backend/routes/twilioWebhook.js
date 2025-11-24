@@ -621,7 +621,7 @@ router.post("/", async (req, res) => {
         body: menuText,
       });
 
-      return res.sendStatus("s");
+      return res.sendStatus("");
     }
 
     // 5) We have a known customer + language
