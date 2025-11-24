@@ -2,20 +2,41 @@
 const express = require("express");
 const router = express.Router();
 const moment = require("moment");
+
+// Models
 const Business = require("../models/Business");
 const Customer = require("../models/Customer");
 const Product = require("../models/Product");
 const Course = require("../models/Course");
 const Booking = require("../models/Booking");
-const ConversationState = require("../models/ConversationState");
-const sendDatePickerTemplate =require("../utils/sendDatePickerTemplate");
-// Twilio send helpers
-const { sendWhatsApp, sendTemplate } = require("../utils/sendTwilio");
+
+// Helpers
+const getState = require("../utils/state/getState");
+const setState = require("../utils/state/setState");
+
 const getNext10Days = require("../utils/getNext10Days");
 
+// Misc helpers
+const { toE164 } = require("../utils/misc/phoneHelpers");
+const { shortText } = require("../utils/misc/textHelpers");
+// language helpers
+const { getLocalized } = require("../utils/language/localization");
+const {t, langFromCustomer, langKeyFromCustomer, langKeyFromChoice} = require("../utils/language/languageTextHelper");
+const {parseLanguageChoice} = require ("../utils/language/languageParser");
+const PRODUCT_LABELS = require("../utils/language/labels/productLabels");
+const COURSE_LABELS = require("../utils/language/labels/courseLabel");
+
+// MENU Lang helpers
+const { getVisibleMenuItemsSorted } = require("../utils/language/menu/menuUtils");
+// const {businessNameFor} = require("../utils/business/businessNameHelper");
+const {getConfigMessage} = require("../utils/config/configMessageHelper");
+const {buildMenuText} = require("../utils/language/menu/menuBuilder");
+
+//Twilio
+const sendDatePickerTemplate =require("../utils/sendDatePickerTemplate");
+const { sendWhatsApp, sendTemplate } = require("../utils/twilio/sendTwilio");
+
 // -------------------- constants & helpers --------------------
-const BACK = "0";
-const CANCEL = "9";
 
 const rawText = (req) => (req.body?.Body || "").trim();
 const lower = (s) => String(s || "").toLowerCase();
@@ -25,364 +46,14 @@ const isRestartCmd = (txt) =>
   ["restart", "/restart", "start"].includes(lower(txt));
 const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
 
-// normalize E.164 without "whatsapp:"
-const toE164 = (x) => String(x || "").replace(/^whatsapp:/, "");
-
-// ---------- state helpers ----------
-async function getState({ businessId, phoneNumber }) {
-  let doc = await ConversationState.findOne({ businessId, phoneNumber });
-  if (!doc) {
-    doc = await ConversationState.create({
-      businessId,
-      phoneNumber,
-      step: "LANGUAGE_SELECT",
-      data: {},
-    });
-  }
-  return doc;
-}
-
-async function setState(stateDoc, patch) {
-  if (!stateDoc) return null;
-  if (patch.step) stateDoc.step = patch.step;
-  if (patch.data) stateDoc.data = { ...(stateDoc.data || {}), ...patch.data };
-  await stateDoc.save();
-  return stateDoc;
-}
 
 // ---------- language parsing / mapping ----------
-
-// ---------- Product helpers for multi-language fields ----------
-
-const PRODUCT_LABELS = {
-    arabic: {
-      category: "الفئة",
-      sku: "الكود",
-      stock: "الكمية المتوفرة",
-      listTitle: "🛍️ *منتجات مختارة لك*",
-      listCta:
-        "💬 أرسلي رقم المنتج الذي أعجبك أو اكتبي سؤالك عن أي منتج، ويمكنك دائمًا كتابة *menu* للعودة للقائمة.",
-      detailTitle: "🛍️ *تفاصيل المنتج*",
-      detailCta:
-        "📞 للطلب الآن: يمكنك الاتصال على الرقم الظاهر أو الرد باسمك + مدينتك + الكمية المطلوبة.\nاكتبي رقم منتج آخر لعرض تفاصيله، أو اكتبي *menu* للعودة للقائمة.",
-    },
-    hebrew: {
-      category: "קטגוריה",
-      sku: "מק״ט",
-      stock: "כמות במלאי",
-      listTitle: "🛍️ *מוצרים נבחרים עבורך*",
-      listCta:
-        "💬 שלחי את מספר המוצר שאהבת או כתבי שאלה על כל מוצר. ניתן תמיד לכתוב *menu* כדי לחזור לתפריט.",
-      detailTitle: "🛍️ *פרטי המוצר*",
-      detailCta:
-        "📞 להזמנה: אפשר להתקשר למספר שמופיע או לשלוח לנו את שמך + העיר + הכמות.\nאפשר לשלוח מספר מוצר אחר לפרטים נוספים, או לכתוב *menu* כדי לחזור לתפריט.",
-    },
-    english: {
-      category: "Category",
-      sku: "SKU",
-      stock: "Stock",
-      listTitle: "🛍️ *Featured Products*",
-      listCta:
-        "💬 Send the product number you like or ask any question. You can always type *menu* to return.",
-      detailTitle: "🛍️ *Product Details*",
-      detailCta:
-        "📞 To order: call the number shown or reply with your name, city and desired quantity.\nYou can send another product number for details, or type *menu* to go back.",
-    },
-  };
-
-const COURSE_LABELS = {
-    arabic: {
-      listTitle: "🎓 *الدورات وورش العمل المتاحة*",
-      listCta:
-        "💬 أرسلي رقم الدورة التي تهمك لعرض التفاصيل، أو اكتبي *menu* للعودة للقائمة.",
-      detailTitle: "🎓 *تفاصيل الدورة*",
-      noCourses: "لا توجد دورات أو ورش عمل مضافة حالياً.",
-      price: "السعر",
-      instructor: "المدرِّبة",
-      capacity: "الحد الأقصى للمشاركات",
-      sessionsHeader: "مواعيد الجلسات",
-      sessionLine: "{{date}} — {{timeRange}}",
-      sessionsCount: "عدد الجلسات",
-      firstDate: "تبدأ في",
-      detailCta:
-        "📞 للتسجيل في الدورة: أرسلي اسمك الكامل + مدينتك + رقم الهاتف، أو اكتبي *menu* للعودة للقائمة.",
-    },
-    hebrew: {
-      listTitle: "🎓 *קורסים וסדנאות זמינים*",
-      listCta:
-        "💬 שלחי את מספר הקורס שמעניין אותך כדי לראות פרטים, או כתבי *menu* כדי לחזור לתפריט.",
-      detailTitle: "🎓 *פרטי הקורס*",
-      noCourses: "אין כרגע קורסים או סדנאות מוגדרים.",
-      price: "מחיר",
-      instructor: "מדריכה",
-      capacity: "מספר משתתפות מקסימלי",
-      sessionsHeader: "מועדי המפגשים",
-      sessionLine: "{{date}} — {{timeRange}}",
-      sessionsCount: "מספר המפגשים",
-      firstDate: "מתחיל ב־",
-      detailCta:
-        "📞 להרשמה לקורס: שלחי לנו שם מלא + עיר + מספר טלפון, או כתבי *menu* כדי לחזור לתפריט.",
-    },
-    english: {
-      listTitle: "🎓 *Available Courses & Workshops*",
-      listCta:
-        "💬 Send the course number to see details, or type *menu* to go back to the menu.",
-      detailTitle: "🎓 *Course Details*",
-      noCourses: "No courses or workshops are defined yet.",
-      price: "Price",
-      instructor: "Instructor",
-      capacity: "Max participants",
-      sessionsHeader: "Session schedule",
-      sessionLine: "{{date}} — {{timeRange}}",
-      sessionsCount: "Number of sessions",
-      firstDate: "Starts on",
-      detailCta:
-        "📞 To register: reply with your full name, city and phone number, or type *menu* to return to the menu.",
-    },
-  };
-
-  
-  function productText(fieldObj, langKey) {
-    return getLocalized(fieldObj, langKey);
-  }
-  
-  function shortText(txt, max = 150) {
-    if (!txt) return "";
-    return txt.length > max ? txt.slice(0, max) + "..." : txt;
-  }
-
-
-function parseLanguageChoice(txt) {
-  const t = lower(txt);
-  // numbers
-  if (t === "1") return "arabic";
-  if (t === "2") return "english";
-  if (t === "3") return "hebrew";
-
-  // labels (accept many variants)
-  if (["العربية", "ar", "arabic", "arabic 🇸🇦"].includes(t)) return "arabic";
-  if (["english", "en", "english 🇬🇧", "english 🇺🇸"].includes(t)) return "english";
-  if (["עברית", "hebrew", "he"].includes(t)) return "hebrew";
-
-  return null;
+function productText(fieldObj, langKey) {
+  return getLocalized(fieldObj, langKey);
 }
 
-// tiny i18n for helper texts (help, cancel, etc.)
-function t(lang, key, vars = {}) {
-  const L = {
-    choose_language: {
-      arabic: "من فضلك اختر اللغة:",
-      english: "Please choose your language:",
-      hebrew: "בחר/י שפה בבקשה:",
-    },
-    got_language: {
-      arabic: "تم تحديث اللغة ✅",
-      english: "Language updated ✅",
-      hebrew: "השפה עודכנה ✅",
-    },
-    welcome: {
-      arabic: "أهلاً بك! كيف نقدر نساعدك اليوم؟",
-      english: "Welcome! How can we help you today?",
-      hebrew: "ברוך/ה הבא/ה! איך נוכל לעזור היום?",
-    },
-    hint_menu: {
-      arabic: "أرسل *menu* لعرض القائمة أو *book* لبدء الحجز.",
-      english: "Send *menu* for the menu or *book* to start booking.",
-      hebrew: "שלח/י *menu* לתפריט או *book* כדי להתחיל הזמנה.",
-    },
-    cancelled: {
-      arabic: "❌ تم الإلغاء. أرسل *menu* للبدء من جديد.",
-      english: "❌ Cancelled. Send *menu* to start again.",
-      hebrew: "❌ בוטל. שלח/י *menu* כדי להתחיל מחדש.",
-    },
-    restarting: {
-      arabic: "🔁 نبدأ من جديد…",
-      english: "🔁 Starting again…",
-      hebrew: "🔁 מתחילים מחדש…",
-    },
-    help: {
-      arabic: `ℹ️ *طريقة الاستخدام*\n• اختر بالزر أو الأرقام (1، 2، 3...)\n• *${CANCEL}* أو *cancel* للإلغاء\n• *menu* لعرض القائمة`,
-      english: `ℹ️ *How to use*\n• Choose by button or numbers (1, 2, 3...)\n• *${CANCEL}* or *cancel* to cancel\n• *menu* to see options`,
-      hebrew: `ℹ️ *איך משתמשים*\n• בחר/י בכפתור או במספרים (1, 2, 3...)\n• *${CANCEL}* או *cancel* לביטול\n• *menu* להצגת אפשרויות`,
-    },
-  };
 
-  let s = L[key]?.[lang] || L[key]?.english || "";
-  Object.entries(vars).forEach(([k, v]) => {
-    s = s.replaceAll(`{{${k}}}`, v);
-  });
-  return s;
-}
 
-// full word language used in Customer + biz.config
-function langFromCustomer(cust, biz) {
-  return (
-    cust?.language ||
-    biz?.config?.language ||
-    biz?.language ||
-    (biz?.wa?.locale === "ar"
-      ? "arabic"
-      : biz?.wa?.locale === "he"
-      ? "hebrew"
-      : "english") ||
-    "english"
-  );
-}
-
-// ---------- helpers to read config.messages ----------
-function langKeyFromCustomer(customer, biz) {
-  if (customer?.language === "arabic") return "ar";
-  if (customer?.language === "english") return "en";
-  if (customer?.language === "hebrew") return "he";
-
-  if (biz?.config?.language === "arabic") return "ar";
-  if (biz?.config?.language === "english") return "en";
-  if (biz?.config?.language === "hebrew") return "he";
-
-  if (biz?.wa?.locale === "ar") return "ar";
-  if (biz?.wa?.locale === "he") return "he";
-  if (biz?.wa?.locale === "en") return "en";
-
-  return "en";
-}
-
-function langKeyFromChoice(choice) {
-  if (choice === "arabic") return "ar";
-  if (choice === "english") return "en";
-  if (choice === "hebrew") return "he";
-  return "en";
-}
-
-function getLocalized(field, langKey) {
-    if (!field) return "";
-  
-    // case 1: field is simple string (current Product schema)
-    if (typeof field === "string") return field;
-  
-    // case 2: field is an object: { ar, en, he }
-    if (typeof field === "object") {
-      return (
-        field[langKey] ||
-        field.en ||
-        field.ar ||
-        field.he ||
-        ""
-      );
-    }
-  
-    return "";
-  }
-
-function businessNameFor(biz, langKey) {
-  if (!biz) return "";
-  if (langKey === "ar") return biz.nameArabic || biz.nameEnglish || "";
-  if (langKey === "he") return biz.nameHebrew || biz.nameEnglish || "";
-  return biz.nameEnglish || biz.nameArabic || biz.nameHebrew || "";
-}
-
-// type: "welcome_first" | "welcome_returning" | "fallback" | "main_menu"
-function getConfigMessage(biz, langKey, type, fallbackText = "") {
-  const msg =
-    biz?.config?.messages?.[langKey]?.[type] ||
-    biz?.config?.messages?.en?.[type] ||
-    fallbackText ||
-    "";
-
-  const name = businessNameFor(biz, langKey);
-  return msg.replaceAll("{{business_name}}", name);
-}
-
-// ---------- NEW: menuItems helpers (using id/action/label) ----------
-
-// enabled + sorted by id
-function getVisibleMenuItemsSorted(biz) {
-  const arr = (biz?.config?.menuItems || []).filter(
-    (item) => item && item.enabled !== false
-  );
-
-  arr.sort((a, b) => {
-    const aid = Number(a.id) || 0;
-    const bid = Number(b.id) || 0;
-    return aid - bid;
-  });
-
-  return arr;
-}
-
-// build the full menu text ONLY from config.menuItems
-function buildMenuText(biz, langKey, langFull) {
-    const items = getVisibleMenuItemsSorted(biz);
-    const bizName = businessNameFor(biz, langKey);
-  
-    // If no structured menuItems → fallback to *old main_menu* behavior
-    if (!items.length) {
-      return getConfigMessage(
-        biz,
-        langKey,
-        "main_menu",
-        langFull === "arabic"
-          ? "*القائمة*\n1) حجز موعد 💅\n2) الأسئلة الشائعة ❓\n3) تواصل مع المالك 📞\n\nأرسل رقم الخيار."
-          : langFull === "hebrew"
-          ? "*תפריט*\n1) קבע/י תור 💅\n2) שאלות נפוצות ❓\n3) יצירת קשר 📞\n\nשלח/י מספר."
-          : "*Menu*\n1) Book an appointment 💅\n2) FAQs ❓\n3) Contact owner 📞\n\nReply with a number."
-      );
-    }
-  
-    // ✅ NEW: header is generated in code – we IGNORE messages.main_menu
-    const header =
-      langFull === "arabic"
-        ? `🌿 *القائمة الرئيسية — ${bizName}*`
-        : langFull === "hebrew"
-        ? `🌿 *תפריט ראשי — ${bizName}*`
-        : `🌿 *Main Menu — ${bizName}*`;
-  
-    const lines = items.map((item, idx) => {
-      const n = idx + 1;
-      const labelObj = item.label || item.labels || {};
-      const label =
-        labelObj[langKey] ||
-        labelObj.en ||
-        labelObj.ar ||
-        labelObj.he ||
-        item.action;
-  
-      return `${n}) ${label}`;
-    });
-  
-    const footer =
-      langFull === "arabic"
-        ? "\n💬 أرسل رقم الخيار أو اكتب *menu* في أي وقت لعرض القائمة مرة أخرى."
-        : langFull === "hebrew"
-        ? "\n💬 שלח/י את מספר האפשרות או כתוב/י *menu* בכל זמן כדי לראות את התפריט שוב."
-        : "\n💬 Send the option number or type *menu* anytime to see this list again.";
-  
-    return [header, lines.join("\n"), footer].filter(Boolean).join("\n\n");
-  }
-
-// parse user input number (supports Arabic digits)
-function parseMenuIndexFromText(txt) {
-  if (!txt) return null;
-
-  const arabicZero = "٠".charCodeAt(0);
-  const arabicExtZero = "۰".charCodeAt(0);
-
-  let normalized = "";
-  for (const ch of txt.trim()) {
-    const code = ch.charCodeAt(0);
-    if (code >= arabicZero && code <= arabicZero + 9) {
-      normalized += String(code - arabicZero);
-    } else if (code >= arabicExtZero && code <= arabicExtZero + 9) {
-      normalized += String(code - arabicExtZero);
-    } else if (/[0-9]/.test(ch)) {
-      normalized += ch;
-    }
-  }
-
-  if (!normalized) return null;
-  const n = parseInt(normalized, 10);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n - 1; // index
-}
 
 // ---------- template helpers ----------
 async function sendLanguageTemplate(biz, to) {
@@ -861,22 +532,7 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
     }
   }
 
-// ---------- BOOKING HELPERS (same logic as bookingsRoutes.js) ----------
-// const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
-// const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
-// let days = getNext10Days(biz);
 
-// // get today's date
-// const todayStr = moment().format("YYYY-MM-DD");
-
-// if (days.includes(todayStr)) {
-//   const hasFreeSlots = await checkFreeSlotsToday(biz); // we will write this helper next
-  
-//   if (!hasFreeSlots) {
-//     // remove today
-//     days = days.filter(d => d !== todayStr);
-//   }
-// }
 
 const toMinutes = (hhmm) => {
   const [h, m] = String(hhmm).split(":").map(Number);
@@ -1823,6 +1479,4 @@ router.post("/", async (req, res) => {
 });
 
 module.exports = router;
-
-
 
