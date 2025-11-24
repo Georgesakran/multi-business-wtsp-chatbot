@@ -28,10 +28,19 @@ const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
 const { getVisibleMenuItemsSorted } = require("../utils/language/menu/menuUtils");
-// const {businessNameFor} = require("../utils/business/businessNameHelper");
 const {getConfigMessage} = require("../utils/config/configMessageHelper");
 const {buildMenuText} = require("../utils/language/menu/menuBuilder");
 const parseMenuIndexFromText = require("../utils/language/menu/menuParser");
+
+
+// Time + Booking Helpers
+const {
+  checkFreeSlotsToday,
+  slotsNeeded,
+  findServiceById,
+  getTakenMap,
+  isRangeFree
+} = require("../utils/booking/bookingHelpers");
 
 
 // System Constants Helpers
@@ -41,8 +50,8 @@ const {BACK, CANCEL} = require("../utils/constants/systemConstants");
 const sendDatePickerTemplate =require("../utils/twilio/sendDatePickerTemplate");
 const { sendWhatsApp, sendTemplate } = require("../utils/twilio/sendTwilio");
 
-// -------------------- constants & helpers --------------------
 
+// -------------------- constants & helpers --------------------
 const rawText = (req) => (req.body?.Body || "").trim();
 const lower = (s) => String(s || "").toLowerCase();
 const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
@@ -50,6 +59,8 @@ const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
 const isRestartCmd = (txt) =>
   ["restart", "/restart", "start"].includes(lower(txt));
 const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
+const weekdayFromISO = (iso) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
 
 // ---------- language parsing / mapping ----------
 function productText(fieldObj, langKey) {
@@ -538,18 +549,6 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
 
 
 
-const toMinutes = (hhmm) => {
-  const [h, m] = String(hhmm).split(":").map(Number);
-  return h * 60 + m;
-};
-const toHHMM = (mins) => {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-};
-
-const weekdayFromISO = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
 
 async function checkFreeSlotsToday(biz) {
   const booking = biz.config.booking;

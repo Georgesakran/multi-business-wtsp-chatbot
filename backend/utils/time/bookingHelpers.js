@@ -1,0 +1,80 @@
+const Booking = require("../../models/Booking");
+const moment = require("moment");
+const makeDayGrid = require("./gridHelpers"); // your makeDayGrid helper
+
+// ------------------------- helper functions -------------------------
+
+/**
+ * Returns how many slots are needed to cover a service duration
+ */
+function slotsNeeded(duration, slotGapMinutes) {
+  const gap = Math.max(5, Number(slotGapMinutes || 15));
+  return Math.max(1, Math.ceil(Number(duration || 0) / gap));
+}
+
+/**
+ * Finds a service by ID in business.services
+ */
+function findServiceById(biz, serviceId) {
+  if (!serviceId) return null;
+  const sid = String(serviceId);
+  return (biz.services || []).find((s) => String(s._id) === sid) || null;
+}
+
+/**
+ * Returns a map of taken slots for a given business & date
+ */
+async function getTakenMap(businessId, date) {
+  const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
+
+  const sameDay = await Booking.find({
+    businessId,
+    date,
+    status: { $in: ["pending", "confirmed"] },
+  })
+    .select("time status")
+    .lean();
+
+  const map = new Map();
+  for (const b of sameDay) {
+    if (isTime(b.time)) map.set(b.time, true);
+  }
+  return map;
+}
+
+/**
+ * Checks if a range of consecutive slots is free
+ */
+function isRangeFree(dayGrid, takenMap, startIndex, need) {
+  for (let i = 0; i < need; i++) {
+    const t = dayGrid[startIndex + i];
+    if (!t || takenMap.get(t)) return false;
+  }
+  return true;
+}
+
+// ------------------------- main helper -------------------------
+
+/**
+ * Returns all free slots for today (or the given date)
+ * Example: returns ["09:00", "09:30", "10:00", ...]
+ */
+async function checkFreeSlotsToday(biz, date = moment().format("YYYY-MM-DD")) {
+  if (!biz || !biz.openingTime || !biz.closingTime) return [];
+
+  const dayGrid = makeDayGrid(biz.openingTime, biz.closingTime, biz.slotGapMinutes);
+  const takenMap = await getTakenMap(biz._id, date);
+
+  // Filter only slots that are free
+  return dayGrid.filter((_, idx) => isRangeFree(dayGrid, takenMap, idx, 1));
+}
+
+// ------------------------- exports -------------------------
+
+module.exports = {
+  checkFreeSlotsToday,
+  slotsNeeded,
+  findServiceById,
+  getTakenMap,
+  isRangeFree,
+};
