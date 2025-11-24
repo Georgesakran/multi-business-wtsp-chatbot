@@ -524,8 +524,7 @@ router.post("/", async (req, res) => {
     const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
     const weekdayFromISO = (iso) =>
       new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
-    const lang = langFromCustomer(customer, biz);
-    const langKey = langKeyFromCustomer(customer, biz);
+   
 
     const biz = await Business.findOne({ "wa.number": to, isActive: true });
     if (!biz) return res.sendStatus(200);
@@ -533,6 +532,8 @@ router.post("/", async (req, res) => {
     // Load state + customer
     let state = await getState({ businessId: biz._id, phoneNumber: from });
     let customer = await Customer.findOne({ businessId: biz._id, phone: from });
+    const lang = langFromCustomer(customer, biz);
+    const langKey = langKeyFromCustomer(customer, biz);
 
     // Global commands
     if (isHelpCmd(txt)) {
