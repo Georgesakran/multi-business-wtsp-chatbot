@@ -6,17 +6,17 @@ async function sendDatePickerTemplate(biz, to, days, lang) {
   const vars = {
     body:
       lang === "arabic"
-        ? "📆 اختاري تاريخ الموعد:"
+        ? "📆 اختار/ي تاريخ الموعد:"
         : lang === "hebrew"
-        ? "📆 בחרי תאריך:"
+        ? "📆 בחר/י תאריך:"
         : "📆 Choose an appointment date:",
 
     select_button:
       lang === "arabic"
-        ? "اختيار التاريخ"
+        ? "اضغط/ي هنا"
         : lang === "hebrew"
-        ? "בחרי תאריך"
-        : "Select date",
+        ? "לחץ/י כאן"
+        : "Click here ",
   };
 
   for (let i = 1; i <= 10; i++) {
