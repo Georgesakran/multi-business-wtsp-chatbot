@@ -11,8 +11,8 @@ const Course = require("../models/Course");
 const Booking = require("../models/Booking");
 
 // Helpers
-const getState = require("../utils/state/getState");
-const setState = require("../utils/state/setState");
+const getState = require("../utils/states/getState");
+const setState = require("../utils/states/setState");
 
 const getNext10Days = require("../utils/getNext10Days");
 
