@@ -17,21 +17,18 @@ async function sendLanguageTemplate(biz, to, lang = "english") {
   return true;
 }
 
-module.exports = { sendLanguageTemplate };
-
-
 /**
  * Fallback if template fails: send plain WhatsApp text
  */
-// async function sendLanguageFallback(biz, to, lang = "english") {
-//   const bodyHeader = `💬 ${t(lang, "choose_language")}`;
-//   const buttons = [
-//     { id: LANG_AR, label: t(lang, "arabic") },
-//     { id: LANG_EN, label: t(lang, "english") },
-//     { id: LANG_HE, label: t(lang, "hebrew") },
-//   ];
-//   const body = bodyHeader + "\n" + buttons.map((b, i) => `${i + 1}) ${b.label}`).join("\n");
-//   await sendWhatsApp({ from: biz.wa.number, to, body });
-// }
+async function sendLanguageFallback(biz, to, lang = "english") {
+  const bodyHeader = `💬 ${t(lang, "choose_language")}`;
+  const buttons = [
+    { id: LANG_AR, label: t(lang, "arabic") },
+    { id: LANG_EN, label: t(lang, "english") },
+    { id: LANG_HE, label: t(lang, "hebrew") },
+  ];
+  const body = bodyHeader + "\n" + buttons.map((b, i) => `${i + 1}) ${b.label}`).join("\n");
+  await sendWhatsApp({ from: biz.wa.number, to, body });
+}
 
 module.exports = { sendLanguageTemplate, sendLanguageFallback };
