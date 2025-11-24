@@ -24,7 +24,7 @@ const { getLocalized } = require("../utils/language/localization");
 const {t, langFromCustomer, langKeyFromCustomer, langKeyFromChoice} = require("../utils/language/languageTextHelper");
 const {parseLanguageChoice} = require ("../utils/language/languageParser");
 const PRODUCT_LABELS = require("../utils/language/labels/productLabels");
-const COURSE_LABELS = require("../utils/language/labels/courseLabel");
+const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
 const { getVisibleMenuItemsSorted } = require("../utils/language/menu/menuUtils");
