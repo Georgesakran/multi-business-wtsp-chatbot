@@ -51,16 +51,10 @@ const { sendWhatsApp, sendTemplate } = require("../utils/twilio/sendTwilio");
 const { sendLanguageTemplate, sendLanguageFallback } = require("../utils/twilio/sendLanguageHelpers");
 
 
-// -------------------- constants & helpers --------------------
-const rawText = (req) => (req.body?.Body || "").trim();
 const lower = (s) => String(s || "").toLowerCase();
-const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
-// restart means: reset language + state
-const isRestartCmd = (txt) =>
-  ["restart", "/restart", "start"].includes(lower(txt));
-const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
-const weekdayFromISO = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
+
+
+
 
 // ---------- language parsing / mapping ----------
 function productText(fieldObj, langKey) {
@@ -520,9 +514,17 @@ async function handleMenuAction({ action, payload, lang, langKey, biz, state, fr
 // -------------------- webhook --------------------
 router.post("/", async (req, res) => {
   try {
+
+    // -------------------- constants & helpers --------------------
     const from = toE164(req.body?.From); // customer WA number
     const to = toE164(req.body?.To); // business WA number
+    const rawText = (req) => (req.body?.Body || "").trim();
     const txt = rawText(req);
+    const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
+    const isRestartCmd = (txt) =>["restart", "/restart", "start"].includes(lower(txt));
+    const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
+    const weekdayFromISO = (iso) =>
+      new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
 
     // 1) Find business by WA number
     const biz = await Business.findOne({ "wa.number": to, isActive: true });
@@ -540,14 +542,14 @@ router.post("/", async (req, res) => {
         to: from,
         body: t(lang, "help"),
       });
-      return res.sendStatus(200);
+      return res.sendStatus("");
     }
 
     if (isRestartCmd(txt)) {
       state = await setState(state, { step: "LANGUAGE_SELECT", data: {} });
       const sent = await sendLanguageTemplate(biz, from);
       if (!sent) await sendLanguageFallback(biz, from);
-      return res.sendStatus(200);
+      return res.sendStatus("");
     }
 
     if (isCancelCmd(txt)) {
@@ -619,7 +621,7 @@ router.post("/", async (req, res) => {
         body: menuText,
       });
 
-      return res.sendStatus(200);
+      return res.sendStatus("s");
     }
 
     // 5) We have a known customer + language
