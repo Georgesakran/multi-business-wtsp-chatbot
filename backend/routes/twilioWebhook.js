@@ -1,4 +1,3 @@
-// routes/twilioWebhook.js
 const express = require("express");
 const router = express.Router();
 const moment = require("moment");
@@ -40,7 +39,7 @@ const {
   findServiceById,
   getTakenMap,
   isRangeFree
-} = require("../utils/booking/bookingHelpers");
+} = require("../utils/time/bookingHelpers");
 
 
 // System Constants Helpers
@@ -49,7 +48,6 @@ const {BACK, CANCEL} = require("../utils/constants/systemConstants");
 //Twilio
 const sendDatePickerTemplate =require("../utils/twilio/sendDatePickerTemplate");
 const { sendWhatsApp, sendTemplate } = require("../utils/twilio/sendTwilio");
-
 
 // -------------------- constants & helpers --------------------
 const rawText = (req) => (req.body?.Body || "").trim();
@@ -855,20 +853,6 @@ router.post("/", async (req, res) => {
           await sendDatePickerTemplate(biz, from, days, lang);
           return res.sendStatus(200);
     
-          // const msg =
-          //   lang === "arabic"
-          //     ? `👍 تم اختيار الخدمة: *${svcName}*\n\n2️⃣ أرسلي تاريخ الموعد المطلوب بصيغة *YYYY-MM-DD* (مثال: 2025-12-05).`
-          //     : lang === "hebrew"
-          //     ? `👍 נבחר השירות: *${svcName}*\n\n2️⃣ כתבי את תאריך התור בפורמט *YYYY-MM-DD* (לדוגמה: 2025-12-05).`
-          //     : `👍 Service selected: *${svcName}*\n\n2️⃣ Please send your preferred date in format *YYYY-MM-DD* (e.g. 2025-12-05).`;
-    
-          // await sendWhatsApp({
-          //   from: biz.wa.number,
-          //   to: from,
-          //   body: msg,
-          // });
-    
-          // return res.sendStatus(200);
         }
     
         if (state.step === "BOOKING_SELECT_DATE_LIST") {
