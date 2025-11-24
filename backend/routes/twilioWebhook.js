@@ -31,7 +31,7 @@ const { getVisibleMenuItemsSorted } = require("../utils/language/menu/menuUtils"
 // const {businessNameFor} = require("../utils/business/businessNameHelper");
 const {getConfigMessage} = require("../utils/config/configMessageHelper");
 const {buildMenuText} = require("../utils/language/menu/menuBuilder");
-const {parseMenuIndexFromText} = require("../utils/language/menu/menuParser");
+const parseMenuIndexFromText = require("../utils/language/menu/menuParser");
 
 
 // System Constants Helpers
