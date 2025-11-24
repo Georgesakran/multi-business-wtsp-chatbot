@@ -3,7 +3,7 @@ const { t } = require("../language/languageTextHelper");
 
 function buildLanguageTemplate(lang = "english") {
   return {
-    body: t(lang, "choose_language"),
+    body: t("hebrew", "choose_language"),
 
     btn1_text: t("arabic", "arabic"),
     btn2_text: t(lang, "english"),
