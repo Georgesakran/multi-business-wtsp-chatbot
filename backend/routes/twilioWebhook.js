@@ -33,7 +33,7 @@ const {getConfigMessage} = require("../utils/config/configMessageHelper");
 const {buildMenuText} = require("../utils/language/menu/menuBuilder");
 
 //Twilio
-const sendDatePickerTemplate =require("../utils/sendDatePickerTemplate");
+const sendDatePickerTemplate =require("../utils/twilio/sendDatePickerTemplate");
 const { sendWhatsApp, sendTemplate } = require("../utils/twilio/sendTwilio");
 
 // -------------------- constants & helpers --------------------
