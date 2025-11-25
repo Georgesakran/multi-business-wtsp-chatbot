@@ -1,4 +1,4 @@
-const { sendWhatsApp } = require("../../utils/twilio/sendTwilio");
+const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const setState = require("../../utils/states/setState");
 
 module.exports = async function bookAppointment({ lang, langKey, biz, state, from }) {
