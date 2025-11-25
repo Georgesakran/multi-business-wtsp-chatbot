@@ -57,6 +57,457 @@ function productText(fieldObj, langKey) {
   return getLocalized(fieldObj, langKey);
 }
 
+// async function handleMenuAction({ action, payload, lang, langKey, biz, state, from }) {
+//     switch (action) {
+//       case "book_appointment": {
+//         // 1) Check if this business supports bookings
+//         if (!biz.enabledServices?.includes("bookingFlow")) {
+//           await sendWhatsApp({
+//             from: biz.wa.number,
+//             to: from,
+//             body:
+//               lang === "arabic"
+//                 ? "حالياً هذا النشاط لا يدعم حجز المواعيد عبر الواتساب."
+//                 : lang === "hebrew"
+//                 ? "לעסק הזה אין עדיין מערכת תורים דרך הצ'אט."
+//                 : "This business does not support booking appointments via WhatsApp yet.",
+//           });
+//           return;
+//         }
+
+//         // 2) Get bookable services
+//         const services = (biz.services || []).filter(
+//           (s) => s && s.isActive !== false && s.bookable !== false
+//         );
+
+//         if (!services.length) {
+//           await sendWhatsApp({
+//             from: biz.wa.number,
+//             to: from,
+//             body:
+//               lang === "arabic"
+//                 ? "لا توجد خدمات للحجز مضافة حالياً."
+//                 : lang === "hebrew"
+//                 ? "אין כרגע שירותים זמינים לחיוב תורים."
+//                 : "There are no bookable services configured yet.",
+//           });
+//           return;
+//         }
+
+//         const key = langKey; // 'ar' | 'en' | 'he'
+
+//         const intro =
+//           lang === "arabic"
+//             ? "تمام! نبدأ الحجز بخطوات بسيطة 👇"
+//             : lang === "hebrew"
+//             ? "מעולה! נתחיל הזמנה בכמה שלבים פשוטים 👇"
+//             : "Great! Let’s start your booking in a few simple steps 👇";
+
+//         const header =
+//           lang === "arabic"
+//             ? "1️⃣ *اختار/ي الخدمة المطلوبة*"
+//             : lang === "hebrew"
+//             ? "1️⃣ *בחר/י את השירות*"
+//             : "1️⃣ *Choose a service*";
+
+//         const lines = services.map((s, i) => {
+//           const name = s.name?.[key] || s.name?.en || "";
+//           const desc = s.description?.[key] || s.description?.en || "";
+//           const price =
+//             typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
+//           const duration =
+//             typeof s.duration === "number" && s.duration > 0
+//               ? lang === "arabic"
+//                 ? `${s.duration} دقيقة`
+//                 : lang === "hebrew"
+//                 ? `${s.duration} דק׳`
+//                 : `${s.duration} min`
+//               : "";
+
+//           return (
+//             `${i + 1}) 🔹 *${name}*` +
+//             (price ? ` — ${price}` : "") +
+//             (duration ? ` • ${duration}` : "") +
+//             (desc ? `\n   ${desc}` : "")
+//           );
+//         });
+
+//         const footer =
+//           lang === "arabic"
+//             ? "\n💬 أرسلي رقم الخدمة التي تريدين حجزها.\nيمكنك في أي وقت كتابة *menu* للعودة للقائمة."
+//             : lang === "hebrew"
+//             ? "\n💬 כתבי את מספר השירות שברצונך להזמין.\nאפשר בכל שלב לכתוב *menu* כדי לחזור לתפריט."
+//             : "\n💬 Reply with the number of the service you want to book.\nYou can type *menu* anytime to go back.";
+
+//         // 3) Save state with service IDs
+//         await setState(state, {
+//           step: "BOOKING_SELECT_SERVICE",
+//           data: {
+//             serviceIds: services.map((s) => String(s._id)),
+//           },
+//         });
+
+//         // 4) Send message
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body: [intro, header, lines.join("\n\n"), footer].join("\n\n"),
+//         });
+
+//         return;
+//       }
+  
+//       case "view_services": {
+//         const services = (biz.services || []).filter(
+//           (s) => s && s.isActive !== false
+//         );
+  
+//         if (!services.length) {
+//           await sendWhatsApp({
+//             from: biz.wa.number,
+//             to: from,
+//             body:
+//               lang === "arabic"
+//                 ? "لا توجد خدمات مضافة بعد."
+//                 : lang === "hebrew"
+//                 ? "עדיין לא הוגדרו שירותים."
+//                 : "No services defined yet.",
+//           });
+//           return;
+//         }
+  
+//         const key = langKey; // 'ar' | 'en' | 'he'
+  
+//         const header =
+//           lang === "arabic"
+//             ? "✨ *خدماتنا الرئيسية*"
+//             : lang === "hebrew"
+//             ? "✨ *השירותים שלנו*"
+//             : "✨ *Our main services*";
+  
+//             const lines = services.map((s, i) => {
+//               const name = s.name?.[key] || s.name?.en || "";
+//               const desc = s.description?.[key] || s.description?.en || "";
+//               const price =
+//                 typeof s.price === "number" && s.price > 0 ? `${s.price}₪` : "";
+//               const duration =
+//                 typeof s.duration === "number" && s.duration > 0
+//                   ? lang === "arabic"
+//                     ? `${s.duration} دقيقة`
+//                     : lang === "hebrew"
+//                     ? `${s.duration} דק׳`
+//                     : `${s.duration} min`
+//                   : "";
+            
+//               return (
+//                 `${i + 1}) 🔹 *${name}*` +
+//                 (price ? ` — ${price}` : "") +
+//                 (duration ? ` • ${duration}` : "") +
+//                 (desc ? `\n   ${desc}` : "")
+//               );
+//             });
+            
+  
+//         const footer =
+//           lang === "arabic"
+//             ? "\n💬 أرسلي رقم الخدمة التي تهمك، أو اكتبي *menu* للعودة إلى القائمة."
+//             : lang === "hebrew"
+//             ? "\n💬 כתבי את מספר השירות שמעניין אותך, או הקלידי *menu* כדי לחזור לתפריט."
+//             : "\n💬 Reply with the service number you like, or type *menu* to go back to the main menu.";
+  
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body: [header, lines.join("\n\n"), footer].join("\n\n"),
+//         });
+  
+//         return;
+//       }
+  
+//       case "view_products": {
+//         // משתמשים ב-langKey שהעברנו לפונקציה – לא ב-customer
+//         const key = langKey; // 'ar' | 'en' | 'he'
+//         const PL = PRODUCT_LABELS[lang] || PRODUCT_LABELS.english;
+  
+//         const products = await Product.find({
+//           businessId: biz._id,
+//           status: "active",
+//           stock: { $gt: 0 },
+//         })
+//           .sort({ createdAt: -1 })
+//           .limit(8);
+  
+//         if (!products.length) {
+//           await sendWhatsApp({
+//             from: biz.wa.number,
+//             to: from,
+//             body:
+//               lang === "arabic"
+//                 ? "لا توجد منتجات متاحة حالياً."
+//                 : lang === "hebrew"
+//                 ? "אין כרגע מוצרים זמינים."
+//                 : "No products available right now.",
+//           });
+//           return;
+//         }
+  
+//         // נשמור את ה־IDs כדי שנוכל לזהות את הבחירה אח"כ
+//         await setState(state, {
+//           step: "VIEW_PRODUCTS_LIST",
+//           data: {
+//             productIds: products.map((p) => String(p._id)),
+//           },
+//         });
+  
+//         const list = products
+//           .map((p, i) => {
+//             const name = productText(p.name, key);
+//             const desc = shortText(productText(p.description, key), 180);
+//             const category = productText(p.category, key);
+//             const price = p.price ? `${p.price}₪` : "";
+//             const sku = p.sku || "-";
+  
+//             return (
+//             `${i + 1}) ✨ *${name}* — ${price}
+//                 📂 ${PL.category}: ${category}
+//                 🆔 ${PL.sku}: ${sku}
+//                 📝 ${desc}
+//             ──────────────────`
+//             );
+//           })
+//           .join("\n");
+  
+//         const body = `${PL.listTitle}
+  
+//   ${list}
+  
+//   ${PL.listCta}`;
+  
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body,
+//         });
+  
+//         return;
+//       }
+  
+//       case "view_courses": {
+//         const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
+      
+//         // === Define "today" (midnight) ===
+//         const today = new Date();
+//         today.setHours(0, 0, 0, 0);
+      
+//         // === Fetch all courses, we'll filter manually ===
+//         let courses = await Course.find({ businessId: biz._id }).lean();
+      
+//         // === Filter: only upcoming courses (first session today or later) ===
+//         courses = courses.filter((c) => {
+//           const firstSession = (c.sessions || [])[0];
+//           if (!firstSession?.date) return false;
+      
+//           const sessionDate = new Date(firstSession.date);
+//           sessionDate.setHours(0, 0, 0, 0);
+      
+//           return sessionDate >= today;
+//         });
+      
+//         // === Sort by first session date ASC ===
+//         courses.sort((a, b) => {
+//           const d1 = new Date(a.sessions?.[0]?.date || 0);
+//           const d2 = new Date(b.sessions?.[0]?.date || 0);
+//           return d1 - d2;
+//         });
+      
+//         // === Limit to 8 ===
+//         courses = courses.slice(0, 8);
+      
+//         // === If no future courses ===
+//         if (!courses.length) {
+//           await sendWhatsApp({
+//             from: biz.wa.number,
+//             to: from,
+//             body: CL.noCourses, // already translated label
+//           });
+//           return;
+//         }
+      
+//         // === Save state: list of IDs ===
+//         await setState(state, {
+//           step: "VIEW_COURSES_LIST",
+//           data: {
+//             courseIds: courses.map((c) => String(c._id)),
+//           },
+//         });
+      
+//         // === Build WhatsApp list message ===
+//         const list = courses
+//           .map((c, i) => {
+//             const firstSession = (c.sessions || [])[0];
+//             const firstDate = firstSession?.date || "";
+//             const sessionsCount = (c.sessions || []).length || 0;
+      
+//             const main =
+//               `${i + 1}) 🎓 *${c.title}*` +
+//               (c.price ? ` — ${c.price}₪` : "");
+      
+//             const metaLines = [];
+      
+//             if (c.instructor) {
+//               metaLines.push(`👩‍🏫 ${CL.instructor}: ${c.instructor}`);
+//             }
+      
+//             if (firstDate) {
+//               metaLines.push(`📅 ${CL.firstDate}: ${firstDate}`);
+//             }
+      
+//             if (sessionsCount > 1) {
+//               metaLines.push(`🗓️ ${CL.sessionsCount}: ${sessionsCount}`);
+//             }
+      
+//             if (typeof c.maxParticipants === "number") {
+//               metaLines.push(`👥 ${CL.capacity}: ${c.maxParticipants}`);
+//             }
+      
+//             const meta =
+//               metaLines.length > 0 ? "\n   " + metaLines.join("\n   ") : "";
+      
+//             const desc = c.description
+//               ? `\n   📝 ${shortText(c.description, 180)}`
+//               : "";
+      
+//             return `${main}${meta}${desc}\n────────────────────`;
+//           })
+//           .join("\n");
+      
+//         const body = `${CL.listTitle}
+      
+//       ${list}
+      
+//       ${CL.listCta}`;
+      
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body,
+//         });
+      
+//         return;
+//       }
+      
+  
+//       case "about_location": {
+//         const loc = biz.location || {};
+//         const body =
+//           lang === "arabic"
+//             ? `📍 عن الصالون / الموقع:\nالمدينة: ${loc.city || "-"}\nالشارع: ${
+//                 loc.street || "-"
+//               }`
+//             : lang === "hebrew"
+//             ? `📍 על הסלון / מיקום:\nעיר: ${loc.city || "-"}\nרחוב: ${
+//                 loc.street || "-"
+//               }`
+//             : `📍 About the salon / location:\nCity: ${loc.city || "-"}\nStreet: ${
+//                 loc.street || "-"
+//               }`;
+  
+//         await sendWhatsApp({ from: biz.wa.number, to: from, body });
+//         return;
+//       }
+  
+//       case "my_appointments": {
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body:
+//             lang === "arabic"
+//               ? "عرض مواعيدك السابقة والقادمة سيتم تفعيله قريبًا."
+//               : lang === "hebrew"
+//               ? "צפייה בתורים שלך תופעל בקרוב."
+//               : "Viewing your appointments will be available soon.",
+//         });
+//         return;
+//       }
+  
+//       case "my_orders": {
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body:
+//             lang === "arabic"
+//               ? "عرض طلباتك السابقة غير مفعّل بعد."
+//               : lang === "hebrew"
+//               ? "צפייה בהזמנות שלך עדיין לא זמינה."
+//               : "Order history is not wired yet.",
+//         });
+//         return;
+//       }
+  
+//       case "reschedule_appointment": {
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body:
+//             lang === "arabic"
+//               ? "لتعديل أو إلغاء موعد، أرسل لنا تفاصيل الموعد الحالي وسنساعدك يدويًا 👩‍💻"
+//               : lang === "hebrew"
+//               ? "כדי לשנות או לבטל תור, כתבי לנו את פרטי התור הנוכחי ונטפל בזה ידנית 👩‍💻"
+//               : "To reschedule or cancel, please send us your current booking details and we’ll handle it manually 👩‍💻",
+//         });
+//         return;
+//       }
+  
+//       case "contact_us": {
+//         const owner = biz.owner || {};
+//         const body =
+//           lang === "arabic"
+//             ? `📞 تواصلي معنا:\nهاتف: ${owner.phone || "-"}\nبريد: ${
+//                 owner.email || "-"
+//               }`
+//             : lang === "hebrew"
+//             ? `📞 צרי קשר:\nטלפון: ${owner.phone || "-"}\nאימייל: ${
+//                 owner.email || "-"
+//               }`
+//             : `📞 Contact us:\nPhone: ${owner.phone || "-"}\nEmail: ${
+//                 owner.email || "-"
+//               }`;
+  
+//         await sendWhatsApp({ from: biz.wa.number, to: from, body });
+//         return;
+//       }
+  
+//       case "follow_instagram": {
+//         const url = payload || "";
+//         const body =
+//           lang === "arabic"
+//             ? `📸 تابعينا على إنستغرام:\n${url || "الرابط غير مضاف بعد."}`
+//             : lang === "hebrew"
+//             ? `📸 עקבי אחרינו באינסטגרם:\n${url || "הקישור עדיין לא הוגדר."}`
+//             : `📸 Follow us on Instagram:\n${url || "Link not configured yet."}`;
+  
+//         await sendWhatsApp({ from: biz.wa.number, to: from, body });
+//         return;
+//       }
+  
+//       case "custom":
+//       default: {
+//         await sendWhatsApp({
+//           from: biz.wa.number,
+//           to: from,
+//           body:
+//             lang === "arabic"
+//               ? "هذا الخيار غير مفعّل بعد. جرّبي خيارًا آخر من القائمة أو أرسلي *menu*."
+//               : lang === "hebrew"
+//               ? "האפשרות הזו עדיין לא מחוברת. נסי אפשרות אחרת בתפריט או שלחי *menu*."
+//               : "This option is not wired yet. Please choose another option or send *menu*.",
+//         });
+//         return;
+//       }
+//     }
+// }
+
+
 const handleMenuAction = require("../utils/menuControllers/handleMenuAction");
 
 // -------------------- webhook --------------------
