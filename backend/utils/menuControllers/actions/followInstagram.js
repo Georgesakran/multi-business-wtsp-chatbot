@@ -1,4 +1,4 @@
-const { sendWhatsApp } = require("../../utils/twilio/sendTwilio");
+const { sendWhatsApp } = require("../../twilio/sendTwilio");
 
 module.exports = async function followInstagram({ lang, payload, biz, from }) {
   const url = payload || "";

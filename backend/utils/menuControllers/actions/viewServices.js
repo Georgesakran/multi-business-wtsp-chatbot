@@ -1,4 +1,4 @@
-const { sendWhatsApp } = require("../../utils/twilio/sendTwilio");
+const { sendWhatsApp } = require("../../twilio/sendTwilio");
 
 module.exports = async function viewServices({ lang, langKey, biz, from }) {
   const services = (biz.services || []).filter((s) => s && s.isActive !== false);

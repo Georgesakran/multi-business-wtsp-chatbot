@@ -1,4 +1,4 @@
-const { sendWhatsApp } = require("../../utils/twilio/sendTwilio");
+const { sendWhatsApp } = require("../../twilio/sendTwilio");
 
 module.exports = async function aboutLocation({ lang, biz, from }) {
   const loc = biz.location || {};
