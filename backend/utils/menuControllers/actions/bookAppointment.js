@@ -2,6 +2,9 @@
 
 const {sendWhatsApp} = require("../../twilio/sendTwilio");
 const setState = require("../../states/setState");
+function rtl(text) {
+  return `\u202B${text}\u202C`;
+}
 
 module.exports = async function bookAppointment({ lang, langKey, biz, state, from }) {
   if (!biz.enabledServices?.includes("bookingFlow")) {
@@ -62,10 +65,10 @@ module.exports = async function bookAppointment({ lang, langKey, biz, state, fro
 
   const footer =
     lang === "arabic"
-      ? "\n💬 أرسلي رقم الخدمة التي تريدين حجزها."
+      ? rtl("\n💬 أرسلي رقم الخدمة التي تريدين حجزها.")
       : lang === "hebrew"
-      ? "\n💬 כתבי את מספר השירות שברצונך להזמין."
-      : "\n💬 Send the number of the service you want.";
+      ? rtl("\n💬 כתבי את מספר השירות שברצונך להזמין.")
+      : rtl("\n💬 Send the number of the service you want.");
 
   await setState(state, {
     step: "BOOKING_SELECT_SERVICE",
