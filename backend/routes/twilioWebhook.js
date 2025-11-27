@@ -24,7 +24,7 @@ const PRODUCT_LABELS = require("../utils/language/labels/productLabels");
 const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
-const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils");
+const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuUtils");
 const {getConfigMessage} = require("../utils/config/configMessageHelper");
 const handleMenuStep = require("../utils/menuControllers/handleMenuState");
 
