@@ -26,7 +26,7 @@ const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 // MENU Lang helpers
 const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuParser");
 const {getConfigMessage} = require("../utils/config/configMessageHelper");
-const handleMenuStep = require("../utils/menuControllers/handleMenuStep");
+const handleMenuStep = require("../utils/menuControllers/handleMenuState");
 
 // Time + Booking Helpers
 const {
