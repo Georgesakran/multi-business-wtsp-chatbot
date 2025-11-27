@@ -2,7 +2,7 @@
 
 const Product = require("../../../models/Product");
 const setState = require("../../states/setState");
-const sendWhatsApp = require("../../twilio/sendTwilio");
+const {sendWhatsApp} = require("../../twilio/sendTwilio");
 const { shortText } = require("../../misc/textHelpers");
 const { getLocalized } = require("../../language/localization");
 const PRODUCT_LABELS = require("../../language/labels/productLabels");

@@ -13,7 +13,10 @@ function ensureWhatsAppAddress(num) {
   return `whatsapp:${s}`;
 }
 
-// send regular WhatsApp text message
+
+// ---------------------
+// SEND NORMAL MESSAGE
+// ---------------------
 async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   const payload = {
     from: ensureWhatsAppAddress(
@@ -35,4 +38,37 @@ async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
 }
 
 
-module.exports = sendWhatsApp;
+// ---------------------
+// SEND TEMPLATE MESSAGE
+// ---------------------
+async function sendTemplate({
+  from,
+  to,
+  contentSid,
+  variables = {},
+  messagingServiceSid,
+}) {
+  const payload = {
+    from: ensureWhatsAppAddress(
+      from || process.env.TWILIO_WHATSAPP_NUMBER
+    ),
+    to: ensureWhatsAppAddress(to),
+    contentSid,
+    contentVariables: JSON.stringify(variables),
+  };
+
+  if (messagingServiceSid) {
+    payload.messagingServiceSid = messagingServiceSid;
+  }
+
+  return client.messages.create(payload);
+}
+
+
+// ---------------------
+// EXPORT BOTH FUNCTIONS
+// ---------------------
+module.exports = {
+  sendWhatsApp,
+  sendTemplate,
+};

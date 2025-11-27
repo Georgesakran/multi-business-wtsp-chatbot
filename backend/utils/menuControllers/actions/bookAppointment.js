@@ -1,6 +1,6 @@
 // utils/menuControllers/actions/bookAppointment.js
 
-const sendWhatsApp = require("../../twilio/sendTwilio");
+const {sendWhatsApp} = require("../../twilio/sendTwilio");
 const setState = require("../../states/setState");
 
 module.exports = async function bookAppointment({ lang, langKey, biz, state, from }) {

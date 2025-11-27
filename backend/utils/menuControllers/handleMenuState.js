@@ -1,5 +1,5 @@
 // utils/menuControllers/handleMenuStep.js
-const sendWhatsApp = require("../twilio/sendTwilio");
+const {sendWhatsApp} = require("../twilio/sendTwilio");
 const parseMenuIndexFromText = require("./menuUtils/menuParser");
 const getVisibleMenuItemsSorted = require("./menuUtils/menuUtils");
 const handleMenuAction = require("./handleMenuAction");
