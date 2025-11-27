@@ -10,4 +10,4 @@ function getConfigMessage(biz, langKey, type, fallbackText = "") {
     return msg.replaceAll("{{business_name}}", name);
 }
 
-  module.exports = { getConfigMessage };
+  module.exports = getConfigMessage;

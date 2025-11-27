@@ -25,7 +25,7 @@ const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
 const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuUtils");
-const {getConfigMessage} = require("../utils/config/configMessageHelper");
+const getConfigMessage= require("../utils/config/configMessageHelper");
 const handleMenuStep = require("../utils/menuControllers/handleMenuState");
 
 // Time + Booking Helpers
@@ -125,15 +125,10 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
     // MENU COMMAND
-    if (isMenuCmd) {
+    if (isMenuCmd(txt)) {
         await showMenu({ biz, from, lang, langKey, state });
         return res.sendStatus(200);
     }
-
-
-
-
-
 
     if (state.step === "MENU") {
       await handleMenuStep({

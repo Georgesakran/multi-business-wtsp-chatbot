@@ -4,7 +4,7 @@ const parseMenuIndexFromText = require("./menuUtils/menuParser");
 const getVisibleMenuItemsSorted = require("./menuUtils/menuUtils");
 const handleMenuAction = require("./handleMenuAction");
 
-module.exports = async function handleMenuStep({ biz, from, txt, lang, langKey, state }) {
+async function handleMenuStep({ biz, from, txt, lang, langKey, state }) {
   const structuredItems = getVisibleMenuItemsSorted(biz);
 
   // If we have menu items
@@ -58,3 +58,5 @@ module.exports = async function handleMenuStep({ biz, from, txt, lang, langKey, 
 
   return { handled: true };
 };
+
+module.exports = handleMenuStep;

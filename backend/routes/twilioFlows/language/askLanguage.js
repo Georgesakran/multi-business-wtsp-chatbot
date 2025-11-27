@@ -5,10 +5,12 @@ const {
   sendLanguageFallback,
 } = require("../../../utils/twilio/sendLanguageHelpers");
 
-module.exports = async function askLanguage({ biz, from, state }) {
+async function askLanguage({ biz, from, state }) {
   // move to LANGUAGE_SELECT state
   await setState(state, { step: "LANGUAGE_SELECT" });
 
   const sent = await sendLanguageTemplate(biz, from);
   if (!sent) await sendLanguageFallback(biz, from);
 };
+
+module.exports = askLanguage;

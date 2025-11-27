@@ -3,14 +3,14 @@ const Customer = require("../../../models/Customer");
 const setState = require("../../../utils/states/setState");
 const { parseLanguageChoice } = require("../../../utils/language/languageParser");
 const { buildMenuText } = require("../../../utils/menuControllers/menuUtils/menuBuilder");
-const { getConfigMessage } = require("../../../utils/config/configMessageHelper");
+const getConfigMessage = require("../../../utils/config/configMessageHelper");
 const {
   langKeyFromChoice,
   t,
 } = require("../../../utils/language/languageTextHelper");
 const sendWhatsApp = require("../../../utils/twilio/sendTwilio");
 
-module.exports = async function handleLanguageChoice({ biz, from, state, customer, txt }) {
+async function handleLanguageChoice({ biz, from, state, customer, txt }) {
   const choice = parseLanguageChoice(txt);
 
   // invalid input → ask again
@@ -59,3 +59,5 @@ module.exports = async function handleLanguageChoice({ biz, from, state, custome
     body: menuText,
   });
 };
+
+module.exports = handleLanguageChoice;
