@@ -34,35 +34,5 @@ async function sendWhatsApp({ from, to, body, mediaUrl, messagingServiceSid }) {
   return client.messages.create(payload);
 }
 
-// send a Twilio Content Template message
-async function sendTemplate({
-  from,
-  to,
-  contentSid,
-  variables = {},
-  messagingServiceSid,
-}) {
 
-  // ---- IMPORTANT: Twilio requires stringified JSON values ----
-  const safeVars = JSON.stringify(variables);
-
-  const payload = {
-    from: ensureWhatsAppAddress(
-      from || process.env.TWILIO_WHATSAPP_NUMBER
-    ),
-    to: ensureWhatsAppAddress(to),
-    contentSid,
-    contentVariables: safeVars,
-  };
-
-  if (messagingServiceSid) {
-    payload.messagingServiceSid = messagingServiceSid;
-  }
-
-  return client.messages.create(payload);
-}
-
-module.exports = {
-  sendWhatsApp,
-  sendTemplate,
-};
+module.exports = sendWhatsApp;

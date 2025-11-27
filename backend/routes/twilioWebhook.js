@@ -17,20 +17,16 @@ const getNext10Days = require("../utils/getNext10Days");
 
 // Misc helpers
 const { toE164 } = require("../utils/misc/phoneHelpers");
-const { shortText } = require("../utils/misc/textHelpers");
 // language helpers
 const { getLocalized } = require("../utils/language/localization");
 const {t, langFromCustomer, langKeyFromCustomer, langKeyFromChoice} = require("../utils/language/languageTextHelper");
-const {parseLanguageChoice} = require ("../utils/language/languageParser");
 const PRODUCT_LABELS = require("../utils/language/labels/productLabels");
 const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
-const { getVisibleMenuItemsSorted } = require("../utils/language/menu/menuUtils");
-const {getConfigMessage} = require("../utils/config/configMessageHelper");
-const {buildMenuText} = require("../utils/language/menu/menuBuilder");
 const parseMenuIndexFromText = require("../utils/language/menu/menuParser");
-
+const {getConfigMessage} = require("../utils/config/configMessageHelper");
+const handleMenuStep = require("../utils/menuControllers/handleMenuStep");
 
 // Time + Booking Helpers
 const {
@@ -41,40 +37,48 @@ const {
   isRangeFree
 } = require("../utils/time/bookingHelpers");
 
-
 // System Constants Helpers
 const {BACK, CANCEL} = require("../utils/constants/systemConstants");
 
 //Twilio
 const sendDatePickerTemplate =require("../utils/twilio/sendDatePickerTemplate");
-const { sendWhatsApp, sendTemplate } = require("../utils/twilio/sendTwilio");
+const sendWhatsApp = require("../utils/twilio/sendTwilio");
 const { sendLanguageTemplate, sendLanguageFallback } = require("../utils/twilio/sendLanguageHelpers");
 
+// Webhook Imports Helpers Functions
+const { handleHelp, handleRestart ,handleCancel} = require("./twilioFlows/global/commands");
+const askLanguage = require("../utils/flows/language/askLanguage");
+const handleLanguageChoice = require("../utils/flows/language/handleLanguageChoice");
 
 const lower = (s) => String(s || "").toLowerCase();
+
+
+
+
+
 // ---------- language parsing / mapping ----------
 function productText(fieldObj, langKey) {
   return getLocalized(fieldObj, langKey);
 }
 
-const handleMenuAction = require("../utils/menuControllers/handleMenuAction");
+// -------------------- webhook -----------------------------------------------
+// -------------------- webhook -----------------------------------------------
 
-// -------------------- webhook --------------------
 router.post("/", async (req, res) => {
   try {
-
     // -------------------- constants & helpers --------------------
     const from = toE164(req.body?.From); // customer WA number
     const to = toE164(req.body?.To); // business WA number
     const rawText = (req) => (req.body?.Body || "").trim();
     const txt = rawText(req);
     const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
+    const isBackCmd = (txt) => txt === BACK || lower(txt) === "back";
     const isRestartCmd = (txt) =>["restart", "/restart", "start"].includes(lower(txt));
-    const isHelpCmd = (txt) => ["help", "?", "instructions"].includes(lower(txt));
+    const isHelpCmd = (txt) => ["help", "?", "instructions","עזרה","مساعدة"].includes(lower(txt));
+    const isMenuCmd = (txt) => ["menu",  "القائمة", "תפריט"].includes(lower(txt));
+
     const weekdayFromISO = (iso) =>
       new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
-   
-
     const biz = await Business.findOne({ "wa.number": to, isActive: true });
     if (!biz) return res.sendStatus(200);
 
@@ -84,155 +88,77 @@ router.post("/", async (req, res) => {
     const lang = langFromCustomer(customer, biz);
     const langKey = langKeyFromCustomer(customer, biz);
 
-    // Global commands
-    if (isHelpCmd(txt)) {
-      const lang = langFromCustomer(customer, biz);
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: t(lang, "help"),
-      });
-      return res.sendStatus(200);
-    }
-
-    if (isRestartCmd(txt)) {
-      state = await setState(state, { step: "LANGUAGE_SELECT", data: {} });
-      const sent = await sendLanguageTemplate(biz, from);
-      if (!sent) await sendLanguageFallback(biz, from);
-      return res.sendStatus(200);
-    }
-
-    if (isCancelCmd(txt)) {
-      const lang = langFromCustomer(customer, biz);
-      await setState(state, { step: "LANGUAGE_SELECT", data: {} });
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: t(lang, "cancelled"),
-      });
-      return res.sendStatus(200);
-    }
-
-    
-    // 4) Language selection flow
+    // -------------------- LANGUAGE SELECTION FLOW --------------------
     if (!customer || !customer.language) {
-      // not yet choosing → send template
+      // Not yet selected → ask
       if (state.step !== "LANGUAGE_SELECT") {
-        await setState(state, { step: "LANGUAGE_SELECT" });
-        const sent = await sendLanguageTemplate(biz, from);
-        if (!sent) await sendLanguageFallback(biz, from);
+        await askLanguage({ biz, from, state });
         return res.sendStatus(200);
       }
+      // Already in LANGUAGE_SELECT → handle user choice
+      await handleLanguageChoice({ biz, from, state, customer, txt });
+      return res.sendStatus(200);
+    }
 
-      // already in LANGUAGE_SELECT → parse choice
-      const choice = parseLanguageChoice(txt);
 
-      if (!choice) {
-        const sent = await sendLanguageTemplate(biz, from);
-        if (!sent) await sendLanguageFallback(biz, from);
+
+    // -------------------- GLOBAL COMMANDS --------------------
+
+    // HELP COMMAND
+    if (isHelpCmd(txt)) {
+      await handleHelp({ biz, from, customer });
+      return res.sendStatus(200);
+    }
+    // RESTART COMMAND
+    if (isRestartCmd(txt)) {
+      await handleRestart({ biz, from, state });
+      return res.sendStatus(200);
+    }
+    // CANCEL COMMAND
+    if (isCancelCmd(txt)) {
+      await handleCancel({ biz, from, state, customer });
+      return res.sendStatus(200);
+    }
+    // BACK COMMAND
+    if (isBackCmd(txt)) {
+      await handleBack({ biz, from, state, customer });
+      return res.sendStatus(200);
+    }
+    // MENU COMMAND
+    if (isMenuCmd) {
+        await showMenu({ biz, from, lang, langKey, state });
         return res.sendStatus(200);
-      }
+    }
 
-      const wasFirstTime = !customer;
 
-      // upsert customer with language
-      customer = await Customer.findOneAndUpdate(
-        { businessId: biz._id, phone: from },
-        {
-          $setOnInsert: { businessId: biz._id, phone: from },
-          $set: { language: choice, "stats.lastSeenAt": new Date() },
-        },
-        { new: true, upsert: true }
-      );
 
-      await setState(state, { step: "MENU", data: { language: choice } });
 
-      const langKey = langKeyFromChoice(choice);
-      const msgType = wasFirstTime ? "welcome_first" : "welcome_returning";
 
-      const welcomeText = getConfigMessage(
+
+    if (state.step === "MENU") {
+      await handleMenuStep({
         biz,
+        from,
+        txt,
+        lang,
         langKey,
-        msgType,
-        t(choice, "welcome")
-      );
-
-      const menuText = buildMenuText(biz, langKey, choice);
-
-      // send welcome
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: welcomeText,
+        state,
       });
-
-      // send menu right after
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: menuText,
-      });
-
+    
       return res.sendStatus(200);
     }
+    
 
 
 
-    // ---- MENU command ----
-    if (lower(txt) === "menu") {
-      const menuText = buildMenuText(biz, langKey, lang);
 
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: menuText,
-      });
-      await setState(state, { step: "MENU" });
-      return res.sendStatus(200);
-    }
 
-        // ---- MENU selection logic ----
-        if (state.step === "MENU") {
-          const structuredItems = getVisibleMenuItemsSorted(biz);
 
-          if (structuredItems.length) {
-            const index = parseMenuIndexFromText(txt);
 
-            if (index == null || index < 0 || index >= structuredItems.length) {
-              await sendWhatsApp({
-                from: biz.wa.number,
-                to: from,
-                body:
-                  lang === "arabic"
-                    ? "من فضلك اختر رقمًا من القائمة أو أرسل *menu* لعرضها مرة أخرى."
-                    : lang === "hebrew"
-                    ? "בחר/י מספר מהתפריט או שלח/י *menu* להצגה מחדש."
-                    : "Please choose a number from the menu, or send *menu* again.",
-              });
-              return res.sendStatus(200);
-            }
 
-            const item = structuredItems[index];
-            const action = item.action || "custom";
-            const payload = item.payload || "";
 
-            await handleMenuAction({ action, payload, lang, langKey, biz, state, from });
-            return res.sendStatus(200);
-          }
 
-          // if somehow no structured items while in MENU
-          await sendWhatsApp({
-            from: biz.wa.number,
-            to: from,
-            body:
-              lang === "arabic"
-                ? "القائمة غير مهيّأة بعد. أرسلي *menu* لاحقًا أو اكتبي سؤالك بحرية."
-                : lang === "hebrew"
-                ? "התפריט עדיין לא הוגדר. שלחי *menu* שוב מאוחר יותר או כתבי לנו חופשי."
-                : "The menu is not configured yet. Try *menu* later or just ask your question.",
-          });
-          return res.sendStatus(200);
-        }
+
 
         // ---- BOOKING: SELECT SERVICE ----
         if (state.step === "BOOKING_SELECT_SERVICE") {

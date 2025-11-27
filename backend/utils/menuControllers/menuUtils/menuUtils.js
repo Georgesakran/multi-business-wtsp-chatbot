@@ -4,5 +4,5 @@ function getVisibleMenuItemsSorted(biz) {
       .sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
 }
   
-module.exports = { getVisibleMenuItemsSorted };
+module.exports =  getVisibleMenuItemsSorted;
   

@@ -1,4 +1,4 @@
-const { getVisibleMenuItemsSorted } = require("./menuUtils");
+const getVisibleMenuItemsSorted= require("./menuUtils");
 const { businessNameFor } = require("../../business/businessNameHelper"); 
 const { getConfigMessage } = require("../../config/configMessageHelper");
 
