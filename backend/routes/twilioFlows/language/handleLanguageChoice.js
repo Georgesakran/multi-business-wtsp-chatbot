@@ -8,7 +8,8 @@ const {
   langKeyFromChoice,
   t,
 } = require("../../../utils/language/languageTextHelper");
-const {sendWhatsApp, sendLanguageTemplate} = require("../../../utils/twilio/sendTwilio");
+const {sendWhatsApp} = require("../../../utils/twilio/sendTwilio");
+const { sendLanguageTemplate, sendLanguageFallback } = require("../../../utils/twilio/sendLanguageHelpers");
 
 async function handleLanguageChoice({ biz, from, state, customer, txt }) {
   const choice = parseLanguageChoice(txt);
