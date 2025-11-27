@@ -46,7 +46,7 @@ const sendWhatsApp = require("../utils/twilio/sendTwilio");
 const { sendLanguageTemplate, sendLanguageFallback } = require("../utils/twilio/sendLanguageHelpers");
 
 // Webhook Imports Helpers Functions
-const { handleHelp, handleRestart ,handleCancel} = require("./twilioFlows/global/commands");
+const { handleHelp, handleRestart ,handleCancel , showMenu} = require("./twilioFlows/global/commands");
 const askLanguage = require("./twilioFlows/language/askLanguage");
 const handleLanguageChoice = require("./twilioFlows/language/handleLanguageChoice");
 
