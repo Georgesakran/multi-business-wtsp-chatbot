@@ -2,7 +2,7 @@
 const Customer = require("../../../models/Customer");
 const setState = require("../../states/setState");
 const { parseLanguageChoice } = require("../../language/languageParser");
-const { buildMenuText } = require("../../language/menu/menuBuilder");
+const { buildMenuText } = require("../../../utils/menuControllers/menuUtils/menuBuilder");
 const { getConfigMessage } = require("../../config/configMessageHelper");
 const {
   langKeyFromChoice,

@@ -3,7 +3,7 @@ const { sendWhatsApp, sendLanguageTemplate, sendLanguageFallback} = require("../
 const { t } = require("../../../utils/language/languageTextHelper");
 const { langFromCustomer } = require("../../../utils/language/languageTextHelper");
 const setState = require("../../../utils/states/setState");
-const { buildMenuText } = require("../../../utils/language/menu/menuBuilder");
+const { buildMenuText } = require("../../../utils/menuControllers/menuUtils/menuBuilder");
 
 
 // HELP COMMAND
