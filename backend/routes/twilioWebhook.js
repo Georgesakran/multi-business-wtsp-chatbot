@@ -130,6 +130,7 @@ router.post("/", async (req, res) => {
         return res.sendStatus(200);
     }
 
+    // HANDLING STEPS
     if (state.step === "MENU") {
       await handleMenuStep({
         biz,
@@ -142,24 +143,15 @@ router.post("/", async (req, res) => {
     
       return res.sendStatus(200);
     }
-    
-
-
-
-
-
-
-
-
-
-
-
+  
 
         // ---- BOOKING: SELECT SERVICE ----
         if (state.step === "BOOKING_SELECT_SERVICE") {
           const serviceIds = state.data?.serviceIds || [];
+          console.log("serviceIds : ",serviceIds);
           const index = parseMenuIndexFromText(txt);
-    
+          console.log("Index : ",index);
+
           if (index == null || index < 0 || index >= serviceIds.length) {
             await sendWhatsApp({
               from: biz.wa.number,
