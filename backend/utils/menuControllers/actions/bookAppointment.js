@@ -65,10 +65,10 @@ module.exports = async function bookAppointment({ lang, langKey, biz, state, fro
 
   const footer =
     lang === "arabic"
-      ? rtl("\n💬 أرسلي رقم الخدمة التي تريدين حجزها.")
+      ? "💬 أرسلي رقم الخدمة التي تريدين حجزها."
       : lang === "hebrew"
-      ? rtl("\n💬 כתבי את מספר השירות שברצונך להזמין.")
-      : rtl("\n💬 Send the number of the service you want.");
+      ? "💬 כתבי את מספר השירות שברצונך להזמין."
+      : "💬 Send the number of the service you want.";
 
   await setState(state, {
     step: "BOOKING_SELECT_SERVICE",
