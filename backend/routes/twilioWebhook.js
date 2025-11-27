@@ -47,8 +47,8 @@ const { sendLanguageTemplate, sendLanguageFallback } = require("../utils/twilio/
 
 // Webhook Imports Helpers Functions
 const { handleHelp, handleRestart ,handleCancel} = require("./twilioFlows/global/commands");
-const askLanguage = require("../utils/flows/language/askLanguage");
-const handleLanguageChoice = require("../utils/flows/language/handleLanguageChoice");
+const askLanguage = require("./twilioFlows/language/askLanguage");
+const handleLanguageChoice = require("./twilioFlows/language/handleLanguageChoice");
 
 const lower = (s) => String(s || "").toLowerCase();
 
