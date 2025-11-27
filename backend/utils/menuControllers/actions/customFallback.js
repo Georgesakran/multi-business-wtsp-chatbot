@@ -1,4 +1,4 @@
-const { sendWhatsApp } = require("../../twilio/sendTwilio");
+const sendWhatsApp= require("../../twilio/sendTwilio");
 
 module.exports = async function customFallback({ lang, biz, from }) {
   await sendWhatsApp({

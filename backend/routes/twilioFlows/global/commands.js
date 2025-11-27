@@ -1,5 +1,6 @@
 // utils/flows/global/help.js
-const { sendWhatsApp, sendLanguageTemplate, sendLanguageFallback} = require("../../../utils/twilio/sendTwilio");
+const sendWhatsApp = require("../../../utils/twilio/sendTwilio");
+const {sendLanguageTemplate , sendLanguageFallback} = require("../../../utils/twilio/sendLanguageHelpers");
 const { t } = require("../../../utils/language/languageTextHelper");
 const { langFromCustomer } = require("../../../utils/language/languageTextHelper");
 const setState = require("../../../utils/states/setState");

@@ -1,14 +1,14 @@
 // utils/flows/language/handleLanguageChoice.js
 const Customer = require("../../../models/Customer");
 const setState = require("../../../utils/states/setState");
-const { parseLanguageChoice } = require("../../language/languageParser");
-const { buildMenuText } = require("");
-const { getConfigMessage } = require("../../config/configMessageHelper");
+const { parseLanguageChoice } = require("../../../utils/language/languageParser");
+const { buildMenuText } = require("../../../utils/menuControllers/menuUtils/menuBuilder");
+const { getConfigMessage } = require("../../../utils/config/configMessageHelper");
 const {
   langKeyFromChoice,
   t,
-} = require("../../language/languageTextHelper");
-const { sendWhatsApp } = require("../../twilio/sendTwilio");
+} = require("../../../utils/language/languageTextHelper");
+const sendWhatsApp = require("../../../utils/twilio/sendTwilio");
 
 module.exports = async function handleLanguageChoice({ biz, from, state, customer, txt }) {
   const choice = parseLanguageChoice(txt);

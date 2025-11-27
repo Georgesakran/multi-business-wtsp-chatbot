@@ -3,7 +3,7 @@ const setState = require("../../../utils/states/setState");
 const {
   sendLanguageTemplate,
   sendLanguageFallback,
-} = require("../../twilio/sendLanguageHelpers");
+} = require("../../../utils/twilio/sendLanguageHelpers");
 
 module.exports = async function askLanguage({ biz, from, state }) {
   // move to LANGUAGE_SELECT state
