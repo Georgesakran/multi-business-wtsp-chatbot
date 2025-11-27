@@ -1,4 +1,5 @@
 function parseLanguageChoice(txt) {
+    const lower = (s) => String(s || "").toLowerCase();
     const t = lower(txt);
     // numbers
     if (t === "1") return "arabic";
