@@ -24,7 +24,7 @@ const PRODUCT_LABELS = require("../utils/language/labels/productLabels");
 const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
-const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuUtils");
+const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuParser");
 const getConfigMessage= require("../utils/config/configMessageHelper");
 const handleMenuStep = require("../utils/menuControllers/handleMenuState");
 
@@ -148,10 +148,7 @@ router.post("/", async (req, res) => {
         // ---- BOOKING: SELECT SERVICE ----
         if (state.step === "BOOKING_SELECT_SERVICE") {
           const serviceIds = state.data?.serviceIds || [];
-          console.log("serviceIds : ",serviceIds);
           const index = parseMenuIndexFromText(txt);
-          console.log("txt : ", txt);
-          console.log("Index : ",index);
 
           if (index == null || index < 0 || index >= serviceIds.length) {
             await sendWhatsApp({
