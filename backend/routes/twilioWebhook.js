@@ -56,7 +56,7 @@ const lower = (s) => String(s || "").toLowerCase();
 
 
 
-// ---------- language parsing / mapping ----------
+// ---------- language parsing / mapping -----------
 function productText(fieldObj, langKey) {
   return getLocalized(fieldObj, langKey);
 }
