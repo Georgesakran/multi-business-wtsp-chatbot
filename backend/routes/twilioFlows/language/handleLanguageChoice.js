@@ -1,8 +1,8 @@
 // utils/flows/language/handleLanguageChoice.js
 const Customer = require("../../../models/Customer");
-const setState = require("../../states/setState");
+const setState = require("../../../utils/states/setState");
 const { parseLanguageChoice } = require("../../language/languageParser");
-const { buildMenuText } = require("../../../utils/menuControllers/menuUtils/menuBuilder");
+const { buildMenuText } = require("");
 const { getConfigMessage } = require("../../config/configMessageHelper");
 const {
   langKeyFromChoice,
