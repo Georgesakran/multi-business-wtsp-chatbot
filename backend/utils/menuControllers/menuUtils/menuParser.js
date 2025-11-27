@@ -17,8 +17,12 @@ function parseMenuIndexFromText(txt) {
   }
 
   if (!normalized) return null;
+
   const n = parseInt(normalized, 10);
   if (!Number.isFinite(n) || n <= 0) return null;
-  return n - 1; // index
+
+  return n - 1; // ALWAYS a number, never array
 }
+
 module.exports = parseMenuIndexFromText;
+
