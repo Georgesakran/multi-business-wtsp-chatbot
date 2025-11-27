@@ -15,14 +15,14 @@ function parseMenuIndexFromText(txt) {
       normalized += ch;
     }
   }
-
+  console.log("normalized : ",normalized);
   if (!normalized) return null;
 
   const n = parseInt(normalized, 10);
+  console.log("n : " , n)
   if (!Number.isFinite(n) || n <= 0) return null;
 
   return n - 1; // ALWAYS a number, never array
 }
 
 module.exports = parseMenuIndexFromText;
-
