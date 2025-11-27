@@ -150,6 +150,7 @@ router.post("/", async (req, res) => {
           const serviceIds = state.data?.serviceIds || [];
           console.log("serviceIds : ",serviceIds);
           const index = parseMenuIndexFromText(txt);
+          console.log("txt : ", txt);
           console.log("Index : ",index);
 
           if (index == null || index < 0 || index >= serviceIds.length) {
@@ -167,6 +168,7 @@ router.post("/", async (req, res) => {
           }
     
           const selectedServiceId = serviceIds[index];
+          console.log("selectedServiceId : ", selectedServiceId)
           const svc = findServiceById(biz, selectedServiceId);
           if (!svc) {
             await sendWhatsApp({
