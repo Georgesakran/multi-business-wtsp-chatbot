@@ -1,8 +1,8 @@
 // utils/menuControllers/handleMenuStep.js
-const {sendWhatsApp} = require("../twilio/sendTwilio");
-const parseMenuIndexFromText = require("./menuUtils/menuParser");
-const getVisibleMenuItemsSorted = require("./menuUtils/menuUtils");
-const handleMenuAction = require("./handleMenuAction");
+const {sendWhatsApp} = require("../../twilio/sendTwilio");
+const parseMenuIndexFromText = require("../../menuControllers/menuUtils/menuParser");
+const getVisibleMenuItemsSorted = require("../../menuControllers/menuUtils/menuUtils");
+const handleMenuAction = require("../../menuControllers/handleMenuAction");
 
 async function handleMenuStep({ biz, from, txt, lang, langKey, state }) {
   const structuredItems = getVisibleMenuItemsSorted(biz);

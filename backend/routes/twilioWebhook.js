@@ -663,6 +663,8 @@ router.post("/", async (req, res) => {
         return res.sendStatus(200);
       }
 
+
+      
     // ---- COURSE DETAILS FLOW after "view_courses" ----
     if (state.step === "VIEW_COURSES_LIST") {
         const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;
