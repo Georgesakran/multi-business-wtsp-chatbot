@@ -120,11 +120,13 @@ router.post("/", async (req, res) => {
       await handleCancel({ biz, from, state, customer });
       return res.sendStatus(200);
     }
+    
     // BACK COMMAND
-    if (isBackCmd(txt)) {
-      await handleBack({ biz, from, state, customer });
-      return res.sendStatus(200);
-    }
+    // if (isBackCmd(txt)) {
+    //   await handleBack({ biz, from, state, customer });
+    //   return res.sendStatus(200);
+    // }
+
     // MENU COMMAND
     if (isMenuCmd(txt)) {
         await showMenu({ biz, from, lang, langKey, state });
@@ -166,7 +168,6 @@ router.post("/", async (req, res) => {
           }
     
           const selectedServiceId = serviceIds[index];
-          console.log("selectedServiceId : ", selectedServiceId)
           const svc = findServiceById(biz, selectedServiceId);
           if (!svc) {
             await sendWhatsApp({
