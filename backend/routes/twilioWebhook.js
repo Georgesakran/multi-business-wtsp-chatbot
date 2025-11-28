@@ -36,6 +36,7 @@ const {
   getTakenMap,
   isRangeFree
 } = require("../utils/time/bookingHelpers");
+const makeDayGrid = require("../utils/time/gridHelpers");
 
 // System Constants Helpers
 const {BACK, CANCEL} = require("../utils/constants/systemConstants");
