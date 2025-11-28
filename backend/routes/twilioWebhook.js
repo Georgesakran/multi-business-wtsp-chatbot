@@ -26,7 +26,6 @@ const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 // MENU Lang helpers
 const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuParser");
 const getConfigMessage= require("../utils/config/configMessageHelper");
-const handleMenuStep = require("../utils/menuControllers/handleMenuState");
 
 // Time + Booking Helpers
 const {
@@ -44,7 +43,6 @@ const {BACK, CANCEL} = require("../utils/constants/systemConstants");
 //Twilio
 const sendDatePickerTemplate =require("../utils/twilio/sendDatePickerTemplate");
 const {sendWhatsApp} = require("../utils/twilio/sendTwilio");
-// const { sendLanguageTemplate, sendLanguageFallback } = require("../utils/twilio/sendLanguageHelpers");
 
 // Webhook Imports Helpers Functions
 const { handleHelp, handleRestart ,handleCancel , showMenu} = require("./twilioFlows/global/commands");
@@ -53,6 +51,9 @@ const handleLanguageChoice = require("./twilioFlows/language/handleLanguageChoic
 
 const lower = (s) => String(s || "").toLowerCase();
 
+// HANDLE STEPS 
+const handleMenuStep = require("../utils/states/stepStates/handleMenuState");
+const handleBookingSelectService = require("../utils/states/stepStates/handleBookingSelectService");
 
 
 
@@ -73,7 +74,7 @@ router.post("/", async (req, res) => {
     const rawText = (req) => (req.body?.Body || "").trim();
     const txt = rawText(req);
     const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
-    const isBackCmd = (txt) => txt === BACK || lower(txt) === "back";
+    // const isBackCmd = (txt) => txt === BACK || lower(txt) === "back";
     const isRestartCmd = (txt) =>["restart", "/restart", "start"].includes(lower(txt));
     const isHelpCmd = (txt) => ["help", "?", "instructions","עזרה","مساعدة"].includes(lower(txt));
     const isMenuCmd = (txt) => ["menu",  "القائمة", "תפריט"].includes(lower(txt));
@@ -120,7 +121,7 @@ router.post("/", async (req, res) => {
       await handleCancel({ biz, from, state, customer });
       return res.sendStatus(200);
     }
-    
+
     // BACK COMMAND
     // if (isBackCmd(txt)) {
     //   await handleBack({ biz, from, state, customer });
@@ -148,78 +149,19 @@ router.post("/", async (req, res) => {
     }
   
 
-        // ---- BOOKING: SELECT SERVICE ----
-        if (state.step === "BOOKING_SELECT_SERVICE") {
-          const serviceIds = state.data?.serviceIds || [];
-          const index = parseMenuIndexFromText(txt);
+      // ---- BOOKING: SELECT SERVICE ----
+      if (state.step === "BOOKING_SELECT_SERVICE") {
+        await handleBookingSelectService({
+          biz,
+          from,
+          lang,
+          langKey,
+          txt,
+          state,
+        });
+        return res.sendStatus(200);
+      }
 
-          if (index == null || index < 0 || index >= serviceIds.length) {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "من فضلك أرسلي رقم خدمة من القائمة، أو اكتبي *menu* للعودة."
-                  : lang === "hebrew"
-                  ? "בחרי מספר שירות מהרשימה, או כתבי *menu* כדי לחזור."
-                  : "Please send a service number from the list, or type *menu* to go back.",
-            });
-            return res.sendStatus(200);
-          }
-    
-          const selectedServiceId = serviceIds[index];
-          const svc = findServiceById(biz, selectedServiceId);
-          if (!svc) {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "هذا الخدمة لم تعد متاحة. اكتبي *menu* لبدء من جديد."
-                  : lang === "hebrew"
-                  ? "השירות הזה כבר לא זמין. כתבי *menu* כדי להתחיל מחדש."
-                  : "This service is no longer available. Type *menu* to start again.",
-            });
-            return res.sendStatus(200);
-          }
-    
-          const key = langKey; // 'ar' | 'en' | 'he'
-          const svcName = svc.name?.[key] || svc.name?.en || "";
-    
-          // snapshot like in bookingsRoutes
-          const serviceSnapshot = {
-            name: {
-              en: svc.name?.en || "",
-              ar: svc.name?.ar || "",
-              he: svc.name?.he || "",
-            },
-            price: Number(svc.price || 0),
-            duration: Number(svc.duration || 0),
-          };
-    
-          const rawDays = getNext10Days(biz);
-          let days = [...rawDays];
-          const todayStr = moment().format("YYYY-MM-DD");
-          
-          if (days.includes(todayStr)) {
-            const hasFree = await checkFreeSlotsToday(biz);
-            if (!hasFree) days = days.filter((d) => d !== todayStr);
-          }
-          
-          await setState(state, {
-            step: "BOOKING_SELECT_DATE_LIST",
-            data: {
-              serviceId: selectedServiceId,
-              serviceSnapshot,
-              days,
-            },
-          });
-          
-          // send Twilio Template
-          await sendDatePickerTemplate(biz, from, days, lang);
-          return res.sendStatus(200);
-    
-        }
     
         if (state.step === "BOOKING_SELECT_DATE_LIST") {
           const days = state.data?.days || [];
