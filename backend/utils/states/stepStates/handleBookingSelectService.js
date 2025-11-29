@@ -67,6 +67,7 @@ module.exports = async function handleBookingSelectService({
       price: Number(svc.price || 0),
       duration: Number(svc.duration || 0),
     };
+    console.log("✅ Service selected:", serviceSnapshot);
     
 
     // 6) Prepare next 10 days
@@ -85,8 +86,10 @@ module.exports = async function handleBookingSelectService({
     await setState(state, {
       step: "BOOKING_SELECT_DATE_LIST",
       data: {
+        ...state.data,
         serviceId: selectedServiceId,
         serviceSnapshot,
+        langKey,
         days,
       },
     });
