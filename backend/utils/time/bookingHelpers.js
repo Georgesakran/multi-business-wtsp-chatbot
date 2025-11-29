@@ -74,11 +74,10 @@ async function checkFreeSlotsToday(biz, date = moment().format("YYYY-MM-DD")) {
  * Converts "YYYY-MM-DD" → weekday name in English
  * Example: "2025-12-05" → "Friday"
  */
-async function weekdayFromISO(iso) {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-  });
-};
+function weekdayFromISO(date) {
+  return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
+}
+
 
 
 // ------------------------- exports -------------------------
