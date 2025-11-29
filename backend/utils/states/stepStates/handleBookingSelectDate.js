@@ -37,6 +37,7 @@ module.exports = async function handleBookingSelectDate({
   const openingTime = bookingCfg.openingTime || "09:00";
   const closingTime = bookingCfg.closingTime || "18:00";
   const gap = Number(bookingCfg.slotGapMinutes || 15);
+  console.log("handleBookingSelectDate -> date:", date);
 
   // --- closed date? ---
   if ((biz.closedDates || []).includes(date)) {

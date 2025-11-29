@@ -40,6 +40,7 @@ module.exports = async function handleBookingSelectDateList({
       date: chosenDate,
     },
   });
+  console.log("handleBookingSelectDateList -> chosenDate:", chosenDate);
 
   // --- immediately call handleBookingSelectDate to continue the flow ---
   await handleBookingSelectDate({
