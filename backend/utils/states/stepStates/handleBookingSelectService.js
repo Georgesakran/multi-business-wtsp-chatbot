@@ -55,6 +55,7 @@ module.exports = async function handleBookingSelectService({
       });
       return;
     }
+    console.log("Selected service object:", svc);
 
     // 5) Prepare service snapshot for booking
     const key = langKey; // 'ar' | 'en' | 'he'
