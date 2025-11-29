@@ -1,6 +1,6 @@
 const setState  = require("../setState");
 const {sendWhatsApp} = require("../../twilio/sendTwilio");
-
+const parseMenuIndexFromText = require("../../menuControllers/menuUtils/menuParser");
 module.exports = async function handleBookingSelectDateList({
   biz,
   from,
@@ -9,46 +9,33 @@ module.exports = async function handleBookingSelectDateList({
   txt,
   state,
 }) {
-  const days = state.data?.days || [];
-  const chosenDate = txt.trim();
-
-  // Validate chosen date is one of the options
-  if (!days.includes(chosenDate)) {
-    const msg =
-      lang === "arabic"
-        ? "❌ يرجى اختيار تاريخ من القائمة."
-        : lang === "hebrew"
-        ? "❌ אנא בחרי תאריך מהרשימה."
-        : "❌ Please select a date from the list.";
-
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to: from,
-      body: msg,
+    const days = state.data?.days || [];
+    const idx = parseMenuIndexFromText(txt);
+  
+    if (idx == null || idx < 0 || idx >= days.length) {
+      await sendWhatsApp({
+        from: biz.wa.number,
+        to: from,
+        body:
+          lang === "arabic"
+            ? "من فضلك اختاري رقم تاريخ صحيح من القائمة."
+            : lang === "hebrew"
+            ? "בחרי מספר תאריך מהרשימה."
+            : "Please select a valid date number.",
+      });
+      return res.sendStatus(200);
+    }
+  
+    const chosenDate = days[idx];
+  
+    await setState(state, {
+      step: "BOOKING_SELECT_DATE",
+      data: {
+        ...state.data,
+        date: chosenDate,
+      },
     });
-
-    return;
-  }
-
-  // Save chosen date to state
-  await setState(state, {
-    step: "BOOKING_SELECT_DATE",
-    data: {
-      ...state.data,
-      date: chosenDate,
-    },
-  });
-
-  // We keep the message the same (date)
-  // The next handler (BOOKING_SELECT_DATE) will continue
-  await sendWhatsApp({
-    from: biz.wa.number,
-    to: from,
-    body:
-      lang === "arabic"
-        ? `📅 تم اختيار التاريخ: *${chosenDate}*\n\nالآن أرسلي التاريخ مرة أخرى أو تابعي العملية.`
-        : lang === "hebrew"
-        ? `📅 נבחר תאריך: *${chosenDate}*\n\nעכשיו כתבי את התאריך שוב כדי להמשיך.`
-        : `📅 Date selected: *${chosenDate}*\n\nPlease send the date again to continue.`,
-  });
+  
+    req.body.Body = chosenDate;  
+    //const newTxt = chosenDate;
 };
