@@ -57,7 +57,7 @@ const handleBookingSelectService = require("../utils/states/stepStates/handleBoo
 const handleBookingSelectDateList = require("../utils/states/stepStates/handleBookingSelectDateList");
 const handleBookingSelectDate = require("../utils/states/stepStates/handleBookingSelectDate");
 const handleBookingSelectTime = require("../utils/states/stepStates/handleBookingSelectTime");
-
+const handleBookingEnterName = require("../utils/states/stepStates/handleBookingEnterName");
 
 
 // ---------- language parsing / mapping -----------
@@ -200,54 +200,19 @@ router.post("/", async (req, res) => {
       });
       return res.sendStatus(200);
     }
+    // ---- BOOKING: ENTER NAME ----
+    if (state.step === "BOOKING_ENTER_NAME") {
+      await handleBookingEnterName({
+        biz,
+        from,
+        lang,
+        txt,
+        state,
+        setState,
+      });
+      return res.sendStatus(200);
+    }
     
-    
-
-
-
-
-
-
-        // ---- BOOKING: ENTER NAME ----
-        if (state.step === "BOOKING_ENTER_NAME") {
-          const name = txt;
-          if (!name || name.length < 2) {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "من فضلك اكتب/ي اسمًا واضحًا (على الأقل حرفين)."
-                  : lang === "hebrew"
-                  ? "נא לכתוב שם ברור (לפחות שני תווים)."
-                  : "Please send a clear name (at least 2 characters).",
-            });
-            return res.sendStatus(200);
-          }
-    
-          await setState(state, {
-            step: "BOOKING_ENTER_NOTE",
-            data: {
-              ...state.data,
-              customerName: name,
-            },
-          });
-    
-          const msg =
-            lang === "arabic"
-              ? "5️⃣ هل لديك ملاحظات خاصة !! (مثال: لون/شكل/معلومة إضافية)؟\nاكتب/ي ما تريدين، أو اكتب/ي *0* إذا لا توجد ملاحظات."
-              : lang === "hebrew"
-              ? "5️⃣ יש לך הערות מיוחדות (צבע, צורה, בקשה נוספת)?\nכתב/י מה שצריך, או כתב/י *0* אם אין הערות."
-              : "5️⃣ Any special notes (e.g. style, color, anything extra)?\nWrite your note, or send *0* if you have no notes.";
-    
-          await sendWhatsApp({
-            from: biz.wa.number,
-            to: from,
-            body: msg,
-          });
-    
-          return res.sendStatus(200);
-        }
     
         // ---- BOOKING: ENTER NOTE + CREATE BOOKING ----
         if (state.step === "BOOKING_ENTER_NOTE") {
