@@ -69,6 +69,18 @@ async function checkFreeSlotsToday(biz, date = moment().format("YYYY-MM-DD")) {
   return dayGrid.filter((_, idx) => isRangeFree(dayGrid, takenMap, idx, 1));
 }
 
+
+/**
+ * Converts "YYYY-MM-DD" → weekday name in English
+ * Example: "2025-12-05" → "Friday"
+ */
+module.exports = function weekdayFromISO(iso) {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+};
+
+
 // ------------------------- exports -------------------------
 
 module.exports = {
@@ -77,4 +89,5 @@ module.exports = {
   findServiceById,
   getTakenMap,
   isRangeFree,
+  weekdayFromISO,
 };
