@@ -212,7 +212,7 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
     // ---- BOOKING: ENTER NOTE + CREATE BOOKING ----
-    if (state.step === "BOOKING_ENTER_NOTE") {
+    if (state.step === "BOOKING_ENTER_NOTE") {  
       await handleBookingEnterNote({ txt, state, biz, from, lang, langKey, sendWhatsApp, setState, lower });
       return res.sendStatus(200);
     }
