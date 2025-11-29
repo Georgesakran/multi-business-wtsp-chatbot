@@ -54,7 +54,7 @@ const lower = (s) => String(s || "").toLowerCase();
 // HANDLE STEPS 
 const handleMenuStep = require("../utils/states/stepStates/handleMenuState");
 const handleBookingSelectService = require("../utils/states/stepStates/handleBookingSelectService");
-
+const handleBookingSelectDateList = require("../utils/states/stepStates/handleBookingSelectDateList");
 
 
 
@@ -162,40 +162,54 @@ router.post("/", async (req, res) => {
         return res.sendStatus(200);
       }
 
-    
-        if (state.step === "BOOKING_SELECT_DATE_LIST") {
-          const days = state.data?.days || [];
-          const idx = parseMenuIndexFromText(txt);
-        
-          if (idx == null || idx < 0 || idx >= days.length) {
-            await sendWhatsApp({
-              from: biz.wa.number,
-              to: from,
-              body:
-                lang === "arabic"
-                  ? "من فضلك اختاري رقم تاريخ صحيح من القائمة."
-                  : lang === "hebrew"
-                  ? "בחרי מספר תאריך מהרשימה."
-                  : "Please select a valid date number.",
-            });
-            return res.sendStatus(200);
-          }
-        
-          const chosenDate = days[idx];
-        
-          await setState(state, {
-            step: "BOOKING_SELECT_DATE",
-            data: {
-              ...state.data,
-              date: chosenDate,
-            },
-          });
-        
-          req.body.Body = chosenDate;  
-          //const newTxt = chosenDate;
+      // ---- BOOKING: SELECT DATE FROM LIST ----
+      if (state.step === "BOOKING_SELECT_DATE_LIST") {
+        await handleBookingSelectDateList({
+          biz,
+          from,
+          lang,
+          langKey,
+          txt,
+          state,
+        });
+        return res.sendStatus(200);
+      }
+      // if (state.step === "BOOKING_SELECT_DATE_LIST") {
+      //   const days = state.data?.days || [];
+      //   const chosenDate = txt.trim();  // User selection is the date itself
+      
+      //   // Check if the chosen date exists in the available dates
+      //   if (!days.includes(chosenDate)) {
+      //     await sendWhatsApp({
+      //       from: biz.wa.number,
+      //       to: from,
+      //       body:
+      //         lang === "arabic"
+      //           ? "❌ يرجى اختيار تاريخ من القائمة."
+      //           : lang === "hebrew"
+      //           ? "❌ אנא בחרי תאריך מהרשימה."
+      //           : "❌ Please select a date from the list.",
+      //     });
+      //     return res.sendStatus(200);
+      //   }
+      
+      //   // Save the chosen date
+      //   await setState(state, {
+      //     step: "BOOKING_SELECT_DATE",
+      //     data: {
+      //       ...state.data,
+      //       date: chosenDate,
+      //     },
+      //   });
+      
+      //   // Keep same message (it's already the date)
+      //   req.body.Body = chosenDate;
+      
+      //   return next(); // Continue to next handler
+      // }
+      
 
-        }
-
+      
         // ---- BOOKING: SELECT DATE (show available slots) ----
         if (state.step === "BOOKING_SELECT_DATE") {
           const date = req.body.Body || txt;
@@ -607,7 +621,7 @@ router.post("/", async (req, res) => {
         // 1️⃣ אם יש תמונה – שולחים קודם את התמונה (עם כותרת קצרה)
         const imgUrl = product.image?.secure_url || product.image?.url;
         console.log("PRODUCT IMAGE URL:", imgUrl, product.image);
-      
+       
         if (imgUrl) {
           await sendWhatsApp({
             from: biz.wa.number,
@@ -664,7 +678,7 @@ router.post("/", async (req, res) => {
       }
 
 
-      
+
     // ---- COURSE DETAILS FLOW after "view_courses" ----
     if (state.step === "VIEW_COURSES_LIST") {
         const CL = COURSE_LABELS[lang] || COURSE_LABELS.english;

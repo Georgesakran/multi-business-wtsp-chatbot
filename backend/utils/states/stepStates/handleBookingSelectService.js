@@ -23,11 +23,6 @@ module.exports = async function handleBookingSelectService({
     // 2) Convert user input (Arabic/Hebrew/English digits → index)
     const index = parseMenuIndexFromText(txt);
 
-    console.log("📌 Incoming service selection:");
-    console.log("serviceIds:", serviceIds);
-    console.log("txt:", txt);
-    console.log("index:", index);
-
     // 3) If invalid index → ask again
     if (index == null || index < 0 || index >= serviceIds.length) {
       await sendWhatsApp({
