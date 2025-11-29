@@ -60,13 +60,14 @@ module.exports = async function handleBookingSelectService({
     const key = langKey; // 'ar' | 'en' | 'he'
     const serviceSnapshot = {
       name: {
-        en: svc.name?.en || "",
-        ar: svc.name?.ar || "",
-        he: svc.name?.he || "",
+        en: svc.name?.en || svc.name || "Service",
+        ar: svc.name?.ar || svc.name || "الخدمة",
+        he: svc.name?.he || svc.name || "השירות",
       },
       price: Number(svc.price || 0),
       duration: Number(svc.duration || 0),
     };
+    
 
     // 6) Prepare next 10 days
     const rawDays = getNext10Days(biz);
