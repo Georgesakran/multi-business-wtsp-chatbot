@@ -38,8 +38,10 @@ module.exports = async function handleBookingSelectDateList({
     data: {
       ...state.data,
       date: chosenDate,
+      langKey: state.data?.langKey,
     },
   });
+  
   console.log("handleBookingSelectDateList -> chosenDate:", chosenDate);
 
   // --- immediately call handleBookingSelectDate to continue the flow ---

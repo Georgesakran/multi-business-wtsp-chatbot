@@ -64,7 +64,8 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, langKey, se
 
     await setState(state, { step: "MENU", data: {} });
 
-    const key = langKey;
+    const { serviceSnapshot, customerName, date, time, langKey } = state.data || {};
+    const key = langKey || 'en'; // fallback to 'en'
     const svcName = serviceSnapshot?.name?.[key] || serviceSnapshot?.name?.en || "";
     const isAutoConfirmed = defaultStatus === "confirmed";
 

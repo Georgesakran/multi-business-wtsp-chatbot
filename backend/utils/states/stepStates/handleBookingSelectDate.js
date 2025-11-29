@@ -113,8 +113,10 @@ module.exports = async function handleBookingSelectDate({
       slotGapMinutes: gap,
       openingTime,
       closingTime,
+      langKey: state.data?.langKey,
     },
   });
+  
 
   const msg =
     lang === "arabic"

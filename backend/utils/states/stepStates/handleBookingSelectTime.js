@@ -51,6 +51,7 @@ module.exports = async function handleBookingSelectTime({
     data: {
       ...state.data,
       time,
+      langKey,
     },
   });
 
