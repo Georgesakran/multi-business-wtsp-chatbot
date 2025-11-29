@@ -1,13 +1,20 @@
+// utils/states/stepStates/handleBookingEnterNote.js
+
 const Booking = require("../../../models/Booking");
 const makeDayGrid = require("../../time/gridHelpers");
-const {slotsNeeded,getTakenMap,isRangeFree,weekdayFromISO} = require("../../time/bookingHelpers");
+const { slotsNeeded, getTakenMap, isRangeFree, weekdayFromISO } = require("../../time/bookingHelpers");
+const { sendWhatsApp } = require("../../twilio/sendTwilio");
 
-async function handleBookingEnterNote({ txt, state, biz, from, lang, langKey, sendWhatsApp, setState, lower }) {
+/**
+ * Handle the step where the user enters a note (or skips)
+ */
+async function handleBookingEnterNote({ txt, state, biz, from, lang, setState }) {
   // ---- process notes ----
-  let notes = txt;
-  if (notes === "0" || lower(txt) === "skip") notes = "";
+  let notes = txt?.trim() || "";
+  if (notes === "0" || notes.toLowerCase() === "skip") notes = "";
 
-  const { serviceId, serviceSnapshot, date, time, customerName } = state.data || {};
+  const { serviceId, serviceSnapshot, date, time, customerName, langKey } = state.data || {};
+  const key = langKey || 'en'; // fallback to English
 
   if (!serviceId || !date || !time || !customerName) {
     await sendWhatsApp({
@@ -62,10 +69,9 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, langKey, se
       notes,
     });
 
+    // reset state to menu
     await setState(state, { step: "MENU", data: {} });
 
-    const { serviceSnapshot, customerName, date, time, langKey } = state.data || {};
-    const key = langKey || 'en'; // fallback to 'en'
     const svcName = serviceSnapshot?.name?.[key] || serviceSnapshot?.name?.en || "";
     const isAutoConfirmed = defaultStatus === "confirmed";
 
