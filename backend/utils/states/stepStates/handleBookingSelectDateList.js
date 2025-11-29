@@ -6,13 +6,13 @@ module.exports = async function handleBookingSelectDateList({
   biz,
   from,
   lang,
-  langKey,
   txt,
   state,
 }) {
   const days = state.data?.days || [];
   const idx = parseMenuIndexFromText(txt);
 
+  // INVALID INDEX
   if (idx == null || idx < 0 || idx >= days.length) {
     await sendWhatsApp({
       from: biz.wa.number,
@@ -24,19 +24,22 @@ module.exports = async function handleBookingSelectDateList({
           ? "בחרי מספר תאריך מהרשימה."
           : "Please select a valid date number.",
     });
-    return; // no res.sendStatus here in helpers
+    return;
   }
 
+  // VALID DATE
   const chosenDate = days[idx];
 
+  // Save chosen date in state and move to next step
   await setState(state, {
     step: "BOOKING_SELECT_DATE",
     data: {
       ...state.data,
       date: chosenDate,
-      txtOverride: chosenDate, // store the chosen date so the next step can use it
+      txtOverride: chosenDate, // optional, next step can use this instead of txt
     },
   });
 
-  // next step handler should use state.data.txtOverride instead of req.body.Body
+  // Do NOT use req.body.Body here
+  // The next step will read the date from state.data.date or txtOverride
 };
