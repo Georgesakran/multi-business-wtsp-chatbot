@@ -40,7 +40,8 @@ module.exports = async function handleBookingSelectService({
 
     // 4) Get selected service data
     const selectedServiceId = serviceIds[index];
-    const svc = findServiceById(biz, selectedServiceId);
+    const svc = await findServiceById(biz, selectedServiceId);
+    console.log("Selected service object:", svc);
 
     if (!svc) {
       await sendWhatsApp({
@@ -55,7 +56,6 @@ module.exports = async function handleBookingSelectService({
       });
       return;
     }
-    console.log("Selected service object:", svc);
 
     // 5) Prepare service snapshot for booking
     const key = langKey; // 'ar' | 'en' | 'he'
