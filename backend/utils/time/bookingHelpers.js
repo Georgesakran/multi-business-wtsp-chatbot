@@ -17,8 +17,7 @@ async function slotsNeeded(duration, slotGapMinutes) {
  */
 async function findServiceById(biz, serviceId) {
   if (!serviceId) return null;
-  const sid = String(serviceId);
-  return (biz.services || []).find((s) => String(s._id) === sid) || null;
+  return (biz.services || []).find((s) => s._id.toString() === serviceId.toString());
 }
 
 /**

@@ -62,7 +62,6 @@ module.exports = async function handleBookingSelectTime({
       : lang === "hebrew"
       ? `✅ נבחרה שעה: *${time}*\n\n4️⃣ כתב/י את שמך המלא להזמנה.`
       : `✅ Time selected: *${time}*\n\n4️⃣ Please send your full name for the booking.`;
-      console.log("handleBookingSelectTime -> slots:", state.data?.slots);
 
   await sendWhatsApp({
     from: biz.wa.number,
