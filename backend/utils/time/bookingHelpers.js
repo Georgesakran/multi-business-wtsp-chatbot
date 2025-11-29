@@ -7,7 +7,7 @@ const makeDayGrid = require("./gridHelpers"); // your makeDayGrid helper
 /**
  * Returns how many slots are needed to cover a service duration
  */
-function slotsNeeded(duration, slotGapMinutes) {
+async function slotsNeeded(duration, slotGapMinutes) {
   const gap = Math.max(5, Number(slotGapMinutes || 15));
   return Math.max(1, Math.ceil(Number(duration || 0) / gap));
 }
@@ -15,7 +15,7 @@ function slotsNeeded(duration, slotGapMinutes) {
 /**
  * Finds a service by ID in business.services
  */
-function findServiceById(biz, serviceId) {
+async function findServiceById(biz, serviceId) {
   if (!serviceId) return null;
   const sid = String(serviceId);
   return (biz.services || []).find((s) => String(s._id) === sid) || null;
@@ -45,7 +45,7 @@ async function getTakenMap(businessId, date) {
 /**
  * Checks if a range of consecutive slots is free
  */
-function isRangeFree(dayGrid, takenMap, startIndex, need) {
+async function isRangeFree(dayGrid, takenMap, startIndex, need) {
   for (let i = 0; i < need; i++) {
     const t = dayGrid[startIndex + i];
     if (!t || takenMap.get(t)) return false;
@@ -74,7 +74,7 @@ async function checkFreeSlotsToday(biz, date = moment().format("YYYY-MM-DD")) {
  * Converts "YYYY-MM-DD" → weekday name in English
  * Example: "2025-12-05" → "Friday"
  */
-module.exports = function weekdayFromISO(iso) {
+async function weekdayFromISO(iso) {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
     weekday: "long",
   });

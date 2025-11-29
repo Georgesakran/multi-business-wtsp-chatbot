@@ -83,10 +83,12 @@ router.post("/", async (req, res) => {
 
     const weekdayFromISO = (iso) =>
       new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
+  
+    // -------------------- load business --------------------
     const biz = await Business.findOne({ "wa.number": to, isActive: true });
     if (!biz) return res.sendStatus(200);
 
-    // Load state + customer
+    // Load state + customer from DB
     let state = await getState({ businessId: biz._id, phoneNumber: from });
     let customer = await Customer.findOne({ businessId: biz._id, phone: from });
     const lang = langFromCustomer(customer, biz);
