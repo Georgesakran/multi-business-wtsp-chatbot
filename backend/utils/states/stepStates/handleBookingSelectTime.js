@@ -48,7 +48,7 @@ module.exports = async function handleBookingSelectTime({
 
   // Fetch customer to check if we already have their name
   const customer = await Customer.findOne({ businessId: biz._id, phone: from });
-  const name = customer?.customerName || "";
+  const name = customer?.name || "";
 
   // Decide step and message
   let step = "AWAITING_NAME_CONFIRM"; // new step for confirming name
