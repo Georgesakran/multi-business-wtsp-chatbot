@@ -32,15 +32,19 @@ module.exports = async function myAppointments({ lang, langKey, biz, from }) {
       hebrew: "📅 *התורים הקרובים שלך:*\n\n",
       english: "📅 *Your upcoming appointments:*\n\n"
     }[lang];
-
+    
+    let i = 1;
     // Format each booking
     for (const b of bookings) {
       body +=
-        `  💈*${b.serviceSnapshot?.name?.[langKey] || b.serviceSnapshot?.name?.en}*\n` +
-        `  👤 ${b.customerName}\n` +
-        `  📆 ${b.date}\n` +
-        `  ⏰ ${b.time}\n\n` ;
+        `${i}. 💈 *${b.serviceSnapshot?.name?.[langKey] || b.serviceSnapshot?.name?.en}*\n` +
+        `👤 ${b.customerName}\n` +
+        `📆 ${b.date}\n` +
+        `⏰ ${b.time}\n\n`;
+    
+      i++;
     }
+    
 
     // Footer
     body += {
