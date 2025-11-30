@@ -36,7 +36,7 @@ module.exports = async function myAppointments({ lang, langKey, biz, from }) {
     // Format each booking
     for (const b of bookings) {
       body +=
-        `• *${b.serviceSnapshot?.[langKey] || b.serviceSnapshot?.en}*\n` +
+        `• *${b.serviceSnapshot?.name?.[langKey] || b.serviceSnapshot?.name?.en}*\n` +
         `  👤 ${b.customerName}\n` +
         `  📆 ${b.date}\n` +
         `  ⏰ ${b.time}\n\n`;
