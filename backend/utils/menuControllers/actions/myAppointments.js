@@ -1,5 +1,7 @@
 const Booking = require("../../../models/Booking");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
+const { langKeyFromCustomer } = require("../../language/languageTextHelper");
+
 function formatAppointmentsList(bookings, lang, langKey) {
   if (!bookings.length) {
     return (
