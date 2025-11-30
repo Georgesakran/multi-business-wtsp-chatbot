@@ -6,12 +6,14 @@ module.exports = async function myAppointments({ lang, langKey, biz, from, custo
   try {
     // Get upcoming bookings for this customer
     const now = new Date();
+    const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
 
     const bookings = await Booking.find({
       businessId: biz._id,
-      customerId: customer?._id,
-      date: { $gte: now }
-    }).sort({ date: 1 });
+      phoneNumber: from,      // user phone number
+      date: { $gte: today }   // upcoming only
+    }).sort({ date: 1, time: 1 });
+    
 
     // If no appointments
     if (!bookings || bookings.length === 0) {
