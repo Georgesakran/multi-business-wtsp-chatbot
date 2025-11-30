@@ -1,47 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const moment = require("moment");
 
 // Models
 const Business = require("../models/Business");
 const Customer = require("../models/Customer");
-const Product = require("../models/Product");
-const Course = require("../models/Course");
-const Booking = require("../models/Booking");
 
 // Helpers
 const getState = require("../utils/states/getState");
 const setState = require("../utils/states/setState");
 
-const getNext10Days = require("../utils/getNext10Days");
-
 // Misc helpers
 const { toE164 } = require("../utils/misc/phoneHelpers");
-// language helpers
-const { getLocalized } = require("../utils/language/localization");
-const {t, langFromCustomer, langKeyFromCustomer, langKeyFromChoice} = require("../utils/language/languageTextHelper");
-const PRODUCT_LABELS = require("../utils/language/labels/productLabels");
-const COURSE_LABELS = require("../utils/language/labels/courseLabels");
 
 // MENU Lang helpers
-const parseMenuIndexFromText = require("../utils/menuControllers/menuUtils/menuParser");
 const getConfigMessage= require("../utils/config/configMessageHelper");
-
-// Time + Booking Helpers
-const {
-  checkFreeSlotsToday,
-  slotsNeeded,
-  findServiceById,
-  getTakenMap,
-  isRangeFree
-} = require("../utils/time/bookingHelpers");
-const makeDayGrid = require("../utils/time/gridHelpers");
 
 // System Constants Helpers
 const {BACK, CANCEL} = require("../utils/constants/systemConstants");
 
 //Twilio
-const sendDatePickerTemplate =require("../utils/twilio/sendDatePickerTemplate");
 const {sendWhatsApp} = require("../utils/twilio/sendTwilio");
 
 // Webhook Imports Helpers Functions
@@ -60,13 +37,7 @@ const handleBookingSelectTime = require("../utils/states/stepStates/handleBookin
 const handleBookingEnterName = require("../utils/states/stepStates/handleBookingEnterName");
 const handleBookingEnterNote = require("../utils/states/stepStates/handleBookingEnterNote");
 const handleViewProductsList = require("../utils/states/stepStates/handleViewProductsList");
-const handleViewCoursesList = require("../utils/states/stepStates/handleViewProductsList");
-
-
-// ---------- language parsing / mapping -----------
-function productText(fieldObj, langKey) {
-  return getLocalized(fieldObj, langKey);
-}
+const handleViewCoursesList = require("../utils/states/stepStates/handleViewCoursesList");
 
 // -------------------- webhook -----------------------------------------------
 // -------------------- webhook -----------------------------------------------
@@ -83,9 +54,6 @@ router.post("/", async (req, res) => {
     const isRestartCmd = (txt) =>["restart", "/restart", "start"].includes(lower(txt));
     const isHelpCmd = (txt) => ["help", "?", "instructions","עזרה","مساعدة"].includes(lower(txt));
     const isMenuCmd = (txt) => ["menu",  "القائمة", "תפריט"].includes(lower(txt));
-
-    const weekdayFromISO = (iso) =>
-      new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "long" });
     // -------------------- load business --------------------
     const biz = await Business.findOne({ "wa.number": to, isActive: true });
     if (!biz) return res.sendStatus(200);
@@ -268,4 +236,3 @@ router.post("/", async (req, res) => {
 });
 
 module.exports = router;
-
