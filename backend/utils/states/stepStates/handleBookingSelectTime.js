@@ -44,7 +44,7 @@ module.exports = async function handleBookingSelectTime({
 
   // Fetch customer to check name
   let customer = await Customer.findOne({ businessId: biz._id, phone: from });
-  const name = customer?.customerName || "";
+  const name = customer?.name || "";
 
   // CASE 1: no name yet
   if (!name) {
