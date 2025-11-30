@@ -35,6 +35,7 @@ const handleBookingSelectService = require("../utils/states/stepStates/handleBoo
 const handleBookingSelectDateList = require("../utils/states/stepStates/handleBookingSelectDateList");
 const handleBookingSelectDate = require("../utils/states/stepStates/handleBookingSelectDate");
 const handleBookingSelectTime = require("../utils/states/stepStates/handleBookingSelectTime");
+const handleNameConfirmation = require("./utils/states/stepStates/handleNameConfirmation");
 const handleBookingEnterName = require("../utils/states/stepStates/handleBookingEnterName");
 const handleBookingEnterNote = require("../utils/states/stepStates/handleBookingEnterNote");
 const handleViewProductsList = require("../utils/states/stepStates/handleViewProductsList");
@@ -76,7 +77,7 @@ router.post("/", async (req, res) => {
       await handleLanguageChoice({ biz, from, state, customer, txt });
       return res.sendStatus(200);
     }
-    
+
     if (state.step === "AWAITING_NAME") {
       const done = await handleInsertName({ biz, from, state, txt, lang, langKey });
       if (done) return res.sendStatus(200);
@@ -176,6 +177,12 @@ router.post("/", async (req, res) => {
       });
       return res.sendStatus(200);
     }
+    // ---- BOOKING: CONFIRMATION NAME ----
+    if (state.step === "AWAITING_NAME_CONFIRM") {
+      await handleNameConfirmation({ biz, from, lang, langKey, txt, state });
+      return res.sendStatus(200);
+    }
+
     // ---- BOOKING: ENTER NAME ----
     if (state.step === "BOOKING_ENTER_NAME") {
       await handleBookingEnterName({
