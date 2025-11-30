@@ -1,4 +1,4 @@
-const {sendWhatsApp} = require("../../twilio/sendTwilios");
+const {sendWhatsApp} = require("../../twilio/sendTwilio");
 
 /**
  * Handle the step where the user enters their full name
