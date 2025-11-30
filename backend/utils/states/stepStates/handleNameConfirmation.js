@@ -2,9 +2,6 @@
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const Customer = require("../../../models/Customer");
 const setState = require("../setState");
-// const { buildMenuText } = require("../../menuControllers/menuUtils/menuBuilder");
-// const getConfigMessage = require("../../config/configMessageHelper");
-// const { t } = require("../../language/languageTextHelper");
 
 /**
  * Handle name confirmation or update after time selection
@@ -22,8 +19,11 @@ module.exports = async function handleNameConfirmation({
 
   if (!input) return;
 
+  // Determine the actual name
+  let actualName = storedName;
+
   if (input === "0") {
-    // keep existing name
+    // Keep existing name
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
@@ -35,10 +35,10 @@ module.exports = async function handleNameConfirmation({
           : `Your current name has been kept: *${storedName}*`,
     });
   } else {
-    // update name
+    // Update name in DB
     await Customer.findOneAndUpdate(
       { businessId: biz._id, phone: from },
-      { $set: { customerName: input } }
+      { $set: { name: input } }
     );
 
     await sendWhatsApp({
@@ -51,14 +51,20 @@ module.exports = async function handleNameConfirmation({
           ? `השם שלך עודכן ל: *${input}*`
           : `Your name has been updated to: *${input}*`,
     });
+
+    actualName = input;
   }
 
-  // Proceed to booking notes
+  // Update state with actual name and move to booking notes
   await setState(state, {
     step: "BOOKING_ENTER_NOTE",
-    data: { ...state.data },
+    data: {
+      ...state.data,
+      customerName: actualName,
+    },
   });
 
+  // Ask for notes
   const noteMsg =
     lang === "arabic"
       ? "5️⃣ هل لديك ملاحظات خاصة؟ اكتب ما تريد، أو اكتب 0 إذا لا توجد."
