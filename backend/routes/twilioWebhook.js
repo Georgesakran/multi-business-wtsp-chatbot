@@ -29,6 +29,7 @@ const {langFromCustomer,langKeyFromCustomer} = require("../utils/language/langua
 const lower = (s) => String(s || "").toLowerCase();
 
 // HANDLE STEPS 
+const handleInsertName = require("../utils/states/stepStates/handleInsertName");
 const handleMenuStep = require("../utils/states/stepStates/handleMenuState");
 const handleBookingSelectService = require("../utils/states/stepStates/handleBookingSelectService");
 const handleBookingSelectDateList = require("../utils/states/stepStates/handleBookingSelectDateList");
@@ -75,7 +76,11 @@ router.post("/", async (req, res) => {
       await handleLanguageChoice({ biz, from, state, customer, txt });
       return res.sendStatus(200);
     }
-
+    
+    if (state.step === "AWAITING_NAME") {
+      const done = await handleInsertName({ biz, from, state, txt, lang, langKey });
+      if (done) return res.sendStatus(200);
+    }
 
 
     // -------------------- GLOBAL COMMANDS --------------------
