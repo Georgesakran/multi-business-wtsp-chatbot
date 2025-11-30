@@ -1,74 +1,67 @@
 const Booking = require("../../../models/Booking");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
-const { t } = require("../../language/languageTextHelper");
 
-module.exports = async function myAppointments({ lang, langKey, biz, from, customer }) {
+module.exports = async function myAppointments({ lang, langKey, biz, from }) {
   try {
-    // Get upcoming bookings for this customer
-    const now = new Date();
-    const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
     const bookings = await Booking.find({
       businessId: biz._id,
-      phoneNumber: from,      // user phone number
-      date: { $gte: today }   // upcoming only
+      phoneNumber: from,
+      date: { $gte: today }
     }).sort({ date: 1, time: 1 });
-    
 
-    // If no appointments
+    // No appointments
     if (!bookings || bookings.length === 0) {
-      const noApptText = {
+      const msg = {
         arabic: "لا يوجد لديك أي مواعيد قادمة.",
         hebrew: "אין לך תורים קרובים.",
         english: "You have no upcoming appointments."
       };
-
       await sendWhatsApp({
         from: biz.wa.number,
         to: from,
-        body: noApptText[lang] || noApptText.english
+        body: msg[lang] || msg.english
       });
-
       return;
     }
 
-    // Format bookings
-    let bodyText = {
+    // Header
+    let body = {
       arabic: "📅 *مواعيدك القادمة:*\n\n",
       hebrew: "📅 *התורים הקרובים שלך:*\n\n",
       english: "📅 *Your upcoming appointments:*\n\n"
     }[lang];
 
+    // Format each booking
     for (const b of bookings) {
-      const dateStr = b.date.toLocaleDateString("en-GB");
-      const timeStr = b.time;
-
-      bodyText +=
-        `• *${b.serviceName}*\n` +
-        `  📆 ${dateStr}\n` +
-        `  ⏰ ${timeStr}\n\n`;
+      body +=
+        `• *${b.serviceSnapshot?.[langKey] || b.serviceSnapshot?.en}*\n` +
+        `  👤 ${b.customerName}\n` +
+        `  📆 ${b.date}\n` +
+        `  ⏰ ${b.time}\n\n`;
     }
 
-    bodyText += {
-      arabic: "يمكنك كتابة *menu* للعودة للقائمة.",
-      hebrew: "תוכל לכתוב *menu* כדי לחזור לתפריט.",
-      english: "You can type *menu* to return to the menu."
+    // Footer
+    body += {
+      arabic: "اكتب *menu* للعودة للقائمة.",
+      hebrew: "כתוב *menu* כדי לחזור לתפריט.",
+      english: "Type *menu* to return to the menu."
     }[lang];
 
-    // Send response
+    // Send
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
-      body: bodyText
+      body
     });
 
   } catch (err) {
     console.error("myAppointments error:", err);
-
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
-      body: "An error occurred while fetching your appointments."
+      body: "Error loading your appointments."
     });
   }
 };
