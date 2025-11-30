@@ -65,7 +65,6 @@ function formatAppointmentsList(bookings, lang, langKey) {
 }
 
 module.exports = async function myAppointments({ lang, langKey, biz, from }) {
-    const langKey = langKeyFromCustomer(customer, biz);
   
     const today = new Date().toISOString().split("T")[0];
   
