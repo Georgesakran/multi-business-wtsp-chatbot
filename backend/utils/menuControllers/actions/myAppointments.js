@@ -1,6 +1,6 @@
 const Booking = require("../../../models/Booking");
+const Customer = require("../../../models/Customer");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
-const { langKeyFromCustomer } = require("../../language/languageTextHelper");
 
 function formatAppointmentsList(bookings, lang, langKey) {
   if (!bookings.length) {
@@ -70,7 +70,7 @@ module.exports = async function myAppointments({ lang, langKey, biz, from }) {
   
     const bookings = await Booking.find({
       businessId: biz._id,
-      phoneNumber: customer.phone,
+      phoneNumber: from,
       date: { $gte: today },
     }).sort({ date: 1, time: 1 });
   
