@@ -1,71 +1,84 @@
 const Booking = require("../../../models/Booking");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
+function formatAppointmentsList(bookings, lang, langKey) {
+  if (!bookings.length) {
+    return (
+      lang === "arabic"
+        ? "ليس لديك أي مواعيد قادمة حالياً."
+        : lang === "hebrew"
+        ? "אין לך תורים קרובים כרגע."
+        : "You currently have no upcoming appointments."
+    );
+  }
+
+  const pad = (num) => String(num).padStart(2, "0");
+
+  let body = "";
+  let i = 1;
+
+  for (const b of bookings) {
+    const serviceName =
+      b.serviceSnapshot?.name?.[langKey] ||
+      b.serviceSnapshot?.name?.en ||
+      "-";
+
+    const duration = b.serviceSnapshot?.duration || 0;
+
+    // Calculate end time
+    const [hour, minute] = b.time.split(":").map(Number);
+    const end = new Date(0, 0, 0, hour, minute + duration);
+    const endTime = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
+
+    const nameLine =
+      lang === "arabic"
+        ? `👤 الاسم: ${b.customerName || "-"}`
+        : lang === "hebrew"
+        ? `👤 שם: ${b.customerName || "-"}`
+        : `👤 Name: ${b.customerName || "-"}`;
+
+    const dateLine =
+      lang === "arabic"
+        ? `📆 التاريخ: ${b.date}`
+        : lang === "hebrew"
+        ? `📆 תאריך: ${b.date}`
+        : `📆 Date: ${b.date}`;
+
+    const timeLine =
+      lang === "arabic"
+        ? `⏰ الوقت: ${b.time} - ${endTime}`
+        : lang === "hebrew"
+        ? `⏰ שעה: ${b.time} - ${endTime}`
+        : `⏰ Time: ${b.time} - ${endTime}`;
+
+    body +=
+      `*${i}. ${serviceName}*\n` +
+      `${nameLine}\n` +
+      `${dateLine}\n` +
+      `${timeLine}\n\n`;
+
+    i++;
+  }
+
+  return body;
+}
 
 module.exports = async function myAppointments({ lang, langKey, biz, from }) {
-  try {
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-
+    const langKey = langKeyFromCustomer(customer, biz);
+  
+    const today = new Date().toISOString().split("T")[0];
+  
     const bookings = await Booking.find({
       businessId: biz._id,
-      phoneNumber: from,
-      date: { $gte: today }
+      phoneNumber: customer.phone,
+      date: { $gte: today },
     }).sort({ date: 1, time: 1 });
-
-    // No appointments
-    if (!bookings || bookings.length === 0) {
-      const msg = {
-        arabic: "لا يوجد لديك أي مواعيد قادمة.",
-        hebrew: "אין לך תורים קרובים.",
-        english: "You have no upcoming appointments."
-      };
-      await sendWhatsApp({
-        from: biz.wa.number,
-        to: from,
-        body: msg[lang] || msg.english
-      });
-      return;
-    }
-
-    // Header
-    let body = {
-      arabic: "📅 *مواعيدك القادمة:*\n\n",
-      hebrew: "📅 *התורים הקרובים שלך:*\n\n",
-      english: "📅 *Your upcoming appointments:*\n\n"
-    }[lang];
-    
-    let i = 1;
-    // Format each booking
-    for (const b of bookings) {
-      body +=
-        `${i}. 💈 *${b.serviceSnapshot?.name?.[langKey] || b.serviceSnapshot?.name?.en}*\n` +
-        `👤 ${b.customerName}\n` +
-        `📆 ${b.date}\n` +
-        `⏰ ${b.time}\n\n`;
-    
-      i++;
-    }
-    
-
-    // Footer
-    body += {
-      arabic: "اكتب *menu* للعودة للقائمة.",
-      hebrew: "כתוב *menu* כדי לחזור לתפריט.",
-      english: "Type *menu* to return to the menu."
-    }[lang];
-
-    // Send
+  
+    const body = formatAppointmentsList(bookings, lang, langKey);
+  
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
-      body
+      body,
     });
-
-  } catch (err) {
-    console.error("myAppointments error:", err);
-    await sendWhatsApp({
-      from: biz.wa.number,
-      to: from,
-      body: "Error loading your appointments."
-    });
-  }
 };
+
