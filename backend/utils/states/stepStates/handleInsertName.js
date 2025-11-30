@@ -28,7 +28,7 @@ module.exports = async function handleInsertName({ biz, from, state, txt, lang, 
   // Save name
   await Customer.findOneAndUpdate(
     { businessId: biz._id, phone: from },
-    { $set: { customerName: name } }
+    { $set: { name: name } }
   );
 
   // Send welcome + menu
