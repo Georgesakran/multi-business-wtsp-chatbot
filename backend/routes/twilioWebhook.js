@@ -35,12 +35,11 @@ const handleBookingSelectService = require("../utils/states/stepStates/handleBoo
 const handleBookingSelectDateList = require("../utils/states/stepStates/handleBookingSelectDateList");
 const handleBookingSelectDate = require("../utils/states/stepStates/handleBookingSelectDate");
 const handleBookingSelectTime = require("../utils/states/stepStates/handleBookingSelectTime");
-const handleNameConfirmation = require("./utils/states/stepStates/handleNameConfirmation");
+const handleNameConfirmation = require("../utils/states/stepStates/handleNameConfirmation");
 const handleBookingEnterName = require("../utils/states/stepStates/handleBookingEnterName");
 const handleBookingEnterNote = require("../utils/states/stepStates/handleBookingEnterNote");
 const handleViewProductsList = require("../utils/states/stepStates/handleViewProductsList");
 const handleViewCoursesList = require("../utils/states/stepStates/handleViewCoursesList");
-
 // -------------------- webhook -----------------------------------------------
 // -------------------- webhook -----------------------------------------------
 
@@ -182,7 +181,6 @@ router.post("/", async (req, res) => {
       await handleNameConfirmation({ biz, from, lang, langKey, txt, state });
       return res.sendStatus(200);
     }
-
     // ---- BOOKING: ENTER NAME ----
     if (state.step === "BOOKING_ENTER_NAME") {
       await handleBookingEnterName({
