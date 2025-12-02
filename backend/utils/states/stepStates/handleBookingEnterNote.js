@@ -4,6 +4,8 @@ const Booking = require("../../../models/Booking");
 const makeDayGrid = require("../../time/gridHelpers");
 const { slotsNeeded, getTakenMap, isRangeFree, weekdayFromISO } = require("../../time/bookingHelpers");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
+const Customer = require("../../../models/Customer");
+
 
 /**
  * Handle the step where the user enters a note (or skips)
@@ -13,8 +15,11 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
   let notes = txt?.trim() || "";
   if (notes === "0" || notes.toLowerCase() === "skip") notes = "";
 
-  const { serviceId, serviceSnapshot, date, time, customerName, langKey } = state.data || {};
+  const { serviceId, serviceSnapshot, date, time, langKey } = state.data || {};
   const key = langKey || 'en'; // fallback to English
+
+  let customer = await Customer.findOne({ businessId: biz._id, phone: from });
+  const customerName = customer?.name || "";
 
   if (!serviceId || !date || !time || !customerName) {
     await sendWhatsApp({
