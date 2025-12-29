@@ -21,6 +21,16 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
   let customer = await Customer.findOne({ businessId: biz._id, phone: from });
   const customerName = customer?.name || "";
 
+  function buildMenuData(data = {}) {
+    return {
+      language: data.language,
+      langKey: data.langKey,
+      storedName: data.storedName,
+      customerName: data.customerName,
+      serviceIds: data.serviceIds,
+    };
+  }
+
   if (!serviceId || !date || !time || !customerName) {
     await sendWhatsApp({
       from: biz.wa.number,
