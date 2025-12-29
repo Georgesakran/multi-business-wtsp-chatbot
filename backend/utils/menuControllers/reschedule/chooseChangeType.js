@@ -1,5 +1,5 @@
-const setState = require("../../utils/states/setState");
-const handleBookingSelectDateList = require("../../utils/states/stepStates/handleBookingSelectDateList");
+const setState = require("../../../utils/states/setState");
+const handleBookingSelectDateList = require("../../../utils/states/stepStates/handleBookingSelectDateList");
 const handleBookingSelectTime = require("../../utils/states/stepStates/handleBookingSelectTime");
 
 module.exports = async function chooseChangeType({

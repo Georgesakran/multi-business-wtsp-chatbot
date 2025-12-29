@@ -1,6 +1,6 @@
-const Booking = require("../../models/Booking");
+const Booking = require("../../../models/Booking");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
-const setState = require("../../utils/states/setState");
+const setState = require("../../../utils/states/setState");
 
 module.exports = async function startReschedule({ biz, from, lang, langKey, state }) {
   const bookings = await Booking.find({
