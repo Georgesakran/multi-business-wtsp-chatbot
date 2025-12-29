@@ -15,6 +15,7 @@ module.exports = async function handleBookingSelectDateList({
 }) {
   const days = state.data?.days || [];
   const idx = parseMenuIndexFromText(txt);
+  console.log("+idx : "+idx);
 
   if (idx == null || idx < 0 || idx >= days.length) {
     await sendWhatsApp({

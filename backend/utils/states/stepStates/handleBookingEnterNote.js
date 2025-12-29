@@ -27,7 +27,6 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
       langKey: data.langKey,
       storedName: data.storedName,
       customerName: data.customerName,
-      serviceIds: data.serviceIds,
     };
   }
 
@@ -47,7 +46,7 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
       replaceData: true,
       data: buildMenuData(state.data),
     });
-        return;
+    return;
   }
 
   try {
@@ -94,7 +93,6 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
         langKey: data.langKey,
         storedName: data.storedName,
         customerName: data.customerName,
-        serviceIds: data.serviceIds,
       };
     }
     
