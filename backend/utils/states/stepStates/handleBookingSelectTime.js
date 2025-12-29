@@ -44,8 +44,8 @@ module.exports = async function handleBookingSelectTime({
   const time = slots[idx];
 // ---------------- RESCHEDULE FLOW ----------------
 if (state.data?.reschedule) {
-  await Booking.findByIdAndUpdate(state.data.bookingId, {
-    date: state.data.selectedDate,
+  await Booking.findByIdAndUpdate(state.data.selectedAppointment._id, {
+    date: state.data.date,
     time,
   });
 
@@ -54,10 +54,10 @@ if (state.data?.reschedule) {
     to: from,
     body:
       lang === "arabic"
-        ? `✅ تم تعديل موعدك بنجاح.\n\n📅 ${state.data.selectedDate}\n⏰ ${time}`
+        ? `✅ تم تعديل موعدك بنجاح.\n\n📅 ${state.data.date}\n⏰ ${time}`
         : lang === "hebrew"
-        ? `✅ התור עודכן בהצלחה.\n\n📅 ${state.data.selectedDate}\n⏰ ${time}`
-        : `✅ Your appointment has been updated successfully.\n\n📅 ${state.data.selectedDate}\n⏰ ${time}`,
+        ? `✅ התור עודכן בהצלחה.\n\n📅 ${state.data.date}\n⏰ ${time}`
+        : `✅ Your appointment has been updated successfully.\n\n📅 ${state.data.date}\n⏰ ${time}`,
   });
 
   await setState(state, { step: "MENU", data: {} });

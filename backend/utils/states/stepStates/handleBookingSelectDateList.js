@@ -14,10 +14,11 @@ module.exports = async function handleBookingSelectDateList({
   state,
 }) {
   const days = state.data?.days || [];
+
   const idx = parseMenuIndexFromText(txt);
   console.log("+idx : "+idx);
 
-  if (idx == null || idx < 0 || idx >= days.length) {
+  if (idx == null || idx < 0 && idx >= days.length) {
     await sendWhatsApp({
       from: biz.wa.number,
       to: from,
@@ -43,15 +44,14 @@ module.exports = async function handleBookingSelectDateList({
     },
   });
   
-  console.log("handleBookingSelectDateList -> chosenDate:", chosenDate);
 
   // --- immediately call handleBookingSelectDate to continue the flow ---
-  await handleBookingSelectDate({
-    biz,
-    from,
-    lang,
-    langKey,
-    txt: chosenDate, // pass the selected date as txt
-    state,
-  });
+  // await handleBookingSelectDate({
+  //   biz,
+  //   from,
+  //   lang,
+  //   langKey,
+  //   txt: chosenDate, // pass the selected date as txt
+  //   state,
+  // });
 };
