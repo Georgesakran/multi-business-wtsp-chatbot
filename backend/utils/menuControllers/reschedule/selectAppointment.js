@@ -17,6 +17,17 @@ module.exports = async function selectAppointment({
   const idx = parseInt(txt, 10) - 1;
   const appointments = state.data?.appointments || [];
 
+  function buildRescheduleState(data, selectedAppointment) {
+    return {
+      language: data.language,
+      langKey: data.langKey,
+      storedName: data.storedName,
+      customerName: data.customerName,
+      selectedAppointment,
+    };
+  }
+  
+
   if (isNaN(idx) || !appointments[idx]) {
     await sendWhatsApp({
       from: biz.wa.number,
@@ -33,11 +44,10 @@ module.exports = async function selectAppointment({
 
   await setState(state, {
     step: "RESCHEDULE_CHOOSE_CHANGE_TYPE",
-    data: {
-      ...state.data,
-      selectedAppointment: appointments[idx],
-    },
+    data: buildRescheduleState(state.data, appointments[idx]),
+    replaceData: true,
   });
+  
 
   await sendWhatsApp({
     from: biz.wa.number,

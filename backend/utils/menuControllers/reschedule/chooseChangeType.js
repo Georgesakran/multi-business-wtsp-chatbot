@@ -42,6 +42,7 @@ module.exports = async function chooseChangeType({
         bookingId: appt._id,
         serviceId: appt.serviceId,
         serviceSnapshot: appt.serviceSnapshot,
+        days,
       },
     });
     await sendDatePickerTemplate(biz, from, days, lang);
