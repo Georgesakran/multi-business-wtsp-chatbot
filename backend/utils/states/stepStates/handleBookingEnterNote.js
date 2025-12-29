@@ -75,7 +75,16 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
     });
 
     // reset state to menu
-    await setState(state, { step: "MENU", data: {} });
+    await setState(state, {
+      step: "MENU",
+      data: {
+        language: state.data.language,
+        langKey: state.data.langKey,
+        storedName: state.data.storedName,
+        customerName: state.data.customerName,
+      },
+    });
+    
 
     const svcName = serviceSnapshot?.name?.[key] || serviceSnapshot?.name?.en || "";
     const isAutoConfirmed = defaultStatus === "confirmed";
