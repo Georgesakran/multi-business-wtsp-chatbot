@@ -32,8 +32,12 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
           ? "אירעה שגיאה בתהליך ההזמנה. כתב/י *menu* כדי להתחיל מחדש."
           : "Something went wrong with the booking flow. Please type *menu* to start again.",
     });
-    await setState(state, { step: "MENU", data: {} });
-    return;
+    await setState(state, {
+      step: "MENU",
+      replaceData: true,
+      data: buildMenuData(state.data),
+    });
+        return;
   }
 
   try {
@@ -74,16 +78,23 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
       notes,
     });
 
+    function buildMenuData(data = {}) {
+      return {
+        language: data.language,
+        langKey: data.langKey,
+        storedName: data.storedName,
+        customerName: data.customerName,
+        serviceIds: data.serviceIds,
+      };
+    }
+    
     // reset state to menu
     await setState(state, {
       step: "MENU",
-      data: {
-        language: state.data.language,
-        langKey: state.data.langKey,
-        storedName: state.data.storedName,
-        customerName: state.data.customerName,
-      },
+      replaceData: true, // 🔥 THIS IS THE KEY
+      data: buildMenuData(state.data),
     });
+    
     
 
     const svcName = serviceSnapshot?.name?.[key] || serviceSnapshot?.name?.en || "";
