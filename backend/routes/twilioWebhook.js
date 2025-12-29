@@ -41,6 +41,8 @@ const handleBookingEnterNote = require("../utils/states/stepStates/handleBooking
 const handleViewProductsList = require("../utils/states/stepStates/handleViewProductsList");
 const handleViewCoursesList = require("../utils/states/stepStates/handleViewCoursesList");
 const selectAppointment = require("../utils/menuControllers/reschedule/selectAppointment");
+const chooseChangeType = require("../utils/menuControllers/reschedule/chooseChangeType");
+
 // -------------------- webhook -----------------------------------------------
 // -------------------- webhook -----------------------------------------------
 
@@ -207,6 +209,10 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
     
+    if (state.step === "RESCHEDULE_CHOOSE_CHANGE_TYPE") {
+      await chooseChangeType({ biz, from, txt, state, lang, langKey });
+      return res.sendStatus(200);
+    }
 
 
 
