@@ -9,7 +9,7 @@ module.exports = async function handleMenuAction({ action, payload, lang, langKe
       about_location: require("./actions/aboutLocation"),
       my_appointments: require("./actions/myAppointments"),
       my_orders: require("./actions/myOrders"),
-      reschedule_appointment: require("./actions/reschedule"),
+      reschedule_appointment: require("./reschedule/startReschedule"),
       contact_us: require("./actions/contactUs"),
       follow_instagram: require("./actions/followInstagram"),
       custom: require("./actions/customFallback"),

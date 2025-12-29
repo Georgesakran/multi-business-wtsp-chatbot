@@ -2,6 +2,7 @@
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const parseMenuIndexFromText = require("../../menuControllers/menuUtils/menuParser");
 const Customer = require("../../../models/Customer");
+const Booking = require("../../../models/Booking");
 
 /**
  * Handle user selecting a time slot in booking
@@ -41,6 +42,27 @@ module.exports = async function handleBookingSelectTime({
 
   // VALID TIME
   const time = slots[idx];
+// ---------------- RESCHEDULE FLOW ----------------
+if (state.data?.reschedule) {
+  await Booking.findByIdAndUpdate(state.data.bookingId, {
+    date: state.data.selectedDate,
+    time,
+  });
+
+  await sendWhatsApp({
+    from: biz.wa.number,
+    to: from,
+    body:
+      lang === "arabic"
+        ? `✅ تم تعديل موعدك بنجاح.\n\n📅 ${state.data.selectedDate}\n⏰ ${time}`
+        : lang === "hebrew"
+        ? `✅ התור עודכן בהצלחה.\n\n📅 ${state.data.selectedDate}\n⏰ ${time}`
+        : `✅ Your appointment has been updated successfully.\n\n📅 ${state.data.selectedDate}\n⏰ ${time}`,
+  });
+
+  await setState(state, { step: "MENU", data: {} });
+  return;
+}
 
   // Fetch customer to check name
   let customer = await Customer.findOne({ businessId: biz._id, phone: from });
