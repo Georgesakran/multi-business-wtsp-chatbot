@@ -40,7 +40,7 @@ const handleBookingEnterName = require("../utils/states/stepStates/handleBooking
 const handleBookingEnterNote = require("../utils/states/stepStates/handleBookingEnterNote");
 const handleViewProductsList = require("../utils/states/stepStates/handleViewProductsList");
 const handleViewCoursesList = require("../utils/states/stepStates/handleViewCoursesList");
-const handleRescheduleSelectAppointment = require("../utils/states/stepStates/handleRescheduleSelectAppointment");
+const selectAppointment = require("../utils/menuControllers/reschedule/selectAppointment");
 // -------------------- webhook -----------------------------------------------
 // -------------------- webhook -----------------------------------------------
 
@@ -202,54 +202,8 @@ router.post("/", async (req, res) => {
 
 
     // ---- RESCHEDULE: SELECT APPOINTMENT ----
-    // if (state.step === "RESCHEDULE_SELECT_APPOINTMENT") {
-    //   const idx = parseMenuIndexFromText(txt);
-    //   const appointments = state.data?.appointments || [];
-
-    //   if (idx == null || idx < 0 || idx >= appointments.length) {
-    //     // invalid selection
-    //     await sendWhatsApp({
-    //       from: biz.wa.number,
-    //       to: from,
-    //       body:
-    //         lang === "arabic"
-    //           ? "من فضلك اختار/ي رقم صحيح من القائمة."
-    //           : lang === "hebrew"
-    //           ? "בחר/י מספר תקין מהרשימה."
-    //           : "Please select a valid number from the list.",
-    //     });
-    //     return res.sendStatus(200);
-    //   }
-
-    //   const selectedAppointment = appointments[idx];
-
-    //   // inject into booking flow
-    //   await setState(state, {
-    //     step: "BOOKING_SELECT_DATE_LIST", // start normal booking
-    //     data: {
-    //       ...state.data,
-    //       reschedule: true, // flag
-    //       selectedAppointment,
-    //       serviceId: selectedAppointment.serviceId,
-    //       serviceSnapshot: selectedAppointment.snapshot,
-    //     },
-    //   });
-
-    //   // start booking flow
-    //   await handleBookingSelectDateList({
-    //     biz,
-    //     from,
-    //     lang,
-    //     langKey,
-    //     txt: "", // user will select date next
-    //     state,
-    //   });
-
-    //   return res.sendStatus(200);
-    // }
-
     if (state.step === "RESCHEDULE_SELECT_APPOINTMENT") {
-      await handleRescheduleSelectAppointment({ biz, from, txt, state, lang, langKey });
+      await selectAppointment({ biz, from, txt, state, lang, langKey });
       return res.sendStatus(200);
     }
     

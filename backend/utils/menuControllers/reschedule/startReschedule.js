@@ -1,13 +1,27 @@
 const Booking = require("../../../models/Booking");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const setState = require("../../../utils/states/setState");
+const moment = require("moment");
+
 
 module.exports = async function startReschedule({ biz, from, lang, langKey, state }) {
-  const bookings = await Booking.find({
-    businessId: biz._id,
-    phoneNumber: from,
-    status: "confirmed",
-  }).sort({ date: 1, time: 1 });
+    const now = moment();
+
+    const allBookings = await Booking.find({
+      businessId: biz._id,
+      phoneNumber: from,
+      status: "confirmed",
+    }).sort({ date: 1, time: 1 });
+    
+    const bookings = allBookings.filter((b) => {
+      const bookingDateTime = moment(
+        `${b.date} ${b.time}`,
+        "YYYY-MM-DD HH:mm"
+      );
+    
+      return bookingDateTime.isAfter(now);
+    });
+    
 
   if (!bookings.length) {
     await sendWhatsApp({
