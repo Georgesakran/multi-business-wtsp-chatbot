@@ -30,10 +30,12 @@ module.exports = async function handleBookingSelectTime({
       console.log("Going back to change type");
       await setState(state, {
         step: state.data.backStep || "RESCHEDULE_CHOOSE_CHANGE_TYPE",
-        data: {},
+        // keep the existing data so chooseChangeType has what it needs
+        data: { ...state.data },
       });
       return chooseChangeType({ biz, from, txt:"" ,lang, langKey, state }); 
     }
+    
   
     // command 99
     if (txt === "99") {
