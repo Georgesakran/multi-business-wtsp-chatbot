@@ -20,7 +20,16 @@ module.exports = async function chooseChangeType({
 }) {
   const appt = state.data.selectedAppointment;
 
-  if (txt === "0") {
+  function buildMenuData(data = {}) {
+    return {
+      language: data.language,
+      langKey: data.langKey,
+      customerName: data.customerName,
+    };
+  }
+
+  // command 00
+  if (txt === "00") {
     await setState(state, {
       step: state.data.backStep || "RESCHEDULE_SELECT_APPOINTMENT",
       data: {},
@@ -28,7 +37,17 @@ module.exports = async function chooseChangeType({
     return startReschedule({ biz, from, lang, langKey, state }); 
   }
   
-
+  // command 99
+  if (txt === "99") {
+    await setState(state, {
+      step: state.data.backStep || "MENU",
+      replaceData: true,
+      data: buildMenuData(state.data),
+    });
+    return showMenu({ biz, from, lang, langKey, state });
+  
+  }
+ 
   if (txt === "1") {
         // 6) Prepare next 10 days
         const rawDays = getNext10Days(biz);

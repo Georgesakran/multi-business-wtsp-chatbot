@@ -120,14 +120,14 @@ module.exports = async function handleBookingSelectDate({
 
   const msg =
     lang === "arabic"
-      ? `3️⃣ الأوقات المتاحة في *${date}*:\n\n${lines.join(
+      ? ` الأوقات المتاحة في *${date}*:\n\n${lines.join(
           "\n"
         )}\n\n💬 أرسلي رقم الوقت المناسب لك.`
       : lang === "hebrew"
-      ? `3️⃣ השעות הפנויות ב-*${date}*:\n\n${lines.join(
+      ? ` השעות הפנויות ב-*${date}*:\n\n${lines.join(
           "\n"
         )}\n\n💬 כתבי את מספר השעה המתאימה.`
-      : `3️⃣ Available times on *${date}*:\n\n${lines.join(
+      : ` Available times on *${date}*:\n\n${lines.join(
           "\n"
         )}\n\n💬 Please reply with the number of your preferred time.`;
 
