@@ -67,10 +67,14 @@ module.exports = async function startReschedule({ biz, from, lang, langKey, stat
         : "Back to menu"
     }`;
 
-  await setState(state, {
-    step: "RESCHEDULE_SELECT_APPOINTMENT",
-    data: { appointments: bookings },
-  });
+    await setState(state, {
+        step: "RESCHEDULE_SELECT_APPOINTMENT",
+        data: {
+          appointments: bookings,
+          backStep: "MENU",
+        },
+      });
+      
 
   await sendWhatsApp({
     from: biz.wa.number,

@@ -10,14 +10,13 @@ module.exports = async function selectAppointment({
   langKey,
 }) {
   if (txt === "0") {
-    await setState(state, 
-      { 
-       step: "RESCHEDULE_SELECT_APPOINTMENT",
-       data: {appointments: bookings},
-       data: {selectedAppointment: null}, 
+    await setState(state, {
+      step: state.data.backStep || "MENU",
+      data: {},
     });
     return;
   }
+  
 
   const idx = parseInt(txt, 10) - 1;
   const appointments = state.data?.appointments || [];
@@ -47,10 +46,17 @@ module.exports = async function selectAppointment({
     return;
   }
 
+
   await setState(state, {
     step: "RESCHEDULE_CHOOSE_CHANGE_TYPE",
-    data: buildRescheduleState(state.data, appointments[idx]),
     replaceData: true,
+    data: {
+      selectedAppointment: appointments[idx],
+      backStep: "RESCHEDULE_SELECT_APPOINTMENT",
+      language: state.data.language,
+      langKey: state.data.langKey,
+      customerName: state.data.customerName,
+    },
   });
   
 
