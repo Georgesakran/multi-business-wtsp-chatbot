@@ -46,12 +46,12 @@ module.exports = async function handleBookingSelectDateList({
   
 
   // --- immediately call handleBookingSelectDate to continue the flow ---
-  // await handleBookingSelectDate({
-  //   biz,
-  //   from,
-  //   lang,
-  //   langKey,
-  //   txt: chosenDate, // pass the selected date as txt
-  //   state,
-  // });
+  await handleBookingSelectDate({
+    biz,
+    from,
+    lang,
+    langKey,
+    txt: chosenDate, // pass the selected date as txt
+    state,
+  });
 };
