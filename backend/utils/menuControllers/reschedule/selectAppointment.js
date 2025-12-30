@@ -10,10 +10,21 @@ module.exports = async function selectAppointment({
   lang,
   langKey,
 }) {
+
+
+  function buildMenuData(data = {}) {
+    return {
+      language: data.language,
+      langKey: data.langKey,
+      customerName: data.customerName,
+    };
+  }
+
   if (txt === "00") {
     await setState(state, {
       step: state.data.backStep || "MENU",
-      data: {},
+      replaceData: true,
+      data: buildMenuData(state.data),
     });
     return showMenu({ biz, from, lang, langKey, state });
   }
