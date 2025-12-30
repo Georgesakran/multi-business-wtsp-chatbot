@@ -8,10 +8,6 @@ const {checkFreeSlotsToday} = require("../../time/bookingHelpers");
 const startReschedule = require("./startReschedule");
 const {showMenu} = require("../../../routes/twilioFlows/global/commands");
 
-
-
-
-
 module.exports = async function chooseChangeType({
   biz,
   from,
