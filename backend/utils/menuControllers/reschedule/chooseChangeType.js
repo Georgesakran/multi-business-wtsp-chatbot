@@ -1,6 +1,6 @@
 const setState = require("../../../utils/states/setState");
 const handleBookingSelectDateList = require("../../../utils/states/stepStates/handleBookingSelectDateList");
-const handleBookingSelectTime = require("../../../utils/states/stepStates/handleBookingSelectTime");
+const handleBookingSelectDate = require("../../../utils/states/stepStates/handleBookingSelectDate");
 const getNext10Days = require("../../getNext10Days");
 const sendDatePickerTemplate = require("../../twilio/sendDatePickerTemplate");
 const moment = require("moment");
@@ -71,6 +71,6 @@ module.exports = async function chooseChangeType({
       },
     });
 
-    return handleBookingSelectTime({ biz, from, lang, langKey, txt: "", state });
+    return handleBookingSelectDate({ biz, from, lang, langKey, txt: appt.date , state });
   }
 };

@@ -60,32 +60,32 @@ if (state.data?.reschedule) {
     "";
 
   const msg =
-    lang === "arabic"
-      ? `✅ تم *تعديل موعدك بنجاح*!
+        lang === "arabic"
+          ? `✅ تم *تعديل موعدك بنجاح*!
 
-👤 الاسم: *${booking.customerName}*
-💅 الخدمة: *${svcName}*
-📅 التاريخ الجديد: *${booking.date}*
-⏰ الساعة الجديدة: *${booking.time}*
+    👤 الاسم: *${booking.customerName}*
+    💅 الخدمة: *${svcName}*
+    📅 التاريخ الجديد: *${booking.date}*
+    ⏰ الساعة الجديدة: *${booking.time}*
 
-يمكنك دائماً كتابة *menu* للعودة للقائمة.`
-      : lang === "hebrew"
-      ? `✅ התור שלך *עודכן בהצלחה*!
+    يمكنك دائماً كتابة *menu* للعودة للقائمة.`
+          : lang === "hebrew"
+          ? `✅ התור שלך *עודכן בהצלחה*!
 
-👤 שם: *${booking.customerName}*
-💅 שירות: *${svcName}*
-📅 תאריך חדש: *${booking.date}*
-⏰ שעה חדשה: *${booking.time}*
+    👤 שם: *${booking.customerName}*
+    💅 שירות: *${svcName}*
+    📅 תאריך חדש: *${booking.date}*
+    ⏰ שעה חדשה: *${booking.time}*
 
-אפשר בכל רגע לכתוב *menu* כדי לחזור לתפריט.`
-      : `✅ Your appointment has been *updated successfully*!
+    אפשר בכל רגע לכתוב *menu* כדי לחזור לתפריט.`
+          : `✅ Your appointment has been *updated successfully*!
 
-👤 Name: *${booking.customerName}*
-💅 Service: *${svcName}*
-📅 New date: *${booking.date}*
-⏰ New time: *${booking.time}*
+    👤 Name: *${booking.customerName}*
+    💅 Service: *${svcName}*
+    📅 New date: *${booking.date}*
+    ⏰ New time: *${booking.time}*
 
-You can type *menu* anytime to go back.`;
+    You can type *menu* anytime to go back.`;
 
   await sendWhatsApp({
     from: biz.wa.number,
