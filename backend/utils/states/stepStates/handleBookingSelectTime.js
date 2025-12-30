@@ -43,7 +43,6 @@ module.exports = async function handleBookingSelectTime({
   const time = slots[idx];
 
 // ---------------- RESCHEDULE FLOW ----------------
-// ---------------- RESCHEDULE FLOW ----------------
 if (state.data?.reschedule) {
   await Booking.findByIdAndUpdate(state.data.selectedAppointment._id, {
     date: state.data.date,

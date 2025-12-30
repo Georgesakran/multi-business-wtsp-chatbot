@@ -10,7 +10,12 @@ module.exports = async function selectAppointment({
   langKey,
 }) {
   if (txt === "0") {
-    await setState(state, { step: "MENU", data: {} });
+    await setState(state, 
+      { 
+       step: "RESCHEDULE_SELECT_APPOINTMENT",
+       data: {appointments: bookings},
+       data: {selectedAppointment: null}, 
+    });
     return;
   }
 
