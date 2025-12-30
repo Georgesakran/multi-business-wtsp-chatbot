@@ -46,25 +46,28 @@ module.exports = async function startReschedule({ biz, from, lang, langKey, stat
     return `${i + 1}️⃣ ${b.date} – ${b.time} – ${serviceName} – ${b.serviceSnapshot.duration} min`;
   });
 
-  const text =
-  (bookings.length === 1
-    ? lang === "arabic"
-      ? "لديك موعد واحد:\n\n"
+  const commandText =
+    lang === "arabic"
+      ? "0️⃣0️⃣ العودة للقائمة"
       : lang === "hebrew"
-      ? "יש לך תור אחד:\n\n"
-      : "You have one appointment:\n\n"
-    : lang === "arabic"
-    ? "اختر موعدًا لتعديله:\n\n"
-    : lang === "hebrew"
-    ? "בחר תור לשינוי:\n\n"
-    : "Select an appointment to reschedule:\n\n") +
-  lines.join("\n") +
-  `\n\n\n` + // blank line between appointments and commands
-  (lang === "arabic"
-    ? "0️⃣0️⃣ خطوة للخلف\n9️⃣9️⃣ إلغاء والعودة للقائمة"
-    : lang === "hebrew"
-    ? "0️⃣0️⃣ חזרה צעד אחד\n9️⃣9️⃣ ביטול וחזרה לתפריט"
-    : "0️⃣0️⃣ Go back one step\n9️⃣9️⃣ Cancel & back to menu");
+      ? "0️⃣0️⃣ חזרה לתפריט"
+      : "0️⃣0️⃣ back to menu";
+
+  const text =
+    (bookings.length === 1
+      ? lang === "arabic"
+        ? "لديك موعد واحد:\n\n"
+        : lang === "hebrew"
+        ? "יש לך תור אחד:\n\n"
+        : "You have one appointment:\n\n"
+      : lang === "arabic"
+      ? "اختر موعدًا لتعديله:\n\n"
+      : lang === "hebrew"
+      ? "בחר תור לשינוי:\n\n"
+      : "Select an appointment to reschedule:\n\n") +
+    lines.join("\n") +
+    "\n\n\n" + // blank line between appointments and commands
+    commandText;
 
 
     await setState(state, {
