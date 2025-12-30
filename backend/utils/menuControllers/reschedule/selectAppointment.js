@@ -70,7 +70,7 @@ module.exports = async function selectAppointment({
         ? "ماذا تريد التغيير؟\n\n1️⃣ تغيير التاريخ والوقت\n\n2️⃣ تغيير الوقت فقط\n\n\n\n0️⃣0️⃣ رجوع خطوة للخلف\n9️⃣9️⃣ إلغاء والعودة للقائمة"
         : lang === "hebrew"
         ? "מה תרצה לשנות?\n\n1️⃣ שינוי תאריך ושעה\n\n2️⃣ שינוי שעה בלבד\n\n\n\n0️⃣0️⃣ חזרה צעד אחד\n9️⃣9️⃣ ביטול וחזרה לתפריט"
-        : "What would you like to change?\n\n1️⃣ Change date & time\n\n\n\n2️⃣ Change time only\n\n0️⃣0️⃣ Go back\n9️⃣9️⃣ Cancel & back to menu",
+        : "What would you like to change?\n\n1️⃣ Change date & time\n\n2️⃣ Change time only\n\n\n\n0️⃣0️⃣ Go back\n9️⃣9️⃣ Cancel & back to menu",
   });
   
 
