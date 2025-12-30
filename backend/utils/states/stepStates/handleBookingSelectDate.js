@@ -122,8 +122,7 @@ module.exports = async function handleBookingSelectDate({
     ? `الأوقات المتاحة في *${date}*:\n\nأرسلي رقم الوقت المناسب لك.\n\n${lines.join("\n")}\n\n💬 0️⃣0️⃣ للعودة خطوة للخلف\n9️⃣9️⃣ لإلغاء والعودة للقائمة`
     : lang === "hebrew"
     ? `השעות הפנויות ב-*${date}*:\n\nכתבי את מספר השעה המתאימה.\n\n${lines.join("\n")}\n\n💬 0️⃣0️⃣ חזרה צעד אחד\n9️⃣9️⃣ ביטול וחזרה לתפריט`
-    : `Available times on *${date}*:\n\n💬 Please reply with the number of your preferred time.${lines.join("\n")}\n\n\n\n0️⃣0️⃣ Go back one step\n9️⃣9️⃣ Cancel & back to menu`;
-
+    : `Available times on *${date}*:\n\n💬 Please reply with the number of your preferred time.\n\n${lines.join("\n")}\n\n0️⃣0️⃣ Go back one step\n9️⃣9️⃣ Cancel & back to menu`;
 
   await sendWhatsApp({ from: biz.wa.number, to: from, body: msg });
 };
