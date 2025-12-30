@@ -5,6 +5,8 @@ const getNext10Days = require("../../getNext10Days");
 const sendDatePickerTemplate = require("../../twilio/sendDatePickerTemplate");
 const moment = require("moment");
 const {checkFreeSlotsToday} = require("../../time/bookingHelpers");
+const startReschedule = require("./startReschedule");
+
 
 
 
@@ -23,7 +25,7 @@ module.exports = async function chooseChangeType({
       step: state.data.backStep || "RESCHEDULE_SELECT_APPOINTMENT",
       data: {},
     });
-    return;
+    return startReschedule({ biz, from, lang, langKey, state }); 
   }
   
 
