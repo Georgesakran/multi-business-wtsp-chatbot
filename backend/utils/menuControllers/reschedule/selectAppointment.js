@@ -33,16 +33,6 @@ module.exports = async function selectAppointment({
   const idx = parseInt(txt, 10) - 1;
   const appointments = state.data?.appointments || [];
 
-  function buildRescheduleState(data, selectedAppointment) {
-    return {
-      language: data.language,
-      langKey: data.langKey,
-      storedName: data.storedName,
-      customerName: data.customerName,
-      selectedAppointment,
-    };
-  }
-  
 
   if (isNaN(idx) || !appointments[idx]) {
     await sendWhatsApp({
@@ -77,10 +67,10 @@ module.exports = async function selectAppointment({
     to: from,
     body:
       lang === "arabic"
-        ? "ماذا تريد التغيير؟\n\n1️⃣ تغيير التاريخ والوقت\n\n2️⃣ تغيير الوقت فقط\n\n0️⃣0️⃣ رجوع خطوة للخلف\n\n9️⃣9️⃣ إلغاء والعودة للقائمة"
+        ? "ماذا تريد التغيير؟\n\n1️⃣ تغيير التاريخ والوقت\n\n2️⃣ تغيير الوقت فقط\n\n\n\n0️⃣0️⃣ رجوع خطوة للخلف\n9️⃣9️⃣ إلغاء والعودة للقائمة"
         : lang === "hebrew"
-        ? "מה תרצה לשנות?\n\n1️⃣ שינוי תאריך ושעה\n\n2️⃣ שינוי שעה בלבד\n\n0️⃣0️⃣ חזרה צעד אחד\n\n9️⃣9️⃣ ביטול וחזרה לתפריט"
-        : "What would you like to change?\n\n1️⃣ Change date & time\n\n2️⃣ Change time only\n\n0️⃣0️⃣ Go back\n\n9️⃣9️⃣ Cancel & back to menu",
+        ? "מה תרצה לשנות?\n\n1️⃣ שינוי תאריך ושעה\n\n2️⃣ שינוי שעה בלבד\n\n\n\n0️⃣0️⃣ חזרה צעד אחד\n9️⃣9️⃣ ביטול וחזרה לתפריט"
+        : "What would you like to change?\n\n1️⃣ Change date & time\n\n\n\n2️⃣ Change time only\n\n0️⃣0️⃣ Go back\n9️⃣9️⃣ Cancel & back to menu",
   });
   
 
