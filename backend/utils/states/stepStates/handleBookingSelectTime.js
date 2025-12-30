@@ -39,9 +39,10 @@ module.exports = async function handleBookingSelectTime({
     await sendWhatsApp({ from: biz.wa.number, to: from, body });
     return;
   }
-
   // VALID TIME
   const time = slots[idx];
+
+// ---------------- RESCHEDULE FLOW ----------------
 // ---------------- RESCHEDULE FLOW ----------------
 if (state.data?.reschedule) {
   await Booking.findByIdAndUpdate(state.data.selectedAppointment._id, {
@@ -49,20 +50,68 @@ if (state.data?.reschedule) {
     time,
   });
 
+  // Fetch updated booking (for full details)
+  const booking = await Booking.findById(
+    state.data.selectedAppointment._id
+  );
+
+  const svcName =
+    booking?.serviceSnapshot?.name?.[langKey] ||
+    booking?.serviceSnapshot?.name?.en ||
+    "";
+
+  const msg =
+    lang === "arabic"
+      ? `✅ تم *تعديل موعدك بنجاح*!
+
+👤 الاسم: *${booking.customerName}*
+💅 الخدمة: *${svcName}*
+📅 التاريخ الجديد: *${booking.date}*
+⏰ الساعة الجديدة: *${booking.time}*
+
+يمكنك دائماً كتابة *menu* للعودة للقائمة.`
+      : lang === "hebrew"
+      ? `✅ התור שלך *עודכן בהצלחה*!
+
+👤 שם: *${booking.customerName}*
+💅 שירות: *${svcName}*
+📅 תאריך חדש: *${booking.date}*
+⏰ שעה חדשה: *${booking.time}*
+
+אפשר בכל רגע לכתוב *menu* כדי לחזור לתפריט.`
+      : `✅ Your appointment has been *updated successfully*!
+
+👤 Name: *${booking.customerName}*
+💅 Service: *${svcName}*
+📅 New date: *${booking.date}*
+⏰ New time: *${booking.time}*
+
+You can type *menu* anytime to go back.`;
+
   await sendWhatsApp({
     from: biz.wa.number,
     to: from,
-    body:
-      lang === "arabic"
-        ? `✅ تم تعديل موعدك بنجاح.\n\n📅 ${state.data.date}\n⏰ ${time}`
-        : lang === "hebrew"
-        ? `✅ התור עודכן בהצלחה.\n\n📅 ${state.data.date}\n⏰ ${time}`
-        : `✅ Your appointment has been updated successfully.\n\n📅 ${state.data.date}\n⏰ ${time}`,
+    body: msg,
   });
 
-  await setState(state, { step: "MENU", data: {} });
+  function buildMenuData(data = {}) {
+    return {
+      language: data.language,
+      langKey: data.langKey,
+      customerName: data.customerName,
+    };
+  }
+
+  // reset state to menu
+  await setState(state, {
+    step: "MENU",
+    replaceData: true,
+    data: buildMenuData(state.data),
+  });
+
   return;
 }
+
 
   // Fetch customer to check name
   let customer = await Customer.findOne({ businessId: biz._id, phone: from });

@@ -91,7 +91,6 @@ async function handleBookingEnterNote({ txt, state, biz, from, lang, setState })
       return {
         language: data.language,
         langKey: data.langKey,
-        storedName: data.storedName,
         customerName: data.customerName,
       };
     }
