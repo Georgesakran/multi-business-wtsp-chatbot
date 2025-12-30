@@ -3,6 +3,7 @@ const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const parseMenuIndexFromText = require("../../menuControllers/menuUtils/menuParser");
 const Customer = require("../../../models/Customer");
 const Booking = require("../../../models/Booking");
+const chooseChangeType = require("../../menuControllers/reschedule/chooseChangeType");
 
 /**
  * Handle user selecting a time slot in booking
@@ -16,6 +17,35 @@ module.exports = async function handleBookingSelectTime({
   state,
   setState,
 }) {
+
+  function buildMenuData(data = {}) {
+    return {
+      language: data.language,
+      langKey: data.langKey,
+      customerName: data.customerName,
+    };
+  }
+    // command 00
+    if (txt === "00") {
+      await setState(state, {
+        step: state.data.backStep || "RESCHEDULE_CHOOSE_CHANGE_TYPE",
+        data: {},
+      });
+      return chooseChangeType({ biz, from, txt,lang, langKey, state }); 
+    }
+  
+    // command 99
+    if (txt === "99") {
+      await setState(state, {
+        step: state.data.backStep || "MENU",
+        replaceData: true,
+        data: buildMenuData(state.data),
+      });
+      return showMenu({ biz, from, lang, langKey, state });
+    }
+
+
+
   const slots = state.data?.slots || [];
   const idx = parseMenuIndexFromText(txt);
 

@@ -6,6 +6,8 @@ const sendDatePickerTemplate = require("../../twilio/sendDatePickerTemplate");
 const moment = require("moment");
 const {checkFreeSlotsToday} = require("../../time/bookingHelpers");
 const startReschedule = require("./startReschedule");
+const {showMenu} = require("../../../routes/twilioFlows/global/commands");
+
 
 
 
@@ -36,7 +38,7 @@ module.exports = async function chooseChangeType({
     });
     return startReschedule({ biz, from, lang, langKey, state }); 
   }
-  
+
   // command 99
   if (txt === "99") {
     await setState(state, {
@@ -45,7 +47,6 @@ module.exports = async function chooseChangeType({
       data: buildMenuData(state.data),
     });
     return showMenu({ biz, from, lang, langKey, state });
-  
   }
  
   if (txt === "1") {

@@ -51,7 +51,7 @@ module.exports = async function startReschedule({ biz, from, lang, langKey, stat
       ? "0️⃣0️⃣ العودة للقائمة"
       : lang === "hebrew"
       ? "0️⃣0️⃣ חזרה לתפריט"
-      : "0️⃣0️⃣ back to menu";
+      : "0️⃣0️⃣ Back to menu";
 
   const text =
     (bookings.length === 1
