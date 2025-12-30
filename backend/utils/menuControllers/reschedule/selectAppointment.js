@@ -1,5 +1,6 @@
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const setState = require("../../../utils/states/setState");
+const handleMenuStep = require("../utils/states/stepStates/handleMenuState");
 
 module.exports = async function selectAppointment({
   biz,
@@ -14,8 +15,7 @@ module.exports = async function selectAppointment({
       step: state.data.backStep || "MENU",
       data: {},
     });
-    return  handleMenuStep = require("../../states/stepStates/handleMenuState");
-    ;
+    return handleMenuStep({ biz, from, lang, langKey, state }); 
   }
   
 
