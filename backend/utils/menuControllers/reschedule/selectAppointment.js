@@ -10,7 +10,7 @@ module.exports = async function selectAppointment({
   lang,
   langKey,
 }) {
-  if (txt === "0") {
+  if (txt === "00") {
     await setState(state, {
       step: state.data.backStep || "MENU",
       data: {},
@@ -66,9 +66,11 @@ module.exports = async function selectAppointment({
     to: from,
     body:
       lang === "arabic"
-        ? "ماذا تريد التغيير؟\n\n1️⃣ تغيير التاريخ\n2️⃣ تغيير الوقت\n0️⃣ رجوع"
+        ? "ماذا تريد التغيير؟\n\n1️⃣ تغيير التاريخ والوقت\n\n2️⃣ تغيير الوقت فقط\n\n0️⃣0️⃣ رجوع خطوة للخلف\n\n9️⃣9️⃣ إلغاء والعودة للقائمة"
         : lang === "hebrew"
-        ? "מה תרצה לשנות?\n\n1️⃣ שינוי תאריך\n2️⃣ שינוי שעה\n0️⃣ חזרה"
-        : "What would you like to change?\n\n1️⃣ Change date\n2️⃣ Change time\n0️⃣ Back",
+        ? "מה תרצה לשנות?\n\n1️⃣ שינוי תאריך ושעה\n\n2️⃣ שינוי שעה בלבד\n\n0️⃣0️⃣ חזרה צעד אחד\n\n9️⃣9️⃣ ביטול וחזרה לתפריט"
+        : "What would you like to change?\n\n1️⃣ Change date & time\n\n2️⃣ Change time only\n\n0️⃣0️⃣ Go back\n\n9️⃣9️⃣ Cancel & back to menu",
   });
+  
+
 };
