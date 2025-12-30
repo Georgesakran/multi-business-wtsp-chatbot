@@ -59,12 +59,12 @@ module.exports = async function startReschedule({ biz, from, lang, langKey, stat
     ? "בחר תור לשינוי:\n\n"
     : "Select an appointment to reschedule:\n\n") +
   lines.join("\n") +
-  `\n\n` + // blank line between appointments and commands
+  `\n\n\n` + // blank line between appointments and commands
   (lang === "arabic"
-    ? "0️⃣0️⃣ خطوة للخلف\n\n9️⃣9️⃣ إلغاء والعودة للقائمة"
+    ? "0️⃣0️⃣ خطوة للخلف\n9️⃣9️⃣ إلغاء والعودة للقائمة"
     : lang === "hebrew"
-    ? "0️⃣0️⃣ חזרה צעד אחד\n\n9️⃣9️⃣ ביטול וחזרה לתפריט"
-    : "0️⃣0️⃣ Go back one step\n\n9️⃣9️⃣ Cancel & back to menu");
+    ? "0️⃣0️⃣ חזרה צעד אחד\n9️⃣9️⃣ ביטול וחזרה לתפריט"
+    : "0️⃣0️⃣ Go back one step\n9️⃣9️⃣ Cancel & back to menu");
 
 
     await setState(state, {
