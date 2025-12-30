@@ -14,7 +14,8 @@ module.exports = async function selectAppointment({
       step: state.data.backStep || "MENU",
       data: {},
     });
-    return;
+    return  handleMenuStep = require("../../states/stepStates/handleMenuState");
+    ;
   }
   
 
