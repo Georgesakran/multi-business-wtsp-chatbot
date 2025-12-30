@@ -53,7 +53,7 @@ router.post("/", async (req, res) => {
     const to = toE164(req.body?.To); // business WA number
     const rawText = (req) => (req.body?.Body || "").trim();
     const txt = rawText(req);
-    const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
+    //const isCancelCmd = (txt) => txt === CANCEL || lower(txt) === "cancel";
     // const isBackCmd = (txt) => txt === BACK || lower(txt) === "back";
     const isRestartCmd = (txt) =>["restart", "/restart", "start"].includes(lower(txt));
     const isHelpCmd = (txt) => ["help", "?", "instructions","עזרה","مساعدة"].includes(lower(txt));
@@ -99,10 +99,10 @@ router.post("/", async (req, res) => {
       return res.sendStatus(200);
     }
     // CANCEL COMMAND
-    if (isCancelCmd(txt)) {
-      await handleCancel({ biz, from, state, customer });
-      return res.sendStatus(200);
-    }
+    // if (isCancelCmd(txt)) {
+    //   await handleCancel({ biz, from, state, customer });
+    //   return res.sendStatus(200);
+    // }
 
     // BACK COMMAND
     // if (isBackCmd(txt)) {
