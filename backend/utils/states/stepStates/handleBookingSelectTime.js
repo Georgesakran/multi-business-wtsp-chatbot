@@ -26,15 +26,15 @@ module.exports = async function handleBookingSelectTime({
     };
   }
     // command 00
-if (txt === "00") {
-  console.log("Going back to change type");
-  await setState(state, {
-    step: state.data.backStep || "RESCHEDULE_CHOOSE_CHANGE_TYPE",
-    // keep the existing data so chooseChangeType has what it needs
-    data: { ...state.data },
-  });
-  return chooseChangeType({ biz, from, txt:"" ,lang, langKey, state }); 
-}
+  if (txt === "00") {
+    console.log("Going back to change type");
+    await setState(state, {
+      step: state.data.backStep || "RESCHEDULE_CHOOSE_CHANGE_TYPE",
+      // keep the existing data so chooseChangeType has what it needs
+      data: { ...state.data },
+    });
+    return chooseChangeType({ biz, from, txt:"" ,lang, langKey, state }); 
+  }
 
   
     // command 99

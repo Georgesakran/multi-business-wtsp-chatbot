@@ -7,6 +7,7 @@ const moment = require("moment");
 const {checkFreeSlotsToday} = require("../../time/bookingHelpers");
 const startReschedule = require("./startReschedule");
 const {showMenu} = require("../../../routes/twilioFlows/global/commands");
+const { sendWhatsApp } = require("../../twilio/sendTwilio");
 
 module.exports = async function chooseChangeType({
   biz,
