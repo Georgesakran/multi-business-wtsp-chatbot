@@ -29,10 +29,10 @@ module.exports = async function selectAppointment({
     return showMenu({ biz, from, lang, langKey, state });
   }
   
-
-  const idx = parseInt(txt, 10) - 1;
-  const appointments = state.data?.appointments || [];
-
+  if (txt !== "") {
+    const idx = parseInt(txt, 10) - 1;
+    const appointments = state.data?.appointments || [];
+  }
 
   if (isNaN(idx) || !appointments[idx]) {
     await sendWhatsApp({
