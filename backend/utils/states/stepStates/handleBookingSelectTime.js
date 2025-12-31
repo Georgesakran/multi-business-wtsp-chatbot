@@ -3,8 +3,7 @@ const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const parseMenuIndexFromText = require("../../menuControllers/menuUtils/menuParser");
 const Customer = require("../../../models/Customer");
 const Booking = require("../../../models/Booking");
-// const chooseChangeType = require("../../menuControllers/reschedule/chooseChangeType");
-const selectAppointment = require("../../menuControllers/reschedule/selectAppointment");
+const chooseChangeType = require("../../menuControllers/reschedule/chooseChangeType");
 
 /**
  * Handle user selecting a time slot in booking
@@ -27,15 +26,15 @@ module.exports = async function handleBookingSelectTime({
     };
   }
     // command 00
-    if (txt === "00") {
-      console.log("Going back to change type");
-      await setState(state, {
-        step: "RESCHEDULE_SELECT_APPOINTMENT",
-        data: { ...state.data },
-      });
-      return selectAppointment({ biz, from, txt:"" ,lang, langKey }); 
-    }
-    
+if (txt === "00") {
+  console.log("Going back to change type");
+  await setState(state, {
+    step: state.data.backStep || "RESCHEDULE_CHOOSE_CHANGE_TYPE",
+    // keep the existing data so chooseChangeType has what it needs
+    data: { ...state.data },
+  });
+  return chooseChangeType({ biz, from, txt:"" ,lang, langKey, state }); 
+}
 
   
     // command 99
