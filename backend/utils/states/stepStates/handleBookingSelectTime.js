@@ -3,7 +3,8 @@ const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const parseMenuIndexFromText = require("../../menuControllers/menuUtils/menuParser");
 const Customer = require("../../../models/Customer");
 const Booking = require("../../../models/Booking");
-const chooseChangeType = require("../../menuControllers/reschedule/chooseChangeType");
+// const chooseChangeType = require("../../menuControllers/reschedule/chooseChangeType");
+const selectAppointment = require("../../menuControllers/reschedule/selectAppointment");
 
 /**
  * Handle user selecting a time slot in booking
@@ -33,9 +34,10 @@ module.exports = async function handleBookingSelectTime({
         // keep the existing data so chooseChangeType has what it needs
         data: { ...state.data },
       });
-      return chooseChangeType({ biz, from, txt:"" ,lang, langKey, state }); 
+      return selectAppointment({ biz, from, txt:"" ,lang, langKey }); 
     }
     
+
   
     // command 99
     if (txt === "99") {
