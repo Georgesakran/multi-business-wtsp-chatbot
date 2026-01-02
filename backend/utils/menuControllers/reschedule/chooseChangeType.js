@@ -17,7 +17,6 @@ module.exports = async function chooseChangeType({
   langKey,
   state,
 }) {
-  console.log(11111);
   const appt = state.data.selectedAppointment;
 
   function buildMenuData(data = {}) {

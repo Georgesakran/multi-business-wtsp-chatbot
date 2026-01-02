@@ -24,22 +24,26 @@ async function findServiceById(biz, serviceId) {
  * Returns a map of taken slots for a given business & date
  */
 async function getTakenMap(businessId, date) {
-  const isTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s || ""));
-
-  const sameDay = await Booking.find({
+  const bookings = await Booking.find({
     businessId,
     date,
-    status: { $in: ["pending", "confirmed"] },
-  })
-    .select("time status")
-    .lean();
+    status: { $in: ["confirmed", "in-progress"] },
+  });
 
-  const map = new Map();
-  for (const b of sameDay) {
-    if (isTime(b.time)) map.set(b.time, true);
-  }
-  return map;
+  return bookings.map((b) => ({
+    start: b.time,
+    end: getEndTime(b.time, b.serviceSnapshot.duration),
+  }));
 }
+function getEndTime(startTime, duration) {
+  const [h, m] = startTime.split(":").map(Number);
+  const end = new Date();
+  end.setHours(h);
+  end.setMinutes(m + duration);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(end.getHours())}:${pad(end.getMinutes())}`;
+}
+
 
 /**
  * Checks if a range of consecutive slots is free

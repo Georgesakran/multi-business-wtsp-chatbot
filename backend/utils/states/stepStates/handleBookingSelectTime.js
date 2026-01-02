@@ -46,7 +46,7 @@ module.exports = async function handleBookingSelectTime({
       });
       return showMenu({ biz, from, lang, langKey, state });
     }
-
+    
 
   const slots = state.data?.slots || [];
   const idx = parseMenuIndexFromText(txt);
