@@ -47,7 +47,7 @@ module.exports = async function handleBookingSelectTimeRange({
     data: {
       ...state.data,
       chosenRange,
-      availableSlots,
+      slots: availableSlots,
     },
   });
 

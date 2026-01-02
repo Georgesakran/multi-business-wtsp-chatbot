@@ -230,10 +230,13 @@ module.exports = async function handleBookingSelectDate({
       ...state.data,
       date,
       ranges: groupedRanges,
+      allSlots: freeSlots, // ✅ store all exact slots for the range step
+      slotGapMinutes: slotGap,
       openingTime,
       closingTime,
     },
   });
+  
 
   // --- send WhatsApp message with ranges ---
   await sendWhatsApp({
