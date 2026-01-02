@@ -34,6 +34,7 @@ module.exports = async function handleBookingSelectTimeRange({
     });
   }
 
+  
   // --- get exact slots in chosen range ---
   const chosenRange = ranges[idx];
   const availableSlots = filterSlotsInRange(allSlots, chosenRange);

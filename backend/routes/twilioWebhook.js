@@ -42,6 +42,7 @@ const handleViewProductsList = require("../utils/states/stepStates/handleViewPro
 const handleViewCoursesList = require("../utils/states/stepStates/handleViewCoursesList");
 const selectAppointment = require("../utils/menuControllers/reschedule/selectAppointment");
 const chooseChangeType = require("../utils/menuControllers/reschedule/chooseChangeType");
+const handleBookingSelectTimeRange = require("../utils/states/stepStates/handleBookingSelectTimeRange");
 
 // -------------------- webhook -----------------------------------------------
 // -------------------- webhook -----------------------------------------------
@@ -166,6 +167,20 @@ router.post("/", async (req, res) => {
       });
       return res.sendStatus(200);
     }
+    // ---- BOOKING: SELECT TIME RANGE ----
+if (state.step === "BOOKING_SELECT_TIME_RANGE") {
+  await handleBookingSelectTimeRange({
+    biz,
+    from,
+    lang,
+    langKey,
+    txt,
+    state,
+  });
+  return res.sendStatus(200);
+}
+
+
     // ---- BOOKING: SELECT TIME ----
     if (state.step === "BOOKING_SELECT_TIME") {
       await handleBookingSelectTime({
