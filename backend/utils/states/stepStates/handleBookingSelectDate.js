@@ -133,35 +133,21 @@ const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const { findServiceById, getTakenMap } = require("../../time/bookingHelpers");
 const generateSmartSlots = require("../../time/generateSmartSlots");
 
-// --- helper to group slots into ranges ---
-function groupSlots(slots, serviceDuration, slotGap) {
+// --- helper to split slots into N groups ---
+function splitIntoGroups(slots, numGroups = 3) {
   if (!slots.length) return [];
-  const ranges = [];
-  let start = slots[0];
-  let prev = slots[0];
+  const groups = [];
+  const perGroup = Math.ceil(slots.length / numGroups);
 
-  const toMinutes = (t) => {
-    const [h, m] = t.split(":").map(Number);
-    return h * 60 + m;
-  };
-
-  const toTime = (min) =>
-    `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
-
-  for (let i = 1; i < slots.length; i++) {
-    const prevMin = toMinutes(prev);
-    const currMin = toMinutes(slots[i]);
-
-    // consecutive if exactly serviceDuration + slotGap apart
-    if (currMin - prevMin > serviceDuration + slotGap) {
-      ranges.push(`${start} – ${prev}`);
-      start = slots[i];
-    }
-    prev = slots[i];
+  for (let i = 0; i < numGroups; i++) {
+    const startIdx = i * perGroup;
+    const endIdx = Math.min((i + 1) * perGroup, slots.length);
+    if (startIdx >= slots.length) break;
+    const groupSlots = slots.slice(startIdx, endIdx);
+    groups.push(`${groupSlots[0]} – ${groupSlots[groupSlots.length - 1]}`);
   }
 
-  ranges.push(`${start} – ${prev}`);
-  return ranges;
+  return groups;
 }
 
 module.exports = async function handleBookingSelectDate({
@@ -188,10 +174,12 @@ module.exports = async function handleBookingSelectDate({
     return;
   }
 
+  // --- check closed dates ---
   if ((biz.closedDates || []).includes(date)) {
     return sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Closed" });
   }
 
+  // --- check working days ---
   const bookingCfg = biz.config?.booking || {};
   const workingDays = Array.isArray(bookingCfg.workingDays) ? bookingCfg.workingDays : [];
   const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -203,12 +191,14 @@ module.exports = async function handleBookingSelectDate({
 
   const openingTime = bookingCfg.openingTime || "09:00";
   const closingTime = bookingCfg.closingTime || "18:00";
-  const taken = await getTakenMap(biz._id, date);
 
+  // --- get already booked slots ---
+  const taken = await getTakenMap(biz._id, date);
   const serviceId = state.data?.serviceId;
   const snapshot = state.data?.serviceSnapshot || {};
   const serviceDuration = snapshot.duration || findServiceById(biz, serviceId)?.duration;
 
+  // --- generate free slots ---
   const freeSlots = generateSmartSlots({
     openingTime,
     closingTime,
@@ -229,23 +219,23 @@ module.exports = async function handleBookingSelectDate({
     });
   }
 
-  const slotGap = bookingCfg.slotGapMinutes || 15;
-  const groupedRanges = groupSlots(freeSlots, Number(serviceDuration), slotGap);
-
+  // --- split into 3 groups ---
+  const groupedRanges = splitIntoGroups(freeSlots, 3);
   const lines = groupedRanges.map((r, i) => `${i + 1}) ${r}`);
 
+  // --- save state & go to next step ---
   await setState(state, {
     step: "BOOKING_SELECT_TIME_RANGE",
     data: {
       ...state.data,
       date,
       ranges: groupedRanges,
-      slotGapMinutes: slotGap,
       openingTime,
       closingTime,
     },
   });
 
+  // --- send WhatsApp message with ranges ---
   await sendWhatsApp({
     from: biz.wa.number,
     to: from,
