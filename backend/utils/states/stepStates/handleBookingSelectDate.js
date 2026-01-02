@@ -218,7 +218,6 @@ module.exports = async function handleBookingSelectDate({
           : "⚠️ No free time slots on this date.",
     });
   }
-
   // --- split into 3 groups ---
   const groupedRanges = splitIntoGroups(freeSlots, 3);
   const lines = groupedRanges.map((r, i) => `${i + 1}) ${r}`);
@@ -230,13 +229,14 @@ module.exports = async function handleBookingSelectDate({
       ...state.data,
       date,
       ranges: groupedRanges,
-      allSlots: freeSlots, // ✅ store all exact slots for the range step
-      slotGapMinutes: slotGap,
+      allSlots: freeSlots,
       openingTime,
       closingTime,
     },
   });
   
+  
+
 
   // --- send WhatsApp message with ranges ---
   await sendWhatsApp({
