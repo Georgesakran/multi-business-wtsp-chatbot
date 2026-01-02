@@ -159,28 +159,33 @@ module.exports = async function handleBookingSelectDate({
     return;
   }
 
-  // check closed dates & working days
-  const weekday = new Date(date).getDay(); // 0 = Sunday
+  // --- check closed dates ---
   if ((biz.closedDates || []).includes(date)) {
     return sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Closed" });
   }
 
+  // --- check working days ---
   const bookingCfg = biz.config?.booking || {};
-  const workingDays = Array.isArray(bookingCfg.workingDays)
-    ? bookingCfg.workingDays
-    : [];
-  if (!workingDays.includes(weekday)) {
+  const workingDays = Array.isArray(bookingCfg.workingDays) ? bookingCfg.workingDays : [];
+
+  // Mapping fix: convert getDay() number to weekday string
+  const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const weekdayStr = dayNames[new Date(date).getDay()];
+
+  if (!workingDays.includes(weekdayStr)) {
     return sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Not a working day" });
   }
 
   const openingTime = bookingCfg.openingTime || "09:00";
   const closingTime = bookingCfg.closingTime || "18:00";
 
+  // --- get already booked slots ---
   const taken = await getTakenMap(biz._id, date); // [{start,end}]
   const serviceId = state.data?.serviceId;
   const snapshot = state.data?.serviceSnapshot || {};
   const serviceDuration = snapshot.duration || findServiceById(biz, serviceId)?.duration;
 
+  // --- generate free slots ---
   const free = generateSmartSlots({
     openingTime,
     closingTime,
@@ -201,9 +206,11 @@ module.exports = async function handleBookingSelectDate({
     });
   }
 
+  // --- show first 10 slots ---
   const slotsToShow = free.slice(0, 10);
   const lines = slotsToShow.map((t, i) => `${i + 1}) ${t}`);
 
+  // --- save state & go to next step ---
   await setState(state, {
     step: "BOOKING_SELECT_TIME",
     data: {
@@ -216,6 +223,7 @@ module.exports = async function handleBookingSelectDate({
     },
   });
 
+  // --- send WhatsApp message with available slots ---
   await sendWhatsApp({
     from: biz.wa.number,
     to: from,
@@ -233,4 +241,3 @@ module.exports = async function handleBookingSelectDate({
           )}\n\n0️⃣0️⃣ Go back\n9️⃣9️⃣ Cancel`,
   });
 };
-
