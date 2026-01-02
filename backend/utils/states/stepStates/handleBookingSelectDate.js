@@ -129,11 +129,36 @@
 
 
 
-
 const setState = require("../setState");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const { findServiceById, getTakenMap } = require("../../time/bookingHelpers");
 const generateSmartSlots = require("../../time/generateSmartSlots");
+
+// --- helper to group slots into ranges ---
+function groupSlots(slots, gapMinutes) {
+  if (!slots.length) return [];
+  const ranges = [];
+  let start = slots[0];
+  let prev = slots[0];
+
+  const toMinutes = (t) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const toTime = (min) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+  for (let i = 1; i < slots.length; i++) {
+    const prevMin = toMinutes(prev);
+    const currMin = toMinutes(slots[i]);
+    if (currMin - prevMin > gapMinutes) {
+      ranges.push(`${start} – ${prev}`);
+      start = slots[i];
+    }
+    prev = slots[i];
+  }
+  ranges.push(`${start} – ${prev}`);
+  return ranges;
+}
 
 module.exports = async function handleBookingSelectDate({
   biz,
@@ -159,16 +184,12 @@ module.exports = async function handleBookingSelectDate({
     return;
   }
 
-  // --- check closed dates ---
   if ((biz.closedDates || []).includes(date)) {
     return sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Closed" });
   }
 
-  // --- check working days ---
   const bookingCfg = biz.config?.booking || {};
   const workingDays = Array.isArray(bookingCfg.workingDays) ? bookingCfg.workingDays : [];
-
-  // Mapping fix: convert getDay() number to weekday string
   const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const weekdayStr = dayNames[new Date(date).getDay()];
 
@@ -178,22 +199,20 @@ module.exports = async function handleBookingSelectDate({
 
   const openingTime = bookingCfg.openingTime || "09:00";
   const closingTime = bookingCfg.closingTime || "18:00";
+  const taken = await getTakenMap(biz._id, date);
 
-  // --- get already booked slots ---
-  const taken = await getTakenMap(biz._id, date); // [{start,end}]
   const serviceId = state.data?.serviceId;
   const snapshot = state.data?.serviceSnapshot || {};
   const serviceDuration = snapshot.duration || findServiceById(biz, serviceId)?.duration;
 
-  // --- generate free slots ---
-  const free = generateSmartSlots({
+  const freeSlots = generateSmartSlots({
     openingTime,
     closingTime,
     serviceDuration: Number(serviceDuration),
     existingBookings: taken,
   });
 
-  if (!free.length) {
+  if (!freeSlots.length) {
     return sendWhatsApp({
       from: biz.wa.number,
       to: from,
@@ -206,24 +225,23 @@ module.exports = async function handleBookingSelectDate({
     });
   }
 
-  // --- show first 10 slots ---
-  const slotsToShow = free.slice(0, 10);
-  const lines = slotsToShow.map((t, i) => `${i + 1}) ${t}`);
+  const slotGap = bookingCfg.slotGapMinutes || 15;
+  const groupedRanges = groupSlots(freeSlots, slotGap);
 
-  // --- save state & go to next step ---
+  const lines = groupedRanges.map((r, i) => `${i + 1}) ${r}`);
+
   await setState(state, {
-    step: "BOOKING_SELECT_TIME",
+    step: "BOOKING_SELECT_TIME_RANGE",
     data: {
       ...state.data,
       date,
-      slots: slotsToShow,
+      ranges: groupedRanges,
+      slotGapMinutes: slotGap,
       openingTime,
       closingTime,
-      slotGapMinutes: bookingCfg.slotGapMinutes || 15,
     },
   });
 
-  // --- send WhatsApp message with available slots ---
   await sendWhatsApp({
     from: biz.wa.number,
     to: from,
@@ -231,13 +249,13 @@ module.exports = async function handleBookingSelectDate({
       lang === "arabic"
         ? `الأوقات المتاحة في *${date}*:\n\n${lines.join(
             "\n"
-          )}\n\n💬 0️⃣0️⃣ للعودة\n9️⃣9️⃣ لإلغاء`
+          )}\n\n💬 أرسلي رقم النطاق الذي ترغبين به`
         : lang === "hebrew"
         ? `השעות הפנויות ב-*${date}*:\n\n${lines.join(
             "\n"
-          )}\n\n💬 0️⃣0️⃣ חזרה\n9️⃣9️⃣ ביטול`
+          )}\n\n💬 כתבי את מספר הטווח הרצוי`
         : `Available times on *${date}*:\n\n${lines.join(
             "\n"
-          )}\n\n0️⃣0️⃣ Go back\n9️⃣9️⃣ Cancel`,
+          )}\n\n💬 Reply with the number of your preferred range`,
   });
 };
