@@ -4,46 +4,31 @@ const moment = require("moment");
  * Generate smart slots for a service
  * No gaps smaller than service duration
  */
-function generateSmartSlots({
-  openingTime,
-  closingTime,
-  serviceDuration, // in minutes
-  existingBookings = [], // [{start:"09:00", end:"09:20"}]
-  gap = 0, // optional gap between bookings
-}) {
-  const slots = [];
-  const fmt = "HH:mm";
-
-  let start = moment(openingTime, fmt);
-  const endOfDay = moment(closingTime, fmt);
-
-  // sort existing bookings
-  const bookings = existingBookings
-    .map((b) => ({
-      start: moment(b.start, fmt),
-      end: moment(b.end, fmt),
-    }))
-    .sort((a, b) => a.start - b.start);
-
-  while (start.clone().add(serviceDuration, "minutes").isSameOrBefore(endOfDay)) {
-    const potentialEnd = start.clone().add(serviceDuration, "minutes");
-
-    const overlap = bookings.some(
-      (b) => potentialEnd.isAfter(b.start) && start.isBefore(b.end)
-    );
-
-    if (!overlap) {
-      slots.push(start.format(fmt));
-      start.add(serviceDuration + gap, "minutes");
-    } else {
-      const nextBooking = bookings.find(
-        (b) => potentialEnd.isAfter(b.start) && start.isBefore(b.end)
+function generateSmartSlots({ openingTime, closingTime, serviceDuration, existingBookings }) {
+    const slots = [];
+    let current = openingTime;
+  
+    while (current <= closingTime) {
+      const slotEnd = addMinutes(current, serviceDuration);
+      // check overlap with existing bookings
+      const overlap = existingBookings.some(
+        (b) => !(slotEnd <= b.start || current >= b.end)
       );
-      start = nextBooking.end.clone().add(gap, "minutes");
+      if (!overlap && slotEnd <= closingTime) {
+        slots.push(current);
+      }
+      current = addMinutes(current, 10); // 10 min increments
     }
+    return slots;
   }
-
-  return slots;
-}
-
+  
+  // helper
+  function addMinutes(timeStr, mins) {
+    const [h, m] = timeStr.split(":").map(Number);
+    let total = h * 60 + m + mins;
+    const hh = Math.floor(total / 60).toString().padStart(2, "0");
+    const mm = (total % 60).toString().padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+  
 module.exports = generateSmartSlots;
