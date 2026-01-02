@@ -128,14 +128,13 @@
 // };
 
 
-
 const setState = require("../setState");
 const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const { findServiceById, getTakenMap } = require("../../time/bookingHelpers");
 const generateSmartSlots = require("../../time/generateSmartSlots");
 
 // --- helper to group slots into ranges ---
-function groupSlots(slots, gapMinutes) {
+function groupSlots(slots, serviceDuration, slotGap) {
   if (!slots.length) return [];
   const ranges = [];
   let start = slots[0];
@@ -145,17 +144,22 @@ function groupSlots(slots, gapMinutes) {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;
   };
-  const toTime = (min) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+  const toTime = (min) =>
+    `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
   for (let i = 1; i < slots.length; i++) {
     const prevMin = toMinutes(prev);
     const currMin = toMinutes(slots[i]);
-    if (currMin - prevMin > gapMinutes) {
+
+    // consecutive if exactly serviceDuration + slotGap apart
+    if (currMin - prevMin > serviceDuration + slotGap) {
       ranges.push(`${start} – ${prev}`);
       start = slots[i];
     }
     prev = slots[i];
   }
+
   ranges.push(`${start} – ${prev}`);
   return ranges;
 }
@@ -226,7 +230,7 @@ module.exports = async function handleBookingSelectDate({
   }
 
   const slotGap = bookingCfg.slotGapMinutes || 15;
-  const groupedRanges = groupSlots(freeSlots, slotGap);
+  const groupedRanges = groupSlots(freeSlots, Number(serviceDuration), slotGap);
 
   const lines = groupedRanges.map((r, i) => `${i + 1}) ${r}`);
 
