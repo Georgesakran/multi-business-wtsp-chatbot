@@ -1,34 +1,56 @@
-const moment = require("moment");
-
-/**
- * Generate smart slots for a service
- * No gaps smaller than service duration
- */
-function generateSmartSlots({ openingTime, closingTime, serviceDuration, existingBookings }) {
+function toMinutes(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+  
+  function toTime(mins) {
+    const h = Math.floor(mins / 60).toString().padStart(2, "0");
+    const m = (mins % 60).toString().padStart(2, "0");
+    return `${h}:${m}`;
+  }
+  
+  module.exports = function generateSmartSlots({
+    openingTime,
+    closingTime,
+    serviceDuration,
+    existingBookings,
+    step = 10,          // minutes grid
+    minGap = 20,        // shortest service (X)
+  }) {
+    const open = toMinutes(openingTime);
+    const close = toMinutes(closingTime);
+  
+    // Normalize bookings
+    const bookings = existingBookings.map(b => ({
+      start: toMinutes(b.start),
+      end: toMinutes(b.end),
+    }));
+  
     const slots = [];
-    let current = openingTime;
   
-    while (current <= closingTime) {
-      const slotEnd = addMinutes(current, serviceDuration);
-      // check overlap with existing bookings
-      const overlap = existingBookings.some(
-        (b) => !(slotEnd <= b.start || current >= b.end)
+    for (let t = open; t + serviceDuration <= close; t += step) {
+      const slotEnd = t + serviceDuration;
+  
+      // 1️⃣ No overlap
+      const overlaps = bookings.some(
+        b => !(slotEnd <= b.start || t >= b.end)
       );
-      if (!overlap && slotEnd <= closingTime) {
-        slots.push(current);
+      if (overlaps) continue;
+  
+      // 2️⃣ Find next booking
+      const nextBooking = bookings
+        .filter(b => b.start >= slotEnd)
+        .sort((a, b) => a.start - b.start)[0];
+  
+      // 3️⃣ Prevent dead gaps
+      if (nextBooking) {
+        const gap = nextBooking.start - slotEnd;
+        if (gap > 0 && gap < minGap) continue;
       }
-      current = addMinutes(current, 10); // 10 min increments
+  
+      slots.push(toTime(t));
     }
+  
     return slots;
-  }
+  };
   
-  // helper
-  function addMinutes(timeStr, mins) {
-    const [h, m] = timeStr.split(":").map(Number);
-    let total = h * 60 + m + mins;
-    const hh = Math.floor(total / 60).toString().padStart(2, "0");
-    const mm = (total % 60).toString().padStart(2, "0");
-    return `${hh}:${mm}`;
-  }
-  
-module.exports = generateSmartSlots;
