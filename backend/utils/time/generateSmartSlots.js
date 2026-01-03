@@ -1,54 +1,49 @@
-function toMinutes(t) {
+// utils/time/generateSmartSlots.js
+
+function timeToMinutes(t) {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;
   }
   
-  function toTime(mins) {
-    const h = Math.floor(mins / 60).toString().padStart(2, "0");
-    const m = (mins % 60).toString().padStart(2, "0");
-    return `${h}:${m}`;
+  function minutesToTime(min) {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+  
+  // round UP to next 20-min anchor
+  function roundUpToStep(min, step) {
+    return Math.ceil(min / step) * step;
+  }
+  
+  function hasConflict(start, duration, bookings) {
+    const end = start + duration;
+  
+    return bookings.some((b) => {
+      const bStart = timeToMinutes(b.time);
+      const bEnd = bStart + Number(b.duration || 0);
+      return start < bEnd && end > bStart;
+    });
   }
   
   module.exports = function generateSmartSlots({
     openingTime,
     closingTime,
     serviceDuration,
-    existingBookings,
-    step = 10,          // minutes grid
-    minGap = 20,        // shortest service (X)
+    existingBookings = [],
+    step = 10, // 🔒 GLOBAL GRID
   }) {
-    const open = toMinutes(openingTime);
-    const close = toMinutes(closingTime);
+    const openMin = timeToMinutes(openingTime);
+    const closeMin = timeToMinutes(closingTime);
   
-    // Normalize bookings
-    const bookings = existingBookings.map(b => ({
-      start: toMinutes(b.start),
-      end: toMinutes(b.end),
-    }));
-  
+    let cursor = roundUpToStep(openMin, step);
     const slots = [];
   
-    for (let t = open; t + serviceDuration <= close; t += step) {
-      const slotEnd = t + serviceDuration;
-  
-      // 1️⃣ No overlap
-      const overlaps = bookings.some(
-        b => !(slotEnd <= b.start || t >= b.end)
-      );
-      if (overlaps) continue;
-  
-      // 2️⃣ Find next booking
-      const nextBooking = bookings
-        .filter(b => b.start >= slotEnd)
-        .sort((a, b) => a.start - b.start)[0];
-  
-      // 3️⃣ Prevent dead gaps
-      if (nextBooking) {
-        const gap = nextBooking.start - slotEnd;
-        if (gap > 0 && gap < minGap) continue;
+    while (cursor + serviceDuration <= closeMin) {
+      if (!hasConflict(cursor, serviceDuration, existingBookings)) {
+        slots.push(minutesToTime(cursor));
       }
-  
-      slots.push(toTime(t));
+      cursor += step;
     }
   
     return slots;
