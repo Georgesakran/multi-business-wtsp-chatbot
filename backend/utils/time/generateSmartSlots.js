@@ -1,13 +1,15 @@
 const scoreSlot = require("./slotScoring");
 
 function timeToMinutes(t) {
-    if (!t || typeof t !== "string") {
-      throw new Error(`Invalid time value: ${t}`);
-    }
-    const [h, m] = t.split(":").map(Number);
-    return h * 60 + m;
+  if (!t || typeof t !== "string") {
+    throw new Error(`Invalid time value: ${t}`);
   }
-  
+  const [h, m] = t.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) {
+    throw new Error(`Invalid time format: ${t}`);
+  }
+  return h * 60 + m;
+}
 
 function minutesToTime(min) {
   const h = Math.floor(min / 60);
@@ -28,7 +30,6 @@ function hasConflict(start, duration, bookings) {
   });
 }
 
-// 🔥 MAIN FUNCTION
 module.exports = function generateSmartSlots({
   openingTime,
   closingTime,
@@ -39,17 +40,19 @@ module.exports = function generateSmartSlots({
   const openMin = timeToMinutes(openingTime);
   const closeMin = timeToMinutes(closingTime);
 
+  // 1️⃣ Normalize bookings and sort
   const bookings = [...existingBookings]
+    .filter(b => b?.time && b?.duration)
     .map(b => ({
       start: timeToMinutes(b.time),
-      end: timeToMinutes(b.time) + Number(b.duration || 0),
+      end: timeToMinutes(b.time) + Number(b.duration),
     }))
     .sort((a, b) => a.start - b.start);
 
+  // 2️⃣ Build free gaps between bookings
   const gaps = [];
   let cursor = openMin;
 
-  // 1️⃣ Build all free gaps
   for (const b of bookings) {
     if (b.start > cursor) {
       gaps.push({ start: cursor, end: b.start });
@@ -61,43 +64,44 @@ module.exports = function generateSmartSlots({
     gaps.push({ start: cursor, end: closeMin });
   }
 
+  // 3️⃣ Generate slots inside each gap
   const slots = [];
 
-  // 2️⃣ Generate slots per gap
   for (const gap of gaps) {
     const gapSize = gap.end - gap.start;
 
-    // ❌ gap too small
+    // Skip tiny gaps
     if (gapSize < serviceDuration) continue;
 
-    // ⭐ exact-fit gap → ONLY ONE SLOT
+    // Exact-fit gap → only one slot
     if (gapSize === serviceDuration) {
       slots.push(gap.start);
       continue;
     }
 
-    // ✅ large gap → controlled grid
+    // Grid-based slots inside large gap
     let t = roundUpToStep(gap.start, step);
 
     while (t + serviceDuration <= gap.end) {
       const leftoverBefore = t - gap.start;
       const leftoverAfter = gap.end - (t + serviceDuration);
 
-      // 🚫 prevent micro-fragments
-      if (
-        (leftoverBefore > 0 && leftoverBefore < step) ||
-        (leftoverAfter > 0 && leftoverAfter < step)
-      ) {
+      // Prevent micro-fragments at start or end
+      if ((leftoverBefore > 0 && leftoverBefore < step) || (leftoverAfter > 0 && leftoverAfter < step)) {
         t += step;
         continue;
       }
 
-      slots.push(t);
+      // Check for conflict (extra safety)
+      if (!hasConflict(t, serviceDuration, existingBookings)) {
+        slots.push(t);
+      }
+
       t += step;
     }
   }
 
-  // 3️⃣ Score & rank
+  // 4️⃣ Score & sort slots
   const scored = slots.map(min => ({
     time: minutesToTime(min),
     score: scoreSlot({
@@ -107,7 +111,7 @@ module.exports = function generateSmartSlots({
       step,
       openingMin: openMin,
       closingMin: closeMin,
-    })
+    }),
   }));
 
   return scored

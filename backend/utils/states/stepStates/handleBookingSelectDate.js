@@ -63,10 +63,19 @@ module.exports = async function handleBookingSelectDate({
   const closingTime = bookingCfg.closingTime || "18:00";
 
   // --- get already booked slots ---
-  const taken = await getTakenMap(biz._id, date);
   const serviceId = state.data?.serviceId;
   const snapshot = state.data?.serviceSnapshot || {};
   const serviceDuration = snapshot.duration || findServiceById(biz, serviceId)?.duration;
+  const takenRaw = await getTakenMap(biz._id, date);
+  const taken = takenRaw
+  .filter(b => b?.time && (b?.duration || b?.serviceSnapshot?.duration))
+  .map(b => ({
+    time: String(b.time),
+    duration: Number(b.duration || b.serviceSnapshot.duration),
+  }));
+
+  
+
 
   // --- generate free slots ---
   const freeSlots = generateSmartSlots({
