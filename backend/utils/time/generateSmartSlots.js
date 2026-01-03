@@ -1,9 +1,13 @@
 const scoreSlot = require("./slotScoring");
 
 function timeToMinutes(t) {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
+    if (!t || typeof t !== "string") {
+      throw new Error(`Invalid time value: ${t}`);
+    }
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+  
 
 function minutesToTime(min) {
   const h = Math.floor(min / 60);
