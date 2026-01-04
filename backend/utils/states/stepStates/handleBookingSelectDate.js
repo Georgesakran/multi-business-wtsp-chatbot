@@ -110,8 +110,7 @@ module.exports = async function handleBookingSelectDate({
     .filter(b =>
       b &&
       typeof b.time === "string" &&
-      (b.duratio    console.log("taken     :"+taken);
-n || b.serviceSnapshot?.duration)
+      (b.duration || b.serviceSnapshot?.duration)
     )
     .map(b => ({
       time: b.time,
@@ -119,6 +118,7 @@ n || b.serviceSnapshot?.duration)
     }))
     .filter(b => !isNaN(b.duration));
 
+    console.log("taken     :"+taken);
   // -----------------------------
   // 6️⃣ Generate free slots
   // -----------------------------
