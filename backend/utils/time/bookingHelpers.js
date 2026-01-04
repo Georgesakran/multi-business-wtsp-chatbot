@@ -29,7 +29,6 @@ async function getTakenMap(businessId, date) {
     date,
     status: { $in: ["confirmed", "in-progress"] },
   });
-  console.log("bookings in getTakenMap :"+bookings);
   console.log(bookings.map((b) => ({
     start: b.time,
     end: getEndTime(b.time, b.serviceSnapshot.duration),

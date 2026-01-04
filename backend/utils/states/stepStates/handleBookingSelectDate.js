@@ -104,7 +104,6 @@ module.exports = async function handleBookingSelectDate({
   // 5️⃣ Load & normalize existing bookings
   // -----------------------------
   const takenRaw = await getTakenMap(biz._id, date);
-  console.log("takenRaw     :"+takenRaw);
 
   const taken = takenRaw
     .filter(b =>
@@ -118,7 +117,6 @@ module.exports = async function handleBookingSelectDate({
     }))
     .filter(b => !isNaN(b.duration));
 
-    console.log("taken     :"+taken);
   // -----------------------------
   // 6️⃣ Generate free slots
   // -----------------------------
