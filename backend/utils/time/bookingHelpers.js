@@ -29,6 +29,7 @@ async function getTakenMap(businessId, date) {
     date,
     status: { $in: ["confirmed", "in-progress"] },
   });
+  console.log("bookings in getTakenMap :"+bookings);
 
   return bookings.map((b) => ({
     start: b.time,
