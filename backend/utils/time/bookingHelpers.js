@@ -29,24 +29,23 @@ async function getTakenMap(businessId, date) {
     date,
     status: { $in: ["confirmed", "in-progress"] },
   });
-  console.log(bookings.map((b) => ({
-    start: b.time,
-    end: getEndTime(b.time, b.serviceSnapshot.duration),
-  })));
-  return bookings.map((b) => ({
-    start: b.time,
-    end: getEndTime(b.time, b.serviceSnapshot.duration),
-  }));
 
+  return bookings
+    .filter(b => b.time && b.serviceSnapshot?.duration)
+    .map(b => ({
+      time: b.time,                       // ✅ expected
+      duration: Number(b.serviceSnapshot.duration), // ✅ expected
+    }));
 }
-function getEndTime(startTime, duration) {
-  const [h, m] = startTime.split(":").map(Number);
-  const end = new Date();
-  end.setHours(h);
-  end.setMinutes(m + duration);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(end.getHours())}:${pad(end.getMinutes())}`;
-}
+
+// function getEndTime(startTime, duration) {
+//   const [h, m] = startTime.split(":").map(Number);
+//   const end = new Date();
+//   end.setHours(h);
+//   end.setMinutes(m + duration);
+//   const pad = (n) => String(n).padStart(2, "0");
+//   return `${pad(end.getHours())}:${pad(end.getMinutes())}`;
+// }
 
 
 /**
