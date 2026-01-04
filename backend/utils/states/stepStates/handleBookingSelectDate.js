@@ -117,6 +117,7 @@ module.exports = async function handleBookingSelectDate({
     }))
     .filter(b => !isNaN(b.duration));
 
+    console.log(taken);
   // -----------------------------
   // 6️⃣ Generate free slots
   // -----------------------------
