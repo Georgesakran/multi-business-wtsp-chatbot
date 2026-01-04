@@ -22,13 +22,13 @@ function roundUpToStep(min, step) {
 }
 
 function hasConflict(start, duration, bookings) {
-  const end = start + duration;
-  return bookings.some(b => {
-    const bStart = timeToMinutes(b.time);
-    const bEnd = bStart + Number(b.duration || 0);
-    return start < bEnd && end > bStart;
-  });
-}
+    const end = start + duration;
+    return bookings.some(b => {
+      // b is already normalized
+      return start < b.end && end > b.start;
+    });
+  }
+  
 
 module.exports = function generateSmartSlots({
   openingTime,
@@ -93,7 +93,7 @@ module.exports = function generateSmartSlots({
       }
 
       // Check for conflict (extra safety)
-      if (!hasConflict(t, serviceDuration, existingBookings)) {
+      if (!hasConflict(t, serviceDuration, bookings)) {
         slots.push(t);
       }
 
