@@ -143,11 +143,12 @@ module.exports = function generateSmartSlots({
   }
 
   // -----------------------------
-  // 4️⃣ Score & sort slots (smart ranking)
-  // -----------------------------
-  const scoredSlots = slotMinutes.map(min => {
+// 4️⃣ Score slots
+// -----------------------------
+const scoredSlots = slotMinutes.map(min => {
     const time = minutesToTime(min);
     return {
+      min,
       time,
       score: scoreSlot({
         slot: time,
@@ -159,8 +160,14 @@ module.exports = function generateSmartSlots({
       }),
     };
   });
-
+  
+  // -----------------------------
+  // 5️⃣ Rank by score, then return time-sorted slots
+  // -----------------------------
+  scoredSlots.sort((a, b) => b.score - a.score);
+  
+  // ⬇️ IMPORTANT: return chronologically sorted times
   return scoredSlots
-    .sort((a, b) => b.score - a.score)
-    .map(s => s.time);
-};
+    .map(s => s.time)
+    .sort(); // "HH:mm" sorts correctly
+};  
