@@ -3,18 +3,22 @@ const { sendWhatsApp } = require("../../twilio/sendTwilio");
 const { findServiceById, getTakenMap } = require("../../time/bookingHelpers");
 const generateSmartSlots = require("../../time/generateSmartSlots");
 
-// --- helper to split slots into N groups ---
-function splitIntoGroups(slots, numGroups = 3) {
-  if (!slots.length) return [];
-  const groups = [];
-  const perGroup = Math.ceil(slots.length / numGroups);
+// -----------------------------
+// Helper: split slots into ranges
+// -----------------------------
+function splitIntoGroups(slots, groupsCount = 3) {
+  if (!Array.isArray(slots) || slots.length === 0) return [];
 
-  for (let i = 0; i < numGroups; i++) {
-    const startIdx = i * perGroup;
-    const endIdx = Math.min((i + 1) * perGroup, slots.length);
-    if (startIdx >= slots.length) break;
-    const groupSlots = slots.slice(startIdx, endIdx);
-    groups.push(`${groupSlots[0]} – ${groupSlots[groupSlots.length - 1]}`);
+  const groups = [];
+  const size = Math.ceil(slots.length / groupsCount);
+
+  for (let i = 0; i < groupsCount; i++) {
+    const start = i * size;
+    const end = Math.min(start + size, slots.length);
+    if (start >= slots.length) break;
+
+    const group = slots.slice(start, end);
+    groups.push(`${group[0]} – ${group[group.length - 1]}`);
   }
 
   return groups;
@@ -24,64 +28,102 @@ module.exports = async function handleBookingSelectDate({
   biz,
   from,
   lang,
-  langKey,
   txt,
   state,
 }) {
-  const date = txt.trim();
-  const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
-  if (!isDate(date)) {
-    await sendWhatsApp({
+  const date = String(txt || "").trim();
+
+  // -----------------------------
+  // 1️⃣ Validate date format
+  // -----------------------------
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return sendWhatsApp({
       from: biz.wa.number,
       to: from,
       body:
         lang === "arabic"
-          ? "📅 من فضلك اكتبي التاريخ بصيغة صحيحة: *YYYY-MM-DD*"
+          ? "📅 من فضلك اكتبي التاريخ بصيغة *YYYY-MM-DD*"
           : lang === "hebrew"
           ? "📅 בבקשה כתבי את התאריך בפורמט *YYYY-MM-DD*"
           : "📅 Please send the date in format *YYYY-MM-DD*",
     });
-    return;
   }
 
-  // --- check closed dates ---
+  // -----------------------------
+  // 2️⃣ Closed dates
+  // -----------------------------
   if ((biz.closedDates || []).includes(date)) {
-    return sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Closed" });
+    return sendWhatsApp({
+      from: biz.wa.number,
+      to: from,
+      body: "❌ Closed on this date",
+    });
   }
 
-  // --- check working days ---
+  // -----------------------------
+  // 3️⃣ Working day validation (UTC-safe)
+  // -----------------------------
   const bookingCfg = biz.config?.booking || {};
-  const workingDays = Array.isArray(bookingCfg.workingDays) ? bookingCfg.workingDays : [];
-  const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const weekdayStr = dayNames[new Date(date).getDay()];
+  const workingDays = bookingCfg.workingDays || [];
 
-  if (!workingDays.includes(weekdayStr)) {
-    return sendWhatsApp({ from: biz.wa.number, to: from, body: "❌ Not a working day" });
+  const weekday = new Date(`${date}T00:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+
+  if (!workingDays.includes(weekday)) {
+    return sendWhatsApp({
+      from: biz.wa.number,
+      to: from,
+      body: "❌ Not a working day",
+    });
   }
 
   const openingTime = bookingCfg.openingTime || "09:00";
   const closingTime = bookingCfg.closingTime || "18:00";
 
-  // --- get already booked slots ---
+  // -----------------------------
+  // 4️⃣ Resolve service duration (HARD GUARD)
+  // -----------------------------
   const serviceId = state.data?.serviceId;
-  const snapshot = state.data?.serviceSnapshot || {};
-  const serviceDuration = snapshot.duration || findServiceById(biz, serviceId)?.duration;
+  const snapshot = state.data?.serviceSnapshot;
+
+  const serviceDuration =
+    Number(snapshot?.duration) ||
+    Number(findServiceById(biz, serviceId)?.duration);
+
+  if (!serviceDuration || isNaN(serviceDuration)) {
+    console.error("❌ Missing service duration", { serviceId, snapshot });
+    return sendWhatsApp({
+      from: biz.wa.number,
+      to: from,
+      body: "⚠️ Service duration error. Please restart booking.",
+    });
+  }
+
+  // -----------------------------
+  // 5️⃣ Load & normalize existing bookings
+  // -----------------------------
   const takenRaw = await getTakenMap(biz._id, date);
+
   const taken = takenRaw
-  .filter(b => b?.time && (b?.duration || b?.serviceSnapshot?.duration))
-  .map(b => ({
-    time: String(b.time),
-    duration: Number(b.duration || b.serviceSnapshot.duration),
-  }));
+    .filter(b =>
+      b &&
+      typeof b.time === "string" &&
+      (b.duration || b.serviceSnapshot?.duration)
+    )
+    .map(b => ({
+      time: b.time,
+      duration: Number(b.duration || b.serviceSnapshot.duration),
+    }))
+    .filter(b => !isNaN(b.duration));
 
-  
-
-
-  // --- generate free slots ---
+  // -----------------------------
+  // 6️⃣ Generate free slots
+  // -----------------------------
   const freeSlots = generateSmartSlots({
     openingTime,
     closingTime,
-    serviceDuration: Number(serviceDuration),
+    serviceDuration,
     existingBookings: taken,
   });
 
@@ -91,47 +133,43 @@ module.exports = async function handleBookingSelectDate({
       to: from,
       body:
         lang === "arabic"
-          ? "⚠️ في هذا التاريخ لا يوجد أوقات متاحة."
+          ? "⚠️ لا يوجد أوقات متاحة في هذا اليوم."
           : lang === "hebrew"
-          ? "⚠️ אין שעות פנויות בתאריך הזה."
-          : "⚠️ No free time slots on this date.",
+          ? "⚠️ אין שעות פנויות ביום זה."
+          : "⚠️ No available time slots on this date.",
     });
   }
-  // --- split into 3 groups ---
-  const groupedRanges = splitIntoGroups(freeSlots, 3);
-  const lines = groupedRanges.map((r, i) => `${i + 1}) ${r}`);
 
-  // --- save state & go to next step ---
+  // -----------------------------
+  // 7️⃣ Group slots into ranges
+  // -----------------------------
+  const ranges = splitIntoGroups(freeSlots, 3);
+  const lines = ranges.map((r, i) => `${i + 1}) ${r}`);
+
+  // -----------------------------
+  // 8️⃣ Save state
+  // -----------------------------
   await setState(state, {
     step: "BOOKING_SELECT_TIME_RANGE",
     data: {
       ...state.data,
       date,
-      ranges: groupedRanges,
+      ranges,
       allSlots: freeSlots,
-      openingTime,
-      closingTime,
     },
   });
-  
-  
 
-
-  // --- send WhatsApp message with ranges ---
+  // -----------------------------
+  // 9️⃣ Send WhatsApp response
+  // -----------------------------
   await sendWhatsApp({
     from: biz.wa.number,
     to: from,
     body:
       lang === "arabic"
-        ? `الأوقات المتاحة في *${date}*:\n\n${lines.join(
-            "\n"
-          )}\n\n💬 أرسلي رقم النطاق الذي ترغبين به`
+        ? `الأوقات المتاحة في *${date}*:\n\n${lines.join("\n")}\n\n💬 أرسلي رقم النطاق`
         : lang === "hebrew"
-        ? `השעות הפנויות ב-*${date}*:\n\n${lines.join(
-            "\n"
-          )}\n\n💬 כתבי את מספר הטווח הרצוי`
-        : `Available times on *${date}*:\n\n${lines.join(
-            "\n"
-          )}\n\n💬 Reply with the number of your preferred range`,
+        ? `השעות הפנויות ב-*${date}*:\n\n${lines.join("\n")}\n\n💬 כתבי את מספר הטווח`
+        : `Available times on *${date}*:\n\n${lines.join("\n")}\n\n💬 Reply with the number of your preferred range`,
   });
 };
