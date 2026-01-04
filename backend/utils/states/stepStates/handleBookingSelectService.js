@@ -41,7 +41,6 @@ module.exports = async function handleBookingSelectService({
     // 4) Get selected service data
     const selectedServiceId = serviceIds[index];
     const svc = await findServiceById(biz, selectedServiceId);
-    console.log("Selected service object:", svc);
 
     if (!svc) {
       await sendWhatsApp({
@@ -68,7 +67,6 @@ module.exports = async function handleBookingSelectService({
       price: Number(svc.price || 0),
       duration: Number(svc.duration || 0),
     };
-    console.log("✅ Service selected:", serviceSnapshot);
     
 
     // 6) Prepare next 10 days
