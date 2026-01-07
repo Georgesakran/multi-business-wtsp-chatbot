@@ -164,10 +164,8 @@ const scoredSlots = slotMinutes.map(min => {
   // -----------------------------
   // 5️⃣ Rank by score, then return time-sorted slots
   // -----------------------------
-  scoredSlots.sort((a, b) => b.score - a.score);
+//   scoredSlots.sort((a, b) => b.score - a.score);
   
-  // ⬇️ IMPORTANT: return chronologically sorted times
-  return scoredSlots
-    .map(s => s.time)
-    .sort(); // "HH:mm" sorts correctly
-};  
+  return scoredSlots.sort((a, b) => a.min - b.min); // chronological
+
+};

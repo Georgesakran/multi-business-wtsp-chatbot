@@ -120,12 +120,23 @@ module.exports = async function handleBookingSelectDate({
   // -----------------------------
   // 6️⃣ Generate free slots
   // -----------------------------
+
+
+
+  
   const freeSlots = generateSmartSlots({
     openingTime,
     closingTime,
     serviceDuration,
     existingBookings: taken,
   });
+
+  const emojiForScore = score => {
+    if (score >= 80) return '⭐';
+    if (score >= 40) return '⚡';
+    if (score >= 0) return '⚠️';
+    return '❌';
+  };
 
   if (!freeSlots.length) {
     return sendWhatsApp({
@@ -144,8 +155,21 @@ module.exports = async function handleBookingSelectDate({
   // 7️⃣ Group slots into ranges
   // -----------------------------
   const ranges = splitIntoGroups(freeSlots, 3);
-  const lines = ranges.map((r, i) => `${i + 1}) ${r}`);
-
+  const lines = ranges.map((r, i) => {
+    const rangeSlots = freeSlots.filter(s => {
+      const start = s.time;
+      const end = s.time; // we can also compute range internally
+      return r.startsWith(start) || r.endsWith(start);
+    });
+  
+    // Attach emoji per slot
+    const slotsWithEmoji = rangeSlots
+      .map(s => `${s.time} ${emojiForScore(s.score)}`)
+      .join('\n');
+  
+    return `${i + 1}) ${r}\n${slotsWithEmoji}`;
+  });
+  
   // -----------------------------
   // 8️⃣ Save state
   // -----------------------------
