@@ -150,7 +150,7 @@ module.exports = async function handleBookingSelectDate({
   const emojiForScore = score => {
     if (score >= 80) return "⭐";
     if (score >= 40) return "⚡";
-    return "⚠️";
+    return "";
   };
 
   // -----------------------------
