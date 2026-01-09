@@ -117,61 +117,64 @@ module.exports = async function handleBookingSelectDate({
     }))
     .filter(b => !isNaN(b.duration));
 
+
+
+
   // -----------------------------
   // 6️⃣ Generate free slots
   // -----------------------------
 
 
 
-  
-  const freeSlots = generateSmartSlots({
+  const slotObjects = generateSmartSlots({
     openingTime,
     closingTime,
     serviceDuration,
     existingBookings: taken,
   });
 
-  const emojiForScore = score => {
-    if (score >= 80) return '⭐';
-    if (score >= 40) return '⚡';
-    if (score >= 0) return '⚠️';
-    return '❌';
-  };
-
-  if (!freeSlots.length) {
+  if (!slotObjects.length) {
     return sendWhatsApp({
       from: biz.wa.number,
       to: from,
-      body:
-        lang === "arabic"
-          ? "⚠️ لا يوجد أوقات متاحة في هذا اليوم."
-          : lang === "hebrew"
-          ? "⚠️ אין שעות פנויות ביום זה."
-          : "⚠️ No available time slots on this date.",
+      body: "⚠️ No available time slots on this date.",
     });
   }
 
+  // ✅ Extract ONLY times for ranges
+  const slotTimes = slotObjects.map(s => s.time);
+
   // -----------------------------
-  // 7️⃣ Group slots into ranges
+  // Emoji logic
   // -----------------------------
-  const ranges = splitIntoGroups(freeSlots, 3);
-  const lines = ranges.map((r, i) => {
-    const rangeSlots = freeSlots.filter(s => {
-      const start = s.time;
-      const end = s.time; // we can also compute range internally
-      return r.startsWith(start) || r.endsWith(start);
-    });
-  
-    // Attach emoji per slot
-    const slotsWithEmoji = rangeSlots
+  const emojiForScore = score => {
+    if (score >= 80) return "⭐";
+    if (score >= 40) return "⚡";
+    return "⚠️";
+  };
+
+  // -----------------------------
+  // 7️⃣ Group slots into ranges (USING TIMES)
+  // -----------------------------
+  const ranges = splitIntoGroups(slotTimes, 3);
+
+  const lines = ranges.map((range, i) => {
+    const [rangeStart, rangeEnd] = range.split(" – ");
+
+    // get slots inside this range
+    const slotsInRange = slotObjects.filter(
+      s => s.time >= rangeStart && s.time <= rangeEnd
+    );
+
+    const slotLines = slotsInRange
       .map(s => `${s.time} ${emojiForScore(s.score)}`)
-      .join('\n');
-  
-    return `${i + 1}) ${r}\n${slotsWithEmoji}`;
+      .join("\n");
+
+    return `${i + 1}) ${range}\n${slotLines}`;
   });
-  
+
   // -----------------------------
-  // 8️⃣ Save state
+  // 8️⃣ Save state (TIMES ONLY)
   // -----------------------------
   await setState(state, {
     step: "BOOKING_SELECT_TIME_RANGE",
@@ -179,7 +182,7 @@ module.exports = async function handleBookingSelectDate({
       ...state.data,
       date,
       ranges,
-      allSlots: freeSlots,
+      allSlots: slotTimes, // IMPORTANT
     },
   });
 
@@ -190,10 +193,7 @@ module.exports = async function handleBookingSelectDate({
     from: biz.wa.number,
     to: from,
     body:
-      lang === "arabic"
-        ? `الأوقات المتاحة في *${date}*:\n\n${lines.join("\n")}\n\n💬 أرسلي رقم النطاق`
-        : lang === "hebrew"
-        ? `השעות הפנויות ב-*${date}*:\n\n${lines.join("\n")}\n\n💬 כתבי את מספר הטווח`
-        : `Available times on *${date}*:\n\n${lines.join("\n")}\n\n💬 Reply with the number of your preferred range`,
+      `Available times on *${date}*:\n\n${lines.join("\n\n")}\n\n` +
+      `💬 Reply with the number of your preferred range`,
   });
 };
