@@ -121,8 +121,11 @@ module.exports = function generateSmartSlots({
     // Grid-based slots
     let t = roundUpToStep(gap.start, step);
 
-    while (t + serviceDuration <= gap.end) {
-      const leftoverBefore = t - gap.start;
+    while (
+        t + serviceDuration <= gap.end &&
+        t + serviceDuration <= closingMin
+      ) {
+            const leftoverBefore = t - gap.start;
       const leftoverAfter = gap.end - (t + serviceDuration);
 
       // Avoid tiny unusable fragments
